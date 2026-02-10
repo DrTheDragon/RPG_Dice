@@ -220,6 +220,14 @@ const tabela={
 
 // ===== TESTE DE ATRIBUTO =====
 function testeAtributo(){
+ let att = parseInt(atributo.value);
+
+ // trava os limites
+ if(isNaN(att)) att = 1;
+ if(att > 20) att = 20;
+ if(att < 1) att = 1;
+
+ atributo.value = att; // reflete no input
  const att=+atributo.value;
  if(!att){
   resAtributo.innerHTML="<span class='F'><b>Defina um atributo primeiro</b></span>";
