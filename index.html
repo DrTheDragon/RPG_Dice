@@ -5,7 +5,6 @@
 <title>Teste de Atributo RPG</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#0b0b0b">
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&display=swap');
@@ -22,55 +21,30 @@ body {
 }
 
 .card {
-    background: linear-gradient(145deg, #1a1a1a, #0f0f0f);
+    background: #111;
     border: 1px solid #333;
     border-radius: 14px;
     padding: 30px;
     width: 340px;
     text-align: center;
-    box-shadow: 0 0 40px rgba(0,0,0,0.9);
 }
 
-h1 {
-    letter-spacing: 2px;
-    margin-bottom: 5px;
-}
-
-.sub {
-    font-size: 12px;
-    opacity: 0.7;
-    margin-bottom: 20px;
-}
-
-input {
+input, button {
     width: 100%;
     padding: 12px;
+    margin-top: 10px;
     background: #0e0e0e;
     border: 1px solid #333;
-    border-radius: 6px;
     color: #fff;
     font-size: 16px;
     text-align: center;
 }
 
-button {
-    width: 100%;
-    margin-top: 15px;
-    padding: 12px;
-    background: #2a2a2a;
-    border: 1px solid #444;
-    color: #fff;
-    font-size: 16px;
-    cursor: pointer;
-}
-
-button:hover {
-    background: #3a3a3a;
-}
+button:hover { background: #222; }
 
 .dado {
     font-size: 64px;
-    margin: 25px 0;
+    margin: 20px 0;
 }
 
 .girando {
@@ -83,12 +57,9 @@ button:hover {
 }
 
 .resultado {
-    font-size: 17px;
     margin-top: 20px;
     line-height: 1.6;
 }
-
-.label { opacity: 0.7; }
 
 .N { color: #7CFC00; }
 .B { color: #1E90FF; }
@@ -100,100 +71,85 @@ button:hover {
 <body>
 
 <div class="card">
-    <h1>Teste de Atributo</h1>
-    <div class="sub">RPG • Investigação • Destino</div>
+    <h2>Teste de Atributo</h2>
 
     <input id="atributo" type="number" min="1" max="20" placeholder="Atributo (1–20)">
 
     <div class="dado" id="dado">🎲</div>
 
-    <button onclick="rolarDado()">ROLAR</button>
+    <button onclick="rolar()">ROLAR</button>
 
     <div class="resultado" id="resultado"></div>
 </div>
 
-<audio id="somDado" preload="auto">
-    <source src="dice.mp3" type="audio/mpeg">
-</audio>
-
 <script>
-// ===== TABELA (IGUAL À IMAGEM) =====
+// ===== TABELA =====
 const tabela = {
-  1:  { N:20, B:null, E:null },
-  2:  { N:19, B:20,  E:null },
-  3:  { N:18, B:20,  E:null },
-  4:  { N:17, B:19,  E:null },
-  5:  { N:16, B:19,  E:20 },
-  6:  { N:15, B:18,  E:20 },
-  7:  { N:14, B:18,  E:20 },
-  8:  { N:13, B:17,  E:20 },
-  9:  { N:12, B:17,  E:20 },
-  10: { N:11, B:16,  E:19 },
-  11: { N:10, B:16,  E:19 },
-  12: { N:9,  B:15,  E:19 },
-  13: { N:8,  B:15,  E:19 },
-  14: { N:7,  B:14,  E:19 },
-  15: { N:6,  B:14,  E:18 },
-  16: { N:5,  B:13,  E:18 },
-  17: { N:4,  B:13,  E:18 },
-  18: { N:3,  B:12,  E:18 },
-  19: { N:2,  B:12,  E:18 },
-  20: { N:1,  B:11,  E:17 }
+  1:{N:20,B:null,E:null},
+  2:{N:19,B:20,E:null},
+  3:{N:18,B:20,E:null},
+  4:{N:17,B:19,E:null},
+  5:{N:16,B:19,E:20},
+  6:{N:15,B:18,E:20},
+  7:{N:14,B:18,E:20},
+  8:{N:13,B:17,E:20},
+  9:{N:12,B:17,E:20},
+  10:{N:11,B:16,E:19},
+  11:{N:10,B:16,E:19},
+  12:{N:9,B:15,E:19},
+  13:{N:8,B:15,E:19},
+  14:{N:7,B:14,E:19},
+  15:{N:6,B:14,E:18},
+  16:{N:5,B:13,E:18},
+  17:{N:4,B:13,E:18},
+  18:{N:3,B:12,E:18},
+  19:{N:2,B:12,E:18},
+  20:{N:1,B:11,E:17}
 };
 
-// ===== CÁLCULO CORRETO (E > B > N) =====
-function calcularResultado(atributo, valorDado) {
+// ===== LÓGICA CORRETA =====
+// SUCESSO = dado <= limite
+function resultadoTeste(atributo, dado) {
     const r = tabela[atributo];
 
-    if (r.E !== null && valorDado >= r.E)
-        return { tipo: "E", texto: "Extremo" };
+    if (r.E !== null && dado <= r.E)
+        return { t:"E", txt:"Extremo" };
 
-    if (r.B !== null && valorDado >= r.B)
-        return { tipo: "B", texto: "Bom" };
+    if (r.B !== null && dado <= r.B)
+        return { t:"B", txt:"Bom" };
 
-    if (valorDado >= r.N)
-        return { tipo: "N", texto: "Normal" };
+    if (dado <= r.N)
+        return { t:"N", txt:"Normal" };
 
-    return { tipo: "F", texto: "Falha" };
+    return { t:"F", txt:"Falha" };
 }
 
-// ===== ROLAGEM =====
-function rolarDado() {
+// ===== ROLAR =====
+function rolar() {
     const atributo = Number(document.getElementById("atributo").value);
-    const dado = document.getElementById("dado");
-    const resultadoDiv = document.getElementById("resultado");
-    const som = document.getElementById("somDado");
+    const dadoEl = document.getElementById("dado");
+    const out = document.getElementById("resultado");
 
     if (!atributo || atributo < 1 || atributo > 20) {
-        resultadoDiv.innerHTML = "Digite um atributo válido (1–20).";
+        out.innerHTML = "Atributo inválido.";
         return;
     }
 
-    resultadoDiv.innerHTML = "";
-    dado.classList.add("girando");
-
-    try {
-        som.currentTime = 0;
-        som.play().catch(()=>{});
-    } catch(e) {}
+    dadoEl.classList.add("girando");
+    out.innerHTML = "";
 
     setTimeout(() => {
-        dado.classList.remove("girando");
+        dadoEl.classList.remove("girando");
 
-        const valorDado = Math.floor(Math.random() * 20) + 1;
-        const res = calcularResultado(atributo, valorDado);
+        const dado = Math.floor(Math.random()*20)+1;
+        const r = resultadoTeste(atributo, dado);
 
-        resultadoDiv.innerHTML = `
-            <div><span class="label">Atributo:</span> <b>${atributo}</b></div>
-            <div><span class="label">Dado:</span> <b>${valorDado}</b></div>
-            <div>
-              <span class="label">Resultado:</span>
-              <span class="${res.tipo}">
-                <b>${res.tipo} – ${res.texto}</b>
-              </span>
-            </div>
+        out.innerHTML = `
+          Atributo: <b>${atributo}</b><br>
+          Dado: <b>${dado}</b><br>
+          Resultado: <span class="${r.t}"><b>${r.t} – ${r.txt}</b></span>
         `;
-    }, 1200);
+    }, 800);
 }
 </script>
 
