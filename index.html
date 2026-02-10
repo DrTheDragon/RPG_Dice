@@ -69,12 +69,14 @@ button:active{transform:scale(.97)}
 .F{color:#777}
 
 .historico{margin-top:15px;font-size:14px}
-.historico ul{list-style:none;padding:0;margin:0;height:110px;overflow:hidden}
+.historico ul{list-style:none;padding:0;margin:0;height:130px;overflow:hidden}
 .historico li{padding:4px 6px;border-bottom:1px solid var(--border);line-height:1.3}
 .fade-0{color:var(--text)}
-.fade-1{color:#aaa}
-.fade-2{color:#888}
-.fade-3{color:#666}
+.fade-1{color:#bbb}
+.fade-2{color:#999}
+.fade-3{color:#777}
+.fade-4{color:#555}
+.fade-5{color:#333}
 
 .toggle{
  margin-bottom:15px;
@@ -224,35 +226,60 @@ button:active{transform:scale(.97)}
  width: 100%;
 }
 
-/* Melhorias para mobile */
+/* Melhorias para mobile - AGORA MAIS CENTRALIZADO E ORGANIZADO */
 @media(max-width:768px){
- body{align-items:flex-start; padding:10px;}
- .app{grid-template-columns:1fr; width:100%;}
- .atributos-extras{grid-template-columns:1fr;}
- .recursos{grid-template-columns:1fr;}
- .nome-personagem, .toggle, .itens, .atributos-extras, .peso-container{width:100%;}
- .panel{padding:15px;}
- .controls button{padding:8px; font-size:14px;}
+ body{align-items:flex-start; padding:15px; justify-content:flex-start;}
+ .wrapper{width:100%; max-width:500px; margin:0 auto;}
+ .app{grid-template-columns:1fr; width:100%; max-width:100%;}
+ .atributos-extras{grid-template-columns:1fr; width:100%; max-width:100%;}
+ .recursos{grid-template-columns:1fr; width:100%; max-width:100%;}
+ .nome-personagem, .toggle, .itens, .atributos-extras, .peso-container{width:100%; max-width:100%;}
+ .panel{padding:20px; width:100%; box-sizing:border-box;}
+ .controls button{padding:10px; font-size:14px;}
  .dado{font-size:48px;}
  .exposicao-input input{width:120px;}
  
- /* Ajuste para os painéis ficarem mais compactos */
+ /* Ajuste para os painéis ficarem mais compactos e centralizados */
  .section{margin-top:15px; padding-top:10px;}
- h2{font-size:1.3em;}
- h3{font-size:1.1em;}
+ h2{font-size:1.4em; margin-top:5px;}
+ h3{font-size:1.2em; margin:10px 0;}
  
  /* Ajuste para históricos em mobile */
- .historico ul{height:100px}
- .historico li{padding:3px 5px; font-size:12px}
+ .historico{margin-top:12px;}
+ .historico ul{height:115px}
+ .historico li{padding:5px 6px; font-size:13px; line-height:1.4}
+ 
+ /* Centralizar melhor os elementos */
+ input, button, textarea{font-size:14px; padding:10px;}
+ .resultado{min-height:80px; padding:10px 0;}
+ 
+ /* Melhorar espaçamento geral */
+ .toggle{margin-bottom:12px;}
+ .itens{margin-top:20px;}
+ .recursos, .atributos-extras, .peso-container{margin-top:20px;}
+ 
+ /* Centralizar checkboxes de vida */
+ .checkboxes-vida{justify-content:center; gap:25px;}
+ .checkbox-vida{width:28px; height:28px;}
 }
 
 @media(max-width:480px){
- .controls{flex-direction:column;}
- .controls button{flex:1 1 100%; margin-bottom:5px;}
- .checkboxes-vida{justify-content:space-around;}
- .panel{padding:10px;}
+ .controls{flex-direction:row;}
+ .controls button{flex:1 1 48%; margin-bottom:5px; font-size:13px; padding:8px;}
+ .checkboxes-vida{gap:20px;}
+ .panel{padding:15px;}
  .historico{font-size:12px;}
- .historico ul{height:90px}
+ .historico ul{height:110px}
+ .dado{font-size:42px;}
+ 
+ /* Melhorar centralização de títulos */
+ h2{font-size:1.3em;}
+ h3{font-size:1.1em;}
+ 
+ /* Ajustes finos para melhor visualização */
+ .section{margin-top:12px; padding-top:8px;}
+ .resultado{min-height:70px;}
+ .nome-personagem input{padding:10px; font-size:14px;}
 }
 </style>
 </head>
@@ -517,11 +544,9 @@ function testeAtributo(){
  const d=Math.floor(Math.random()*20)+1;
  let t,c;
 
- // CORREÇÃO: Para atributo 20, resultado 1 deve ser NORMAL, não FALHA CRÍTICA
  const r=tabela[att];
  
  if(d===1){
-  // Verifica se 1 é maior ou igual ao valor necessário para NORMAL
   if(d >= r.N){
    t="NORMAL";
    c="N";
@@ -549,7 +574,7 @@ function testeAtributo(){
  `🎲 ${d}<br>📊 Atributo ${att}<br><span class="${c}"><b>${t}</b></span>`;
 
  historico.unshift(`🎲 ${d} | Atributo ${att} → ${t}`);
- if(historico.length>5)historico.pop();
+ if(historico.length>6)historico.pop();
  salvar();atualizarHistorico();
 }
 
@@ -570,7 +595,7 @@ function testeSanidade(){
  resSan.innerHTML=`🎲 ${d}<br><span class="${ok?'N':'F'}"><b>${r}</b></span>`;
 
  historicoSan.unshift(`🧠 ${d} / San Máx: ${sanMaxVal} → ${r}`);
- if(historicoSan.length>5)historicoSan.pop();
+ if(historicoSan.length>6)historicoSan.pop();
  salvar();atualizarHistoricoSan();
 }
 
@@ -587,18 +612,14 @@ function rolarDadoPersonalizado(){
  }
  
  try {
-  // Remover espaços e converter para minúsculas
   input = input.replace(/\s+/g, '').toLowerCase();
   
-  // Interpretar a fórmula
   const partes = input.split('+');
   let total = 0;
   let detalhesText = '';
   
   for(let parte of partes) {
-   // Verificar se a parte contém 'd' (agora sempre minúsculo)
    if(parte.includes('d')) {
-    // Usar expressão regular case-insensitive para dividir
     const [quantidadeStr, facesStr] = parte.split(/d/i);
     const quantidade = parseInt(quantidadeStr) || 1;
     const faces = parseInt(facesStr);
@@ -625,7 +646,6 @@ function rolarDadoPersonalizado(){
     total += somaParte;
     detalhesText += '<br>';
    } 
-   // Se não contém 'd', é um número fixo
    else {
     const valor = parseInt(parte);
     if(!isNaN(valor)) {
@@ -638,9 +658,8 @@ function rolarDadoPersonalizado(){
   resultado.innerHTML = `🎲 ${input}<br>Total: <b>${total}</b>`;
   detalhes.innerHTML = `<p><b>Detalhes:</b></p>${detalhesText}`;
   
-  // Adicionar ao histórico de dados personalizados
   historicoDados.unshift(`🎲 ${input} → ${total}`);
-  if(historicoDados.length>5)historicoDados.pop();
+  if(historicoDados.length>6)historicoDados.pop();
   atualizarHistoricoDados();
   
  } catch(e) {
@@ -649,7 +668,6 @@ function rolarDadoPersonalizado(){
  }
 }
 
-// Função para calcular dinheiro automaticamente
 function calcularDinheiro() {
  const input = document.getElementById('dinheiro');
  const valor = input.value.trim();
@@ -657,17 +675,14 @@ function calcularDinheiro() {
  if(!valor) return;
  
  try {
-  // Remover espaços e validar caracteres (apenas números, +, -)
   const validInput = valor.replace(/\s+/g, '');
   if(!/^[0-9+\-]+$/.test(validInput)) {
-   // Se não for uma fórmula válida, apenas salva o valor como número
    const num = parseInt(valor) || 0;
    input.value = num;
    salvar();
    return;
   }
   
-  // Separar por operadores, mantendo os sinais
   const numeros = validInput.split(/([+-])/);
   let total = 0;
   let operador = '+';
@@ -687,19 +702,16 @@ function calcularDinheiro() {
    }
   }
   
-  // Atualiza o campo com o resultado calculado
   input.value = total;
   salvar();
   
  } catch(e) {
-  // Em caso de erro, tenta salvar como número
   const num = parseInt(valor) || 0;
   input.value = num;
   salvar();
  }
 }
 
-// Funções para definir valores máximos
 function setVidaMaxima() {
  const max = Math.max(0, +vidaMax.value || 0);
  vida = max;
@@ -718,7 +730,8 @@ function atualizarHistorico(){
  listaHistorico.innerHTML="";
  historico.forEach((h,i)=>{
   const li=document.createElement("li");
-  li.className=i===0?"fade-0":i===1?"fade-1":i===2?"fade-2":"fade-3";
+  // 0-2: normal, 3: fade-1, 4: fade-2, 5: fade-3, 6: fade-4, 7: fade-5
+  li.className = i<3 ? "fade-0" : i===3 ? "fade-1" : i===4 ? "fade-2" : i===5 ? "fade-3" : i===6 ? "fade-4" : "fade-5";
   li.textContent=h;
   listaHistorico.appendChild(li);
  });
@@ -728,7 +741,7 @@ function atualizarHistoricoSan(){
  listaHistoricoSan.innerHTML="";
  historicoSan.forEach((h,i)=>{
   const li=document.createElement("li");
-  li.className=i===0?"fade-0":i===1?"fade-1":i===2?"fade-2":"fade-3";
+  li.className = i<3 ? "fade-0" : i===3 ? "fade-1" : i===4 ? "fade-2" : i===5 ? "fade-3" : i===6 ? "fade-4" : "fade-5";
   li.textContent=h;
   listaHistoricoSan.appendChild(li);
  });
@@ -738,7 +751,7 @@ function atualizarHistoricoDados(){
  listaHistoricoDados.innerHTML="";
  historicoDados.forEach((h,i)=>{
   const li=document.createElement("li");
-  li.className=i===0?"fade-0":i===1?"fade-1":i===2?"fade-2":"fade-3";
+  li.className = i<3 ? "fade-0" : i===3 ? "fade-1" : i===4 ? "fade-2" : i===5 ? "fade-3" : i===6 ? "fade-4" : "fade-5";
   li.textContent=h;
   listaHistoricoDados.appendChild(li);
  });
@@ -747,14 +760,11 @@ function atualizarHistoricoDados(){
 let vida=0,san=0,descanso=0,poder=0,peso=0,defesa=0,exposicao=0;
 function salvar(){
  localStorage.setItem("noir",JSON.stringify({
-  // Valores atuais
   vida,san,descanso,poder,peso,defesa,exposicao,
-  // Valores máximos
   vidaMax:Math.max(0,+vidaMax.value||0),
   sanMax:Math.max(0,+sanMax.value||0),
   poderMax:Math.max(0,+poderMax.value||0),
   pesoMax:Math.max(0,+pesoMax.value||0),
-  // Outros valores - agora salvando apenas o resultado do dinheiro
   dinheiro:dinheiro.value,
   itens:itens.value,
   traumas:traumas.value,
@@ -773,27 +783,21 @@ function salvar(){
 function carregar(){
  const d=JSON.parse(localStorage.getItem("noir"));if(!d)return;
  
- // Carregar valores atuais
  vida=d.vida||0;san=d.san||0;descanso=d.descanso||0;
  poder=d.poder||0;peso=d.peso||0;defesa=d.defesa||0;exposicao=d.exposicao||0;
  
- // Carregar valores máximos
  vidaMax.value=Math.max(0,d.vidaMax||0);
  sanMax.value=Math.max(0,d.sanMax||0);
  poderMax.value=Math.max(0,d.poderMax||0);
  pesoMax.value=Math.max(0,d.pesoMax||0);
  
- // Carregar defesa - CORREÇÃO: usar o valor salvo
  defesaInput.value = defesa;
  
- // Carregar exposição
  exposicaoValor.textContent=exposicao;
  exposicaoInput.value=exposicao;
  
- // Carregar dinheiro (agora apenas o resultado)
  dinheiro.value=d.dinheiro||"";
  
- // Carregar outros dados
  itens.value=d.itens||"";
  traumas.value=d.traumas||"";
  historico=d.historico||[];
@@ -857,7 +861,6 @@ pesoMax.onchange=()=>{
  salvar();atualizar();
 };
 
-// CORREÇÃO: Criar referência ao input de defesa e configurar evento para salvar
 const defesaInput = document.getElementById('defesa');
 defesaInput.onchange = () => {
  defesa = Math.max(0, +defesaInput.value || 0);
@@ -867,7 +870,6 @@ defesaInput.onchange = () => {
 exposicaoInput.onchange=atualizarExposicao;
 exposicaoInput.oninput=atualizarExposicao;
 
-// Event listener para dinheiro (calcular automaticamente ao perder o foco)
 dinheiro.addEventListener('blur', calcularDinheiro);
 dinheiro.addEventListener('keypress', function(e){
  if(e.key === 'Enter') {
@@ -889,7 +891,6 @@ function toggleTema(){
  salvar();
 }
 
-// Inicializar áudio na primeira interação
 document.addEventListener('click', function initAudioOnClick() {
  if (!audioInitialized) {
   initAudio();
