@@ -136,6 +136,18 @@ button:active{transform:scale(.97)}
 <h3>Vida</h3>
 <input id="vidaMax" type="number" placeholder="Vida Máxima">
 <p>Atual: <b><span id="vidaAtual">0</span></b></p>
+ <div class="section">
+  <h4>Chances de Sobrevivência</h4>
+  <label><input type="checkbox" id="vidaChk1"> Última força</label><br>
+  <label><input type="checkbox" id="vidaChk2"> À beira da morte</label><br>
+  <label><input type="checkbox" id="vidaChk3"> Instinto de sobrevivência</label>
+
+  <hr style="border:1px solid var(--border);margin:10px 0">
+
+  <p><b>🩸 Extremamente Ferido</b></p>
+  <p><b>☠ Caído</b></p>
+</div>
+ 
 <div class="controls">
 <button onclick="alterar('vida',-1)">-1</button>
 <button onclick="alterar('vida',1)">+1</button>
@@ -164,6 +176,35 @@ button:active{transform:scale(.97)}
 <textarea id="itens" placeholder="Anota aqui armas, pistas, acessórios, contatos, segredos..."></textarea>
 </div>
 
+ <div class="panel itens">
+  <h2>CONDIÇÕES & REGISTROS</h2>
+  <div class="section">
+    <h3>Horas de Sono</h3>
+    <p><b><span id="sonoAtual">0</span> horas</b></p>
+    <div class="controls">
+      <button onclick="alterarSono(-3)">-3</button>
+      <button onclick="alterarSono(-1)">-1</button>
+      <button onclick="alterarSono(1)">+1</button>
+      <button onclick="alterarSono(3)">+3</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>💰 Dinheiro</h3>
+    <input id="dinheiro" type="number" placeholder="Dinheiro atual">
+  </div>
+
+  <div class="section">
+    <h3>🧠 Traumas</h3>
+    <textarea id="traumas" placeholder="Medos, choques, cicatrizes mentais..."></textarea>
+  </div>
+
+  <div class="section">
+    <h3>⭐ Vantagens</h3>
+    <textarea id="vantagens" placeholder="Habilidades, contatos, vantagens especiais..."></textarea>
+  </div>
+</div>
+ 
 </div>
 
 <script>
@@ -315,6 +356,89 @@ function toggleTema(){
 }
 
 carregar();
+ <script>
+/* ===== EXTENSÕES DE STATUS ===== */
+
+let sono = 0;
+
+function alterarSono(v){
+  sono = Math.max(0, sono + v);
+  document.getElementById("sonoAtual").textContent = sono;
+  salvar();
+}
+
+/* estende o salvar() sem quebrar o original */
+const salvarOriginal = salvar;
+salvar = function(){
+  salvarOriginal();
+  const dados = JSON.parse(localStorage.getItem("noir")) || {};
+  dados.sono = sono;
+  dados.dinheiro = document.getElementById("dinheiro").value;
+  dados.traumas = document.getElementById("traumas").value;
+  dados.vantagens = document.getElementById("vantagens").value;
+  dados.condicoes = [
+    document.getElementById("cond1").checked,
+    document.getElementById("cond2").checked,
+    document.getElementById("cond3").checked
+  ];
+  localStorage.setItem("noir", JSON.stringify(dados));
+};
+
+/* estende o carregar() sem quebrar o original */
+const carregarOriginal = carregar;
+carregar = function(){
+  carregarOriginal();
+  const dados = JSON.parse(localStorage.getItem("noir"));
+  if(!dados) return;
+
+  sono = dados.sono || 0;
+  document.getElementById("sonoAtual").textContent = sono;
+
+  document.getElementById("dinheiro").value = dados.dinheiro || "";
+  document.getElementById("traumas").value = dados.traumas || "";
+  document.getElementById("vantagens").value = dados.vantagens || "";
+
+  if(dados.condicoes){
+    document.getElementById("cond1").checked = dados.condicoes[0];
+    document.getElementById("cond2").checked = dados.condicoes[1];
+    document.getElementById("cond3").checked = dados.condicoes[2];
+  }
+};
+
+/* autosave */
+["dinheiro","traumas","vantagens","cond1","cond2","cond3"]
+.forEach(id=>{
+  document.getElementById(id).addEventListener("input",salvar);
+  document.getElementById(id).addEventListener("change",salvar);
+});
+ /* ===== CHECKBOX DE VIDA (SOBREVIVÊNCIA) ===== */
+
+const vidaChecks = ["vidaChk1","vidaChk2","vidaChk3"];
+
+/* estende salvar */
+const salvarVidaChk = salvar;
+salvar = function(){
+  salvarVidaChk();
+  const dados = JSON.parse(localStorage.getItem("noir")) || {};
+  dados.vidaChecks = vidaChecks.map(id => document.getElementById(id).checked);
+  localStorage.setItem("noir", JSON.stringify(dados));
+};
+
+/* estende carregar */
+const carregarVidaChk = carregar;
+carregar = function(){
+  carregarVidaChk();
+  const dados = JSON.parse(localStorage.getItem("noir"));
+  if(!dados || !dados.vidaChecks) return;
+  vidaChecks.forEach((id,i)=>{
+    document.getElementById(id).checked = dados.vidaChecks[i];
+  });
+};
+
+/* autosave */
+vidaChecks.forEach(id=>{
+  document.getElementById(id).addEventListener("change",salvar);
+});
 </script>
 </body>
 </html>
