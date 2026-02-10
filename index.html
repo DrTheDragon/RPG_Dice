@@ -218,6 +218,12 @@ button:active{transform:scale(.97)}
  margin:5px 0;
 }
 
+/* Estilo para os botões de máximo */
+.max-button{
+ margin-top: 10px;
+ width: 100%;
+}
+
 /* Melhorias para mobile */
 @media(max-width:768px){
  body{align-items:flex-start; padding:10px;}
@@ -312,6 +318,7 @@ button:active{transform:scale(.97)}
 <button onclick="alterar('vida',-5)">-5</button>
 <button onclick="alterar('vida',5)">+5</button>
 </div>
+<button class="max-button" onclick="setVidaMaxima()">VIDA MÁXIMA</button>
 
 <div class="checkboxes-vida">
 <label><input type="checkbox" class="checkbox-vida" id="checkVida1"></label>
@@ -339,6 +346,7 @@ button:active{transform:scale(.97)}
 <button onclick="alterar('san',-5)">-5</button>
 <button onclick="alterar('san',5)">+5</button>
 </div>
+<button class="max-button" onclick="setSanidadeMaxima()">SANIDADE MÁXIMA</button>
 </div>
 
 <div class="section">
@@ -407,7 +415,7 @@ button:active{transform:scale(.97)}
 <div class="recursos">
 <div class="recurso-item">
 <h3>💰 DINHEIRO</h3>
-<input id="dinheiro" type="text" placeholder="Dinheiro obtido">
+<input id="dinheiro" type="text" placeholder="Digite fórmula (ex: 100+50-30) ou número">
 </div>
 
 <div class="recurso-item">
@@ -677,6 +685,21 @@ function calcularDinheiro() {
   input.value = num;
   salvar();
  }
+}
+
+// Funções para definir valores máximos
+function setVidaMaxima() {
+ const max = Math.max(0, +vidaMax.value || 0);
+ vida = max;
+ atualizar();
+ salvar();
+}
+
+function setSanidadeMaxima() {
+ const max = Math.max(0, +sanMax.value || 0);
+ san = max;
+ atualizar();
+ salvar();
 }
 
 function atualizarHistorico(){
