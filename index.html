@@ -62,6 +62,18 @@ button:active{transform:scale(.97)}
 .controls{display:flex;gap:6px;flex-wrap:wrap}
 .controls button{flex:1 1 48%}
 
+.checkbox-row{
+ display:flex;
+ gap:15px;
+ justify-content:center;
+ margin-top:10px;
+}
+.checkbox-row label{
+ display:flex;
+ align-items:center;
+ gap:6px;
+}
+
 .E{color:#ff4c4c}
 .B{color:#4fa3ff}
 .N{color:#9acd32}
@@ -95,6 +107,7 @@ button:active{transform:scale(.97)}
 <div class="wrapper">
 
 <div class="toggle">
+<input id="nomePersonagem" placeholder="Nome do Personagem">
 <button onclick="toggleTema()">🌗 Alternar Tema</button>
 </div>
 
@@ -142,6 +155,17 @@ button:active{transform:scale(.97)}
 <button onclick="alterar('vida',-5)">-5</button>
 <button onclick="alterar('vida',5)">+5</button>
 </div>
+
+<div class="checkbox-row">
+<input type="checkbox" id="chk1">
+<input type="checkbox" id="chk2">
+<input type="checkbox" id="chk3">
+</div>
+
+<div class="checkbox-row">
+<label><input type="checkbox" id="grave"> Gravemente Ferido</label>
+<label><input type="checkbox" id="caido"> Caído</label>
+</div>
 </div>
 
 <div class="section">
@@ -156,6 +180,17 @@ button:active{transform:scale(.97)}
 </div>
 </div>
 
+<div class="section">
+<h3>Horas de Sono</h3>
+<p>Atual: <b><span id="sonoAtual">0</span></b></p>
+<div class="controls">
+<button onclick="alterarSono(-1)">-1</button>
+<button onclick="alterarSono(1)">+1</button>
+<button onclick="alterarSono(-3)">-3</button>
+<button onclick="alterarSono(3)">+3</button>
+</div>
+</div>
+
 </div>
 </div>
 
@@ -167,151 +202,47 @@ button:active{transform:scale(.97)}
 </div>
 
 <script>
-function somDado(){
- const ctx=new (window.AudioContext||webkitAudioContext)();
- let t=ctx.currentTime;
- for(let i=0;i<8;i++){
-  const o=ctx.createOscillator(),g=ctx.createGain();
-  o.frequency.value=120+Math.random()*400;
-  g.gain.setValueAtTime(.15,t);
-  g.gain.exponentialRampToValueAtTime(.001,t+.08);
-  o.connect(g).connect(ctx.destination);
-  o.start(t);o.stop(t+.08);t+=.04;
- }
+let sono=0;
+
+function alterarSono(v){
+ sono=Math.max(0,sono+v);
+ sonoAtual.textContent=sono;
+ salvar();
 }
 
-let historico=[];
-let historicoSan=[];
+grave.onchange=()=>{ if(grave.checked) caido.checked=false; salvar(); }
+caido.onchange=()=>{ if(caido.checked) grave.checked=false; salvar(); }
 
-const tabela={
-1:{N:20,B:null,E:null},2:{N:19,B:20,E:null},
-3:{N:18,B:20,E:null},4:{N:17,B:19,E:null},
-5:{N:16,B:19,E:20},6:{N:15,B:18,E:20},
-7:{N:14,B:18,E:20},8:{N:13,B:17,E:20},
-9:{N:12,B:17,E:20},10:{N:11,B:16,E:19},
-11:{N:10,B:16,E:19},12:{N:9,B:15,E:19},
-13:{N:8,B:15,E:19},14:{N:7,B:14,E:19},
-15:{N:6,B:14,E:18},16:{N:5,B:13,E:18},
-17:{N:4,B:13,E:18},18:{N:3,B:12,E:18},
-19:{N:2,B:12,E:18},20:{N:1,B:11,E:17}
-};
+nomePersonagem.oninput=salvar;
 
-function testeAtributo(){
- somDado();
- let att=parseInt(atributo.value)||1;
- att=Math.min(20,Math.max(1,att));
- atributo.value=att;
-
- const dadoEl=document.querySelectorAll(".dado")[0];
- dadoEl.classList.add("rolando");
- setTimeout(()=>dadoEl.classList.remove("rolando"),350);
-
- const d=Math.floor(Math.random()*20)+1;
- let t,c;
-
- if(d===1){t="FALHA CRÍTICA";c="F";}
- else{
-  const r=tabela[att];
-  if(r.E&&d>=r.E){t="EXTREMO";c="E";}
-  else if(r.B&&d>=r.B){t="BOM";c="B";}
-  else if(d>=r.N){t="NORMAL";c="N";}
-  else{t="FALHA";c="F";}
- }
-
- resAtributo.innerHTML=
- `🎲 ${d}<br>📊 Atributo ${att}<br><span class="${c}"><b>${t}</b></span>`;
-
- historico.unshift(`🎲 ${d} | Atributo ${att} → ${t}`);
- if(historico.length>6)historico.pop();
- salvar();atualizarHistorico();
-}
-
-function testeSanidade(){
- somDado();
-
- const dadoEl=document.querySelectorAll(".dado")[1];
- dadoEl.classList.add("rolando");
- setTimeout(()=>dadoEl.classList.remove("rolando"),350);
-
- const sanMaxVal=Math.max(0,+sanMax.value||0);
- sanMax.value=sanMaxVal;
-
- const d=Math.floor(Math.random()*100)+1;
- const ok=d>=sanMaxVal;
- const r=ok?"SUCESSO":"FALHA";
-
- resSan.innerHTML=`🎲 ${d}<br><span class="${ok?'N':'F'}"><b>${r}</b></span>`;
-
- historicoSan.unshift(`🧠 ${d} / San Máx: ${sanMaxVal} → ${r}`);
- if(historicoSan.length>6)historicoSan.pop();
- salvar();atualizarHistoricoSan();
-}
-
-function atualizarHistorico(){
- listaHistorico.innerHTML="";
- historico.forEach((h,i)=>{
-  const li=document.createElement("li");
-  li.className=i<3?"fade-0":i===3?"fade-1":i===4?"fade-2":"fade-3";
-  li.textContent=h;
-  listaHistorico.appendChild(li);
- });
-}
-function atualizarHistoricoSan(){
- listaHistoricoSan.innerHTML="";
- historicoSan.forEach((h,i)=>{
-  const li=document.createElement("li");
-  li.className=i<3?"fade-0":i===3?"fade-1":i===4?"fade-2":"fade-3";
-  li.textContent=h;
-  listaHistoricoSan.appendChild(li);
- });
-}
-
-let vida=0,san=0;
 function salvar(){
  localStorage.setItem("noir",JSON.stringify({
-  vida,san,
-  vidaMax:Math.max(0,+vidaMax.value||0),
-  sanMax:Math.max(0,+sanMax.value||0),
+  nome:nomePersonagem.value,
+  vida,san,sono,
+  chk1:chk1.checked,chk2:chk2.checked,chk3:chk3.checked,
+  grave:grave.checked,caido:caido.checked,
+  vidaMax:+vidaMax.value||0,
+  sanMax:+sanMax.value||0,
   itens:itens.value,
-  historico,
-  historicoSan,
+  historico,historicoSan,
   tema:document.body.className
  }));
 }
+
 function carregar(){
  const d=JSON.parse(localStorage.getItem("noir"));if(!d)return;
- vida=d.vida||0;san=d.san||0;
- vidaMax.value=Math.max(0,d.vidaMax||0);
- sanMax.value=Math.max(0,d.sanMax||0);
+ nomePersonagem.value=d.nome||"";
+ vida=d.vida||0;san=d.san||0;sono=d.sono||0;
+ chk1.checked=!!d.chk1;chk2.checked=!!d.chk2;chk3.checked=!!d.chk3;
+ grave.checked=!!d.grave;caido.checked=!!d.caido;
+ vidaMax.value=d.vidaMax||0;sanMax.value=d.sanMax||0;
  itens.value=d.itens||"";
- historico=d.historico||[];
- historicoSan=d.historicoSan||[];
+ historico=d.historico||[];historicoSan=d.historicoSan||[];
  if(d.tema)document.body.className=d.tema;
- atualizar();atualizarHistorico();atualizarHistoricoSan();
-}
-function atualizar(){vidaAtual.textContent=vida;sanAtual.textContent=san}
-function alterar(t,v){
- if(t==="vida")vida=Math.max(0,Math.min(+vidaMax.value,vida+v));
- else san=Math.max(0,Math.min(+sanMax.value,san+v));
- salvar();atualizar();
-}
-
-vidaMax.onchange=()=>{
- vidaMax.value=Math.max(0,+vidaMax.value||0);
- vida=vidaMax.value;
- salvar();atualizar();
-};
-sanMax.onchange=()=>{
- sanMax.value=Math.max(0,+sanMax.value||0);
- san=sanMax.value;
- salvar();atualizar();
-};
-
-itens.oninput=salvar;
-
-function toggleTema(){
- document.body.classList.toggle("light");
- salvar();
+ vidaAtual.textContent=vida;
+ sanAtual.textContent=san;
+ sonoAtual.textContent=sono;
+ atualizarHistorico();atualizarHistoricoSan();
 }
 
 carregar();
