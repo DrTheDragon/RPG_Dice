@@ -233,7 +233,9 @@ function testeSanidade(){
  dadoEl.classList.add("rolando");
  setTimeout(()=>dadoEl.classList.remove("rolando"),350);
 
- const sanMaxVal=+sanMax.value||0;
+ const sanMaxVal=Math.max(0,+sanMax.value||0);
+ sanMax.value=sanMaxVal;
+
  const d=Math.floor(Math.random()*100)+1;
  const ok=d<=sanMaxVal;
  const r=ok?"SUCESSO":"FALHA";
@@ -267,14 +269,20 @@ function atualizarHistoricoSan(){
 let vida=0,san=0;
 function salvar(){
  localStorage.setItem("noir",JSON.stringify({
-  vida,san,vidaMax:vidaMax.value,sanMax:sanMax.value,
-  itens:itens.value,historico,historicoSan,tema:document.body.className
+  vida,san,
+  vidaMax:Math.max(0,+vidaMax.value||0),
+  sanMax:Math.max(0,+sanMax.value||0),
+  itens:itens.value,
+  historico,
+  historicoSan,
+  tema:document.body.className
  }));
 }
 function carregar(){
  const d=JSON.parse(localStorage.getItem("noir"));if(!d)return;
  vida=d.vida||0;san=d.san||0;
- vidaMax.value=d.vidaMax||"";sanMax.value=d.sanMax||"";
+ vidaMax.value=Math.max(0,d.vidaMax||0);
+ sanMax.value=Math.max(0,d.sanMax||0);
  itens.value=d.itens||"";
  historico=d.historico||[];
  historicoSan=d.historicoSan||[];
@@ -287,8 +295,18 @@ function alterar(t,v){
  else san=Math.max(0,Math.min(+sanMax.value,san+v));
  salvar();atualizar();
 }
-vidaMax.onchange=()=>{vida=+vidaMax.value;salvar();atualizar()}
-sanMax.onchange=()=>{san=+sanMax.value;salvar();atualizar()}
+
+vidaMax.onchange=()=>{
+ vidaMax.value=Math.max(0,+vidaMax.value||0);
+ vida=vidaMax.value;
+ salvar();atualizar();
+};
+sanMax.onchange=()=>{
+ sanMax.value=Math.max(0,+sanMax.value||0);
+ san=sanMax.value;
+ salvar();atualizar();
+};
+
 itens.oninput=salvar;
 
 function toggleTema(){
