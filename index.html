@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Testes RPG</title>
+<title>Teste RPG</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
@@ -66,6 +66,13 @@ button:hover{background:#111;}
     margin:10px 0;
 }
 
+.resultado{
+    margin-top:10px;
+    line-height:1.6;
+    text-align:center;
+    min-height:70px; /* FIXA ALTURA */
+}
+
 .controls{
     display:flex;
     flex-wrap:wrap;
@@ -74,12 +81,6 @@ button:hover{background:#111;}
 
 .controls button{
     flex:1 1 48%;
-}
-
-.resultado{
-    margin-top:10px;
-    line-height:1.6;
-    text-align:center;
 }
 
 .E{color:#ff4c4c;}
@@ -165,6 +166,7 @@ function testeAtributo(){
  const att=+atributo.value;
  const d=Math.floor(Math.random()*20)+1;
  let t,c;
+
  if(d===1){t="FALHA CRÍTICA";c="F";}
  else if(d===20){t="SUCESSO CRÍTICO";c="C";}
  else{
@@ -174,6 +176,7 @@ function testeAtributo(){
   else if(d>=r.N){t="NORMAL";c="N";}
   else{t="FALHA";c="F";}
  }
+
  resAtributo.innerHTML=`Dado: <b>${d}</b><br><span class="${c}"><b>${t}</b></span>`;
 }
 
@@ -204,13 +207,13 @@ function alterar(t,v){
 vidaMax.onchange=()=>{vida=+vidaMax.value;salvar();atualizar();}
 sanMax.onchange=()=>{san=+sanMax.value;salvar();atualizar();}
 
-// ===== TESTE DE SANIDADE (CORRIGIDO) =====
+// ===== TESTE DE SANIDADE =====
 function testeSanidade(){
- const dado=Math.floor(Math.random()*100)+1;
- const sanMaxima=+sanMax.value;
- const sucesso=dado<=sanMaxima;
+ const d=Math.floor(Math.random()*100)+1;
+ const sanidadeMax=+sanMax.value;
+ const sucesso=d<=sanidadeMax;
 
- resSan.innerHTML=`Dado: <b>${dado}</b><br>
+ resSan.innerHTML=`Dado: <b>${d}</b><br>
  <span class="${sucesso?'N':'F'}"><b>${sucesso?'SUCESSO':'FALHA'}</b></span>`;
 }
 
