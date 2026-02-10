@@ -8,6 +8,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
 
 <style>
+    @keyframes roll {
+  0%   { transform: rotate(0deg) scale(1); }
+  30%  { transform: rotate(25deg) scale(1.05); }
+  60%  { transform: rotate(-20deg) scale(1.05); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+.dado.rolando {
+  animation: roll 0.35s ease-in-out;
+}
+
 body{
     background: radial-gradient(circle at top,#111,#000);
     color:#e0e0e0;
@@ -213,6 +224,10 @@ function testeAtributo(){
   resAtributo.innerHTML="<span class='F'><b>Defina um atributo primeiro</b></span>";
   return;
  }
+
+ const dadoEl = document.querySelectorAll(".dado")[0];
+ dadoEl.classList.add("rolando");
+ setTimeout(()=>dadoEl.classList.remove("rolando"),350);
  somDado();
  const d=Math.floor(Math.random()*20)+1;
  let t,c;
@@ -258,6 +273,9 @@ itens.oninput=salvar;
 
 // ===== TESTE SANIDADE =====
 function testeSanidade(){
+ const dadoEl = document.querySelectorAll(".dado")[1];
+ dadoEl.classList.add("rolando");
+ setTimeout(()=>dadoEl.classList.remove("rolando"),350);
  somDado();
  const d=Math.floor(Math.random()*100)+1;
  const max=+sanMax.value;
