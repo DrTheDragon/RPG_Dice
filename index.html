@@ -301,6 +301,11 @@ button:active{transform:scale(.97)}
 <button onclick="rolarDadoPersonalizado()">ROLAR DADOS</button>
 <div class="resultado" id="resDadoPersonalizado"></div>
 <div id="detalhesRolagem" class="roll-details"></div>
+
+<div class="historico">
+<h3>🎲 Histórico de Dados Personalizados</h3>
+<ul id="listaHistoricoDados"></ul>
+</div>
 </div>
 </div>
 
@@ -415,7 +420,7 @@ button:active{transform:scale(.97)}
 <div class="recursos">
 <div class="recurso-item">
 <h3>💰 DINHEIRO</h3>
-<input id="dinheiro" type="text" placeholder="Dinheiro obtido">
+<input id="dinheiro" type="text" placeholder="Digite fórmula (ex: 100+50-30) ou número">
 </div>
 
 <div class="recurso-item">
@@ -479,6 +484,7 @@ function somDado(){
 
 let historico=[];
 let historicoSan=[];
+let historicoDados=[];
 
 const tabela={
 1:{N:20,B:null,E:null},2:{N:19,B:20,E:null},
@@ -627,9 +633,10 @@ function rolarDadoPersonalizado(){
   resultado.innerHTML = `🎲 ${input}<br>Total: <b>${total}</b>`;
   detalhes.innerHTML = `<p><b>Detalhes:</b></p>${detalhesText}`;
   
-  historico.unshift(`🎲 ${input} → Total: ${total}`);
-  if(historico.length>6)historico.pop();
-  atualizarHistorico();
+  // Adicionar ao histórico de dados personalizados
+  historicoDados.unshift(`🎲 ${input} → ${total}`);
+  if(historicoDados.length>6)historicoDados.pop();
+  atualizarHistoricoDados();
   
  } catch(e) {
   resultado.innerHTML = 'Formato inválido. Use: "2d6", "1d20+4", etc.';
@@ -711,6 +718,7 @@ function atualizarHistorico(){
   listaHistorico.appendChild(li);
  });
 }
+
 function atualizarHistoricoSan(){
  listaHistoricoSan.innerHTML="";
  historicoSan.forEach((h,i)=>{
@@ -718,6 +726,16 @@ function atualizarHistoricoSan(){
   li.className=i<3?"fade-0":i===3?"fade-1":i===4?"fade-2":"fade-3";
   li.textContent=h;
   listaHistoricoSan.appendChild(li);
+ });
+}
+
+function atualizarHistoricoDados(){
+ listaHistoricoDados.innerHTML="";
+ historicoDados.forEach((h,i)=>{
+  const li=document.createElement("li");
+  li.className=i<3?"fade-0":i===3?"fade-1":i===4?"fade-2":"fade-3";
+  li.textContent=h;
+  listaHistoricoDados.appendChild(li);
  });
 }
 
@@ -737,6 +755,7 @@ function salvar(){
   traumas:traumas.value,
   historico,
   historicoSan,
+  historicoDados,
   tema:document.body.className,
   nomePersonagem:nomePersonagem.value,
   checkVida1:checkVida1.checked,
@@ -774,6 +793,7 @@ function carregar(){
  traumas.value=d.traumas||"";
  historico=d.historico||[];
  historicoSan=d.historicoSan||[];
+ historicoDados=d.historicoDados||[];
  if(d.tema)document.body.className=d.tema;
  if(d.nomePersonagem)nomePersonagem.value=d.nomePersonagem;
  if(d.checkVida1!==undefined)checkVida1.checked=d.checkVida1;
@@ -782,7 +802,7 @@ function carregar(){
  if(d.checkFerido!==undefined)checkFerido.checked=d.checkFerido;
  if(d.checkCaido!==undefined)checkCaido.checked=d.checkCaido;
  
- atualizar();atualizarHistorico();atualizarHistoricoSan();
+ atualizar();atualizarHistorico();atualizarHistoricoSan();atualizarHistoricoDados();
 }
 function atualizar(){
  vidaAtual.textContent=vida;
