@@ -107,13 +107,6 @@ button:hover{background:#111;}
 </div>
 
 <div class="section">
-<h3>Teste Convencional</h3>
-<div class="dado">🎲</div>
-<button onclick="testeConvencional()">ROLAR D20</button>
-<div class="resultado" id="resConv"></div>
-</div>
-
-<div class="section">
 <h3>Teste de Sanidade</h3>
 <div class="dado">🎲</div>
 <button onclick="testeSanidade()">ROLAR D100</button>
@@ -131,8 +124,8 @@ button:hover{background:#111;}
 <p>Atual: <b><span id="vidaAtual">0</span></b></p>
 <div class="controls">
 <button onclick="alterar('vida',-1)">-1</button>
-<button onclick="alterar('vida',-5)">-5</button>
 <button onclick="alterar('vida',1)">+1</button>
+<button onclick="alterar('vida',-5)">-5</button>
 <button onclick="alterar('vida',5)">+5</button>
 </div>
 </div>
@@ -143,8 +136,8 @@ button:hover{background:#111;}
 <p>Atual: <b><span id="sanAtual">0</span></b></p>
 <div class="controls">
 <button onclick="alterar('san',-1)">-1</button>
-<button onclick="alterar('san',-5)">-5</button>
 <button onclick="alterar('san',1)">+1</button>
+<button onclick="alterar('san',-5)">-5</button>
 <button onclick="alterar('san',5)">+5</button>
 </div>
 </div>
@@ -184,18 +177,6 @@ function testeAtributo(){
  resAtributo.innerHTML=`Dado: <b>${d}</b><br><span class="${c}"><b>${t}</b></span>`;
 }
 
-// ===== TESTE CONVENCIONAL =====
-function testeConvencional(){
- const att=+atributo.value;
- const d=Math.floor(Math.random()*20)+1;
- let t,c;
- if(d===1){t="FALHA CRÍTICA";c="F";}
- else if(d===20){t="SUCESSO CRÍTICO";c="C";}
- else if(d<=att){t="SUCESSO";c="N";}
- else{t="FALHA";c="F";}
- resConv.innerHTML=`Dado: <b>${d}</b><br><span class="${c}"><b>${t}</b></span>`;
-}
-
 // ===== STATUS =====
 let vida=0,san=0;
 function salvar(){
@@ -223,12 +204,14 @@ function alterar(t,v){
 vidaMax.onchange=()=>{vida=+vidaMax.value;salvar();atualizar();}
 sanMax.onchange=()=>{san=+sanMax.value;salvar();atualizar();}
 
-// ===== SANIDADE =====
+// ===== TESTE DE SANIDADE (CORRIGIDO) =====
 function testeSanidade(){
- const d=Math.floor(Math.random()*100)+1;
- const ok=d<=san;
- resSan.innerHTML=`Dado: <b>${d}</b><br>
- <span class="${ok?'N':'F'}"><b>${ok?'SUCESSO':'FALHA'}</b></span>`;
+ const dado=Math.floor(Math.random()*100)+1;
+ const sanMaxima=+sanMax.value;
+ const sucesso=dado<=sanMaxima;
+
+ resSan.innerHTML=`Dado: <b>${dado}</b><br>
+ <span class="${sucesso?'N':'F'}"><b>${sucesso?'SUCESSO':'FALHA'}</b></span>`;
 }
 
 carregar();
