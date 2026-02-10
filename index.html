@@ -175,15 +175,12 @@ button:active{transform:scale(.97)}
  padding:10px 0;
 }
 .exposicao-input{
- display:flex;
- justify-content:center;
- align-items:center;
- gap:10px;
  margin-top:10px;
 }
 .exposicao-input input{
- width:100px;
- margin:0;
+ width:150px;
+ margin:0 auto;
+ display:block;
 }
 
 /* Estilos para Recursos */
@@ -217,8 +214,7 @@ button:active{transform:scale(.97)}
  .panel{padding:15px;}
  .controls button{padding:8px; font-size:14px;}
  .dado{font-size:48px;}
- .exposicao-input{flex-direction:column;}
- .exposicao-input input{width:80%;}
+ .exposicao-input input{width:120px;}
  
  /* Ajuste para os painéis ficarem mais compactos */
  .section{margin-top:15px; padding-top:10px;}
@@ -342,9 +338,7 @@ button:active{transform:scale(.97)}
 <div class="exposicao-container">
 <p>Valor: <b><span id="exposicaoValor">0</span>%</b></p>
 <div class="exposicao-input">
-<button onclick="alterarExposicao(-10)">-10%</button>
-<input id="exposicao" type="number" min="0" max="100" value="0" onchange="atualizarExposicao()">
-<button onclick="alterarExposicao(10)">+10%</button>
+<input id="exposicaoInput" type="number" min="0" max="100" value="0" placeholder="0-100">
 </div>
 </div>
 
@@ -510,12 +504,14 @@ function atualizarHistoricoSan(){
 let vida=0,san=0,descanso=0,poder=0,peso=0,defesa=0,exposicao=0;
 function salvar(){
  localStorage.setItem("noir",JSON.stringify({
+  // Valores atuais
   vida,san,descanso,poder,peso,defesa,exposicao,
+  // Valores máximos
   vidaMax:Math.max(0,+vidaMax.value||0),
   sanMax:Math.max(0,+sanMax.value||0),
   poderMax:Math.max(0,+poderMax.value||0),
   pesoMax:Math.max(0,+pesoMax.value||0),
-  defesa:Math.max(0,+defesa.value||0),
+  // Outros valores
   itens:itens.value,
   dinheiro:dinheiro.value,
   traumas:traumas.value,
@@ -532,15 +528,23 @@ function salvar(){
 }
 function carregar(){
  const d=JSON.parse(localStorage.getItem("noir"));if(!d)return;
+ 
+ // Carregar valores atuais
  vida=d.vida||0;san=d.san||0;descanso=d.descanso||0;
  poder=d.poder||0;peso=d.peso||0;defesa=d.defesa||0;exposicao=d.exposicao||0;
+ 
+ // Carregar valores máximos
  vidaMax.value=Math.max(0,d.vidaMax||0);
  sanMax.value=Math.max(0,d.sanMax||0);
  poderMax.value=Math.max(0,d.poderMax||0);
  pesoMax.value=Math.max(0,d.pesoMax||0);
  defesa.value=Math.max(0,d.defesa||0);
+ 
+ // Carregar exposição
  exposicaoValor.textContent=exposicao;
  exposicaoInput.value=exposicao;
+ 
+ // Carregar outros dados
  itens.value=d.itens||"";
  dinheiro.value=d.dinheiro||"";
  traumas.value=d.traumas||"";
@@ -553,6 +557,7 @@ function carregar(){
  if(d.checkVida3!==undefined)checkVida3.checked=d.checkVida3;
  if(d.checkFerido!==undefined)checkFerido.checked=d.checkFerido;
  if(d.checkCaido!==undefined)checkCaido.checked=d.checkCaido;
+ 
  atualizar();atualizarHistorico();atualizarHistoricoSan();
 }
 function atualizar(){
@@ -561,6 +566,7 @@ function atualizar(){
  descansoAtual.textContent=descanso;
  poderAtual.textContent=poder;
  pesoAtual.textContent=peso;
+ exposicaoValor.textContent=exposicao;
 }
 function alterar(t,v){
  if(t==="vida")vida=Math.max(0,Math.min(+vidaMax.value,vida+v));
@@ -571,43 +577,46 @@ function alterar(t,v){
  salvar();atualizar();
 }
 
-function alterarExposicao(v){
- exposicao=Math.max(0,Math.min(100,parseInt(exposicao)+v));
- exposicaoValor.textContent=exposicao;
- exposicaoInput.value=exposicao;
- salvar();
-}
-
+// Função para atualizar exposição paranormal
 function atualizarExposicao(){
- exposicao=Math.max(0,Math.min(100,parseInt(exposicaoInput.value)||0));
- exposicaoValor.textContent=exposicao;
+ let valor = parseInt(exposicaoInput.value) || 0;
+ if(valor < 0) valor = 0;
+ if(valor > 100) valor = 100;
+ exposicao = valor;
+ exposicaoValor.textContent = exposicao;
+ exposicaoInput.value = exposicao;
  salvar();
 }
 
 vidaMax.onchange=()=>{
  vidaMax.value=Math.max(0,+vidaMax.value||0);
- vida=vidaMax.value;
+ // Se o atual for maior que o novo máximo, ajustar
+ if(vida > vidaMax.value) vida = vidaMax.value;
  salvar();atualizar();
 };
 sanMax.onchange=()=>{
  sanMax.value=Math.max(0,+sanMax.value||0);
- san=sanMax.value;
+ if(san > sanMax.value) san = sanMax.value;
  salvar();atualizar();
 };
 poderMax.onchange=()=>{
  poderMax.value=Math.max(0,+poderMax.value||0);
- poder=poderMax.value;
+ if(poder > poderMax.value) poder = poderMax.value;
  salvar();atualizar();
 };
 pesoMax.onchange=()=>{
  pesoMax.value=Math.max(0,+pesoMax.value||0);
- peso=pesoMax.value;
+ if(peso > pesoMax.value) peso = pesoMax.value;
  salvar();atualizar();
 };
 defesa.onchange=()=>{
  defesa.value=Math.max(0,+defesa.value||0);
  salvar();
 };
+
+// Event listener para exposição paranormal
+exposicaoInput.onchange=atualizarExposicao;
+exposicaoInput.oninput=atualizarExposicao;
 
 itens.oninput=salvar;
 dinheiro.oninput=salvar;
