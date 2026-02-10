@@ -89,11 +89,12 @@ button:active{transform:scale(.97)}
  width:820px;
  max-width:95%;
  margin-bottom:15px;
- text-align:left;
+ text-align:center;
 }
 .nome-personagem input{
- width:300px;
+ width:100%;
  max-width:100%;
+ box-sizing:border-box;
 }
 
 .checkboxes-vida{
@@ -118,11 +119,33 @@ button:active{transform:scale(.97)}
  margin-right:10px;
 }
 
+/* Estilos para Dinheiro e Traumas */
+.recursos{
+ width:820px;
+ max-width:95%;
+ margin-top:25px;
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:20px;
+}
+.recurso-item{
+ background:var(--panel);
+ border:1px solid var(--border);
+ box-shadow:0 0 40px rgba(0,0,0,.7);
+ padding:25px;
+ text-align:center;
+}
+.recurso-item h3{
+ margin-top:0;
+ margin-bottom:15px;
+}
+
 @media(max-width:768px){
  body{align-items:flex-start}
  .app{grid-template-columns:1fr}
  .nome-personagem{text-align:center}
  .checkboxes-vida{justify-content:space-around}
+ .recursos{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -222,6 +245,18 @@ button:active{transform:scale(.97)}
 </div>
 </div>
 
+</div>
+</div>
+
+<div class="recursos">
+<div class="recurso-item">
+<h3>💰 DINHEIRO</h3>
+<textarea id="dinheiro" placeholder="Anote seu dinheiro e recursos financeiros aqui..."></textarea>
+</div>
+
+<div class="recurso-item">
+<h3>😨 TRAUMAS</h3>
+<textarea id="traumas" placeholder="Anote seus traumas e fobias aqui..."></textarea>
 </div>
 </div>
 
@@ -339,6 +374,8 @@ function salvar(){
   vidaMax:Math.max(0,+vidaMax.value||0),
   sanMax:Math.max(0,+sanMax.value||0),
   itens:itens.value,
+  dinheiro:dinheiro.value,
+  traumas:traumas.value,
   historico,
   historicoSan,
   tema:document.body.className,
@@ -356,6 +393,8 @@ function carregar(){
  vidaMax.value=Math.max(0,d.vidaMax||0);
  sanMax.value=Math.max(0,d.sanMax||0);
  itens.value=d.itens||"";
+ dinheiro.value=d.dinheiro||"";
+ traumas.value=d.traumas||"";
  historico=d.historico||[];
  historicoSan=d.historicoSan||[];
  if(d.tema)document.body.className=d.tema;
@@ -391,6 +430,8 @@ sanMax.onchange=()=>{
 };
 
 itens.oninput=salvar;
+dinheiro.oninput=salvar;
+traumas.oninput=salvar;
 nomePersonagem.oninput=salvar;
 checkVida1.onchange=salvar;
 checkVida2.onchange=salvar;
