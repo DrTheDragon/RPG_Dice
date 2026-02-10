@@ -84,9 +84,45 @@ button:active{transform:scale(.97)}
 
 .itens{width:820px;max-width:95%;margin-top:25px}
 
+/* Novos estilos adicionados */
+.nome-personagem{
+ width:820px;
+ max-width:95%;
+ margin-bottom:15px;
+ text-align:left;
+}
+.nome-personagem input{
+ width:300px;
+ max-width:100%;
+}
+
+.checkboxes-vida{
+ display:flex;
+ justify-content:space-between;
+ margin:15px 0 10px 0;
+}
+.checkbox-vida{
+ width:30px;
+ height:30px;
+ margin:0;
+}
+.checkboxes-status{
+ margin-top:15px;
+}
+.checkbox-status{
+ display:block;
+ margin:8px 0;
+}
+.checkbox-status input{
+ width:auto;
+ margin-right:10px;
+}
+
 @media(max-width:768px){
  body{align-items:flex-start}
  .app{grid-template-columns:1fr}
+ .nome-personagem{text-align:center}
+ .checkboxes-vida{justify-content:space-around}
 }
 </style>
 </head>
@@ -96,6 +132,10 @@ button:active{transform:scale(.97)}
 
 <div class="toggle">
 <button onclick="toggleTema()">🌗 Alternar Tema</button>
+</div>
+
+<div class="nome-personagem">
+<input id="nomePersonagem" type="text" placeholder="Nome do Personagem">
 </div>
 
 <div class="app">
@@ -142,6 +182,21 @@ button:active{transform:scale(.97)}
 <button onclick="alterar('vida',-5)">-5</button>
 <button onclick="alterar('vida',5)">+5</button>
 </div>
+
+<div class="checkboxes-vida">
+<label><input type="checkbox" class="checkbox-vida" id="checkVida1"></label>
+<label><input type="checkbox" class="checkbox-vida" id="checkVida2"></label>
+<label><input type="checkbox" class="checkbox-vida" id="checkVida3"></label>
+</div>
+
+<div class="checkboxes-status">
+<label class="checkbox-status">
+ <input type="checkbox" id="checkFerido"> 🩸 Gravemente ferido
+</label>
+<label class="checkbox-status">
+ <input type="checkbox" id="checkCaido"> ☠ Caído
+</label>
+</div>
 </div>
 
 <div class="section">
@@ -153,6 +208,17 @@ button:active{transform:scale(.97)}
 <button onclick="alterar('san',1)">+1</button>
 <button onclick="alterar('san',-5)">-5</button>
 <button onclick="alterar('san',5)">+5</button>
+</div>
+</div>
+
+<div class="section">
+<h3>Horas de Descanso</h3>
+<p>Atual: <b><span id="descansoAtual">0</span></b></p>
+<div class="controls">
+<button onclick="alterar('descanso',-1)">-1</button>
+<button onclick="alterar('descanso',1)">+1</button>
+<button onclick="alterar('descanso',-3)">-3</button>
+<button onclick="alterar('descanso',3)">+3</button>
 </div>
 </div>
 
@@ -266,33 +332,50 @@ function atualizarHistoricoSan(){
  });
 }
 
-let vida=0,san=0;
+let vida=0,san=0,descanso=0;
 function salvar(){
  localStorage.setItem("noir",JSON.stringify({
-  vida,san,
+  vida,san,descanso,
   vidaMax:Math.max(0,+vidaMax.value||0),
   sanMax:Math.max(0,+sanMax.value||0),
   itens:itens.value,
   historico,
   historicoSan,
-  tema:document.body.className
+  tema:document.body.className,
+  nomePersonagem:nomePersonagem.value,
+  checkVida1:checkVida1.checked,
+  checkVida2:checkVida2.checked,
+  checkVida3:checkVida3.checked,
+  checkFerido:checkFerido.checked,
+  checkCaido:checkCaido.checked
  }));
 }
 function carregar(){
  const d=JSON.parse(localStorage.getItem("noir"));if(!d)return;
- vida=d.vida||0;san=d.san||0;
+ vida=d.vida||0;san=d.san||0;descanso=d.descanso||0;
  vidaMax.value=Math.max(0,d.vidaMax||0);
  sanMax.value=Math.max(0,d.sanMax||0);
  itens.value=d.itens||"";
  historico=d.historico||[];
  historicoSan=d.historicoSan||[];
  if(d.tema)document.body.className=d.tema;
+ if(d.nomePersonagem)nomePersonagem.value=d.nomePersonagem;
+ if(d.checkVida1!==undefined)checkVida1.checked=d.checkVida1;
+ if(d.checkVida2!==undefined)checkVida2.checked=d.checkVida2;
+ if(d.checkVida3!==undefined)checkVida3.checked=d.checkVida3;
+ if(d.checkFerido!==undefined)checkFerido.checked=d.checkFerido;
+ if(d.checkCaido!==undefined)checkCaido.checked=d.checkCaido;
  atualizar();atualizarHistorico();atualizarHistoricoSan();
 }
-function atualizar(){vidaAtual.textContent=vida;sanAtual.textContent=san}
+function atualizar(){
+ vidaAtual.textContent=vida;
+ sanAtual.textContent=san;
+ descansoAtual.textContent=descanso;
+}
 function alterar(t,v){
  if(t==="vida")vida=Math.max(0,Math.min(+vidaMax.value,vida+v));
- else san=Math.max(0,Math.min(+sanMax.value,san+v));
+ else if(t==="san")san=Math.max(0,Math.min(+sanMax.value,san+v));
+ else if(t==="descanso")descanso=Math.max(0,descanso+v);
  salvar();atualizar();
 }
 
@@ -308,6 +391,12 @@ sanMax.onchange=()=>{
 };
 
 itens.oninput=salvar;
+nomePersonagem.oninput=salvar;
+checkVida1.onchange=salvar;
+checkVida2.onchange=salvar;
+checkVida3.onchange=salvar;
+checkFerido.onchange=salvar;
+checkCaido.onchange=salvar;
 
 function toggleTema(){
  document.body.classList.toggle("light");
