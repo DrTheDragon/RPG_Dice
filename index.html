@@ -93,6 +93,7 @@ button:hover {
 .N { color: #7CFC00; }
 .B { color: #1E90FF; }
 .E { color: #FF3B3B; }
+.F { color: #999; }
 </style>
 </head>
 
@@ -116,31 +117,59 @@ button:hover {
 </audio>
 
 <script>
+// ===== TABELA (IGUAL À IMAGEM) =====
 const tabela = {
-  1:{N:[20],B:[],E:[]},2:{N:[19],B:[20],E:[]},
-  3:{N:[18],B:[20],E:[]},4:{N:[17],B:[19],E:[]},
-  5:{N:[16],B:[19],E:[20]},6:{N:[15],B:[18],E:[20]},
-  7:{N:[14],B:[18],E:[20]},8:{N:[13],B:[17],E:[20]},
-  9:{N:[12],B:[17],E:[20]},10:{N:[11],B:[16],E:[19]},
-  11:{N:[10],B:[16],E:[19]},12:{N:[9],B:[15],E:[19]},
-  13:{N:[8],B:[15],E:[19]},14:{N:[7],B:[14],E:[19]},
-  15:{N:[6],B:[14],E:[18]},16:{N:[5],B:[13],E:[18]},
-  17:{N:[4],B:[13],E:[18]},18:{N:[3],B:[12],E:[18]},
-  19:{N:[2],B:[12],E:[18]},20:{N:[1],B:[11],E:[17]}
+  1:  { N:20, B:null, E:null },
+  2:  { N:19, B:20,  E:null },
+  3:  { N:18, B:20,  E:null },
+  4:  { N:17, B:19,  E:null },
+  5:  { N:16, B:19,  E:20 },
+  6:  { N:15, B:18,  E:20 },
+  7:  { N:14, B:18,  E:20 },
+  8:  { N:13, B:17,  E:20 },
+  9:  { N:12, B:17,  E:20 },
+  10: { N:11, B:16,  E:19 },
+  11: { N:10, B:16,  E:19 },
+  12: { N:9,  B:15,  E:19 },
+  13: { N:8,  B:15,  E:19 },
+  14: { N:7,  B:14,  E:19 },
+  15: { N:6,  B:14,  E:18 },
+  16: { N:5,  B:13,  E:18 },
+  17: { N:4,  B:13,  E:18 },
+  18: { N:3,  B:12,  E:18 },
+  19: { N:2,  B:12,  E:18 },
+  20: { N:1,  B:11,  E:17 }
 };
 
+// ===== CÁLCULO CORRETO (E > B > N) =====
+function calcularResultado(atributo, valorDado) {
+    const r = tabela[atributo];
+
+    if (r.E !== null && valorDado >= r.E)
+        return { tipo: "E", texto: "Extremo" };
+
+    if (r.B !== null && valorDado >= r.B)
+        return { tipo: "B", texto: "Bom" };
+
+    if (valorDado >= r.N)
+        return { tipo: "N", texto: "Normal" };
+
+    return { tipo: "F", texto: "Falha" };
+}
+
+// ===== ROLAGEM =====
 function rolarDado() {
     const atributo = Number(document.getElementById("atributo").value);
     const dado = document.getElementById("dado");
-    const resultado = document.getElementById("resultado");
+    const resultadoDiv = document.getElementById("resultado");
     const som = document.getElementById("somDado");
 
     if (!atributo || atributo < 1 || atributo > 20) {
-        resultado.innerHTML = "Digite um atributo válido (1–20).";
+        resultadoDiv.innerHTML = "Digite um atributo válido (1–20).";
         return;
     }
 
-    resultado.innerHTML = "";
+    resultadoDiv.innerHTML = "";
     dado.classList.add("girando");
 
     try {
@@ -152,18 +181,17 @@ function rolarDado() {
         dado.classList.remove("girando");
 
         const valorDado = Math.floor(Math.random() * 20) + 1;
-        let tipo = "N";
+        const res = calcularResultado(atributo, valorDado);
 
-        if (tabela[atributo].E.includes(valorDado)) tipo = "E";
-        else if (tabela[atributo].B.includes(valorDado)) tipo = "B";
-
-        const texto = tipo === "N" ? "Normal" : tipo === "B" ? "Bom" : "Extremo";
-
-        resultado.innerHTML = `
-          <div><span class="label">Atributo:</span> <b>${atributo}</b></div>
-          <div><span class="label">Dado:</span> <b>${valorDado}</b></div>
-          <div><span class="label">Resultado:</span>
-          <span class="${tipo}"><b>${tipo} – ${texto}</b></span></div>
+        resultadoDiv.innerHTML = `
+            <div><span class="label">Atributo:</span> <b>${atributo}</b></div>
+            <div><span class="label">Dado:</span> <b>${valorDado}</b></div>
+            <div>
+              <span class="label">Resultado:</span>
+              <span class="${res.tipo}">
+                <b>${res.tipo} – ${res.texto}</b>
+              </span>
+            </div>
         `;
     }, 1200);
 }
