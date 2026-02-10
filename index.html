@@ -100,7 +100,6 @@ button:active{transform:scale(.97)}
 
 <div class="app">
 
-<!-- TESTES -->
 <div class="panel">
 <h2>TESTES</h2>
 
@@ -130,7 +129,6 @@ button:active{transform:scale(.97)}
 </div>
 </div>
 
-<!-- STATUS -->
 <div class="panel">
 <h2>STATUS</h2>
 
@@ -169,7 +167,6 @@ button:active{transform:scale(.97)}
 </div>
 
 <script>
-// SOM
 function somDado(){
  const ctx=new (window.AudioContext||webkitAudioContext)();
  let t=ctx.currentTime;
@@ -186,7 +183,6 @@ function somDado(){
 let historico=[];
 let historicoSan=[];
 
-/* ===== TABELA ===== */
 const tabela={
 1:{N:20,B:null,E:null},2:{N:19,B:20,E:null},
 3:{N:18,B:20,E:null},4:{N:17,B:19,E:null},
@@ -200,10 +196,8 @@ const tabela={
 19:{N:2,B:12,E:18},20:{N:1,B:11,E:17}
 };
 
-/* ===== TESTE ATRIBUTO ===== */
 function testeAtributo(){
  somDado();
-
  let att=parseInt(atributo.value)||1;
  att=Math.min(20,Math.max(1,att));
  atributo.value=att;
@@ -229,11 +223,9 @@ function testeAtributo(){
 
  historico.unshift(`🎲 ${d} | Atributo ${att} → ${t}`);
  if(historico.length>6)historico.pop();
- salvar();
- atualizarHistorico();
+ salvar();atualizarHistorico();
 }
 
-/* ===== TESTE SANIDADE ===== */
 function testeSanidade(){
  somDado();
 
@@ -241,19 +233,18 @@ function testeSanidade(){
  dadoEl.classList.add("rolando");
  setTimeout(()=>dadoEl.classList.remove("rolando"),350);
 
+ const sanMaxVal=+sanMax.value||0;
  const d=Math.floor(Math.random()*100)+1;
- const ok=d>=+sanMax.value;
+ const ok=d<=sanMaxVal;
  const r=ok?"SUCESSO":"FALHA";
 
  resSan.innerHTML=`🎲 ${d}<br><span class="${ok?'N':'F'}"><b>${r}</b></span>`;
 
- historicoSan.unshift(`🧠 ${d} → ${r}`);
+ historicoSan.unshift(`🧠 ${d} / San Máx: ${sanMaxVal} → ${r}`);
  if(historicoSan.length>6)historicoSan.pop();
- salvar();
- atualizarHistoricoSan();
+ salvar();atualizarHistoricoSan();
 }
 
-/* ===== HISTÓRICOS ===== */
 function atualizarHistorico(){
  listaHistorico.innerHTML="";
  historico.forEach((h,i)=>{
@@ -273,7 +264,6 @@ function atualizarHistoricoSan(){
  });
 }
 
-/* ===== STATUS + STORAGE ===== */
 let vida=0,san=0;
 function salvar(){
  localStorage.setItem("noir",JSON.stringify({
@@ -301,7 +291,6 @@ vidaMax.onchange=()=>{vida=+vidaMax.value;salvar();atualizar()}
 sanMax.onchange=()=>{san=+sanMax.value;salvar();atualizar()}
 itens.oninput=salvar;
 
-/* ===== TEMA ===== */
 function toggleTema(){
  document.body.classList.toggle("light");
  salvar();
