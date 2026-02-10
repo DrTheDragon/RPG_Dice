@@ -2,9 +2,9 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Teste de Atributo</title>
+<title>Teste de Atributo RPG</title>
 
-<link rel="manifest" href="manifest.json">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0b0b0b">
 
 <style>
@@ -18,6 +18,7 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
+    margin: 0;
 }
 
 .card {
@@ -25,17 +26,18 @@ body {
     border: 1px solid #333;
     border-radius: 14px;
     padding: 30px;
-    width: 360px;
+    width: 340px;
     text-align: center;
     box-shadow: 0 0 40px rgba(0,0,0,0.9);
 }
 
 h1 {
     letter-spacing: 2px;
+    margin-bottom: 5px;
 }
 
 .sub {
-    font-size: 13px;
+    font-size: 12px;
     opacity: 0.7;
     margin-bottom: 20px;
 }
@@ -67,7 +69,7 @@ button:hover {
 }
 
 .dado {
-    font-size: 60px;
+    font-size: 64px;
     margin: 25px 0;
 }
 
@@ -81,14 +83,12 @@ button:hover {
 }
 
 .resultado {
-    font-size: 18px;
+    font-size: 17px;
     margin-top: 20px;
-    line-height: 1.5;
+    line-height: 1.6;
 }
 
-.label {
-    opacity: 0.7;
-}
+.label { opacity: 0.7; }
 
 .N { color: #7CFC00; }
 .B { color: #1E90FF; }
@@ -102,47 +102,51 @@ button:hover {
     <h1>Teste de Atributo</h1>
     <div class="sub">RPG • Investigação • Destino</div>
 
-    <input type="number" id="atributo" min="1" max="20" placeholder="Atributo (1–20)">
+    <input id="atributo" type="number" min="1" max="20" placeholder="Atributo (1–20)">
 
     <div class="dado" id="dado">🎲</div>
 
-    <button onclick="rolar()">ROLAR DADO</button>
+    <button onclick="rolarDado()">ROLAR</button>
 
     <div class="resultado" id="resultado"></div>
 </div>
 
-<audio id="somDado" src="dice.mp3"></audio>
+<audio id="somDado" preload="auto">
+    <source src="dice.mp3" type="audio/mpeg">
+</audio>
 
 <script>
 const tabela = {
-    1:{N:[20],B:[],E:[]},2:{N:[19],B:[20],E:[]},
-    3:{N:[18],B:[20],E:[]},4:{N:[17],B:[19],E:[]},
-    5:{N:[16],B:[19],E:[20]},6:{N:[15],B:[18],E:[20]},
-    7:{N:[14],B:[18],E:[20]},8:{N:[13],B:[17],E:[20]},
-    9:{N:[12],B:[17],E:[20]},10:{N:[11],B:[16],E:[19]},
-    11:{N:[10],B:[16],E:[19]},12:{N:[9],B:[15],E:[19]},
-    13:{N:[8],B:[15],E:[19]},14:{N:[7],B:[14],E:[19]},
-    15:{N:[6],B:[14],E:[18]},16:{N:[5],B:[13],E:[18]},
-    17:{N:[4],B:[13],E:[18]},18:{N:[3],B:[12],E:[18]},
-    19:{N:[2],B:[12],E:[18]},20:{N:[1],B:[11],E:[17]}
+  1:{N:[20],B:[],E:[]},2:{N:[19],B:[20],E:[]},
+  3:{N:[18],B:[20],E:[]},4:{N:[17],B:[19],E:[]},
+  5:{N:[16],B:[19],E:[20]},6:{N:[15],B:[18],E:[20]},
+  7:{N:[14],B:[18],E:[20]},8:{N:[13],B:[17],E:[20]},
+  9:{N:[12],B:[17],E:[20]},10:{N:[11],B:[16],E:[19]},
+  11:{N:[10],B:[16],E:[19]},12:{N:[9],B:[15],E:[19]},
+  13:{N:[8],B:[15],E:[19]},14:{N:[7],B:[14],E:[19]},
+  15:{N:[6],B:[14],E:[18]},16:{N:[5],B:[13],E:[18]},
+  17:{N:[4],B:[13],E:[18]},18:{N:[3],B:[12],E:[18]},
+  19:{N:[2],B:[12],E:[18]},20:{N:[1],B:[11],E:[17]}
 };
 
-function rolar() {
+function rolarDado() {
     const atributo = Number(document.getElementById("atributo").value);
     const dado = document.getElementById("dado");
     const resultado = document.getElementById("resultado");
     const som = document.getElementById("somDado");
 
     if (!atributo || atributo < 1 || atributo > 20) {
-        resultado.innerHTML = "Atributo inválido.";
+        resultado.innerHTML = "Digite um atributo válido (1–20).";
         return;
     }
 
     resultado.innerHTML = "";
     dado.classList.add("girando");
 
-    som.currentTime = 0;
-    som.play();
+    try {
+        som.currentTime = 0;
+        som.play().catch(()=>{});
+    } catch(e) {}
 
     setTimeout(() => {
         dado.classList.remove("girando");
@@ -153,19 +157,15 @@ function rolar() {
         if (tabela[atributo].E.includes(valorDado)) tipo = "E";
         else if (tabela[atributo].B.includes(valorDado)) tipo = "B";
 
-        const texto =
-            tipo === "N" ? "Normal" :
-            tipo === "B" ? "Bom" : "Extremo";
+        const texto = tipo === "N" ? "Normal" : tipo === "B" ? "Bom" : "Extremo";
 
         resultado.innerHTML = `
-            <div><span class="label">Atributo:</span> <b>${atributo}</b></div>
-            <div><span class="label">Dado:</span> <b>${valorDado}</b></div>
-            <div>
-                <span class="label">Resultado:</span>
-                <span class="${tipo}"><b>${tipo} – ${texto}</b></span>
-            </div>
+          <div><span class="label">Atributo:</span> <b>${atributo}</b></div>
+          <div><span class="label">Dado:</span> <b>${valorDado}</b></div>
+          <div><span class="label">Resultado:</span>
+          <span class="${tipo}"><b>${tipo} – ${texto}</b></span></div>
         `;
-    }, 1500);
+    }, 1200);
 }
 </script>
 
