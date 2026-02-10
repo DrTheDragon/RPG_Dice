@@ -695,6 +695,9 @@ function rolarDadoPersonalizado(){
   
   historicoDados.unshift(`🎲 ${input} → ${total}`);
   if(historicoDados.length>6)historicoDados.pop();
+  
+  // CORREÇÃO: Adicionar salvar() para salvar o histórico no localStorage
+  salvar();
   atualizarHistoricoDados();
   
  } catch(e) {
