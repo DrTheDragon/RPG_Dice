@@ -82,7 +82,13 @@ button:active{transform:scale(.97)}
  margin-bottom:15px;
  width:820px;
  max-width:95%;
- text-align:right;
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+}
+.toggle button{
+ width:auto;
+ min-width:150px;
 }
 
 .itens{width:820px;max-width:95%;margin-top:25px}
@@ -254,8 +260,8 @@ button:active{transform:scale(.97)}
  .resultado{min-height:70px; padding:8px 0; font-size:14px; text-align:center;}
  
  /* Centralizar melhor */
- .toggle{margin-bottom:10px; text-align:center;}
- .toggle button{width:auto; min-width:150px; display:inline-block;}
+ .toggle{flex-direction:column; gap:10px; align-items:center;}
+ .toggle button{width:100%; max-width:250px;}
  .itens{margin-top:12px;}
  .recursos, .atributos-extras, .peso-container{margin-top:12px;}
  
@@ -317,6 +323,7 @@ button:active{transform:scale(.97)}
 
 <div class="toggle">
 <button onclick="toggleTema()">🌗 Alternar Tema</button>
+<button onclick="exportarDados()">📤 Exportar Dados</button>
 </div>
 
 <div class="nome-personagem">
@@ -613,16 +620,16 @@ function testeSanidade(){
  dadoEl.classList.add("rolando");
  setTimeout(()=>dadoEl.classList.remove("rolando"),350);
 
- const sanMaxVal=Math.max(0,+sanMax.value||0);
- sanMax.value=sanMaxVal;
+ // MODIFICAÇÃO: Agora compara com a sanidade ATUAL, não máxima
+ const sanAtualVal = Math.max(0, san); // san é a variável que guarda a sanidade atual
 
  const d=Math.floor(Math.random()*100)+1;
- const ok=d>=sanMaxVal;
+ const ok=d>=sanAtualVal;
  const r=ok?"SUCESSO":"FALHA";
 
- resSan.innerHTML=`🎲 ${d}<br><span class="${ok?'N':'F'}"><b>${r}</b></span>`;
+ resSan.innerHTML=`🎲 ${d}<br>Sanidade Atual: ${sanAtualVal}<br><span class="${ok?'N':'F'}"><b>${r}</b></span>`;
 
- historicoSan.unshift(`🧠 ${d} / San Máx: ${sanMaxVal} → ${r}`);
+ historicoSan.unshift(`🧠 ${d} / San Atual: ${sanAtualVal} → ${r}`);
  if(historicoSan.length>6)historicoSan.pop();
  salvar();atualizarHistoricoSan();
 }
@@ -696,6 +703,7 @@ function rolarDadoPersonalizado(){
  }
 }
 
+// Função para calcular dinheiro automaticamente
 function calcularDinheiro() {
  const input = document.getElementById('dinheiro');
  const valor = input.value.trim();
@@ -740,6 +748,7 @@ function calcularDinheiro() {
  }
 }
 
+// Funções para definir valores máximos
 function setVidaMaxima() {
  const max = Math.max(0, +vidaMax.value || 0);
  vida = max;
@@ -752,6 +761,78 @@ function setSanidadeMaxima() {
  san = max;
  atualizar();
  salvar();
+}
+
+// Função para exportar dados
+function exportarDados() {
+ const nome = nomePersonagem.value || "PersonagemSemNome";
+ const data = new Date().toLocaleDateString('pt-BR');
+ const hora = new Date().toLocaleTimeString('pt-BR');
+ 
+ let conteudo = `=== FICHA DE PERSONAGEM ===\n`;
+ conteudo += `Nome: ${nome}\n`;
+ conteudo += `Exportado em: ${data} às ${hora}\n\n`;
+ 
+ // STATUS
+ conteudo += `=== STATUS ===\n`;
+ conteudo += `Vida: ${vida}/${vidaMax.value || 0}\n`;
+ conteudo += `Sanidade: ${san}/${sanMax.value || 0}\n`;
+ conteudo += `Descanso: ${descanso} horas\n`;
+ conteudo += `Poder: ${poder}/${poderMax.value || 0}\n`;
+ conteudo += `Peso: ${peso}/${pesoMax.value || 0}\n`;
+ conteudo += `Defesa: ${defesa}\n`;
+ conteudo += `Exposição Paranormal: ${exposicao}%\n\n`;
+ 
+ // STATUS DE VIDA
+ const ferido = checkFerido.checked ? "Sim" : "Não";
+ const caido = checkCaido.checked ? "Sim" : "Não";
+ const vida1 = checkVida1.checked ? "✓" : "✗";
+ const vida2 = checkVida2.checked ? "✓" : "✗";
+ const vida3 = checkVida3.checked ? "✓" : "✗";
+ 
+ conteudo += `=== ESTADO ===\n`;
+ conteudo += `Gravemente Ferido: ${ferido}\n`;
+ conteudo += `Caído: ${caido}\n`;
+ conteudo += `Marcadores de Vida: [${vida1}] [${vida2}] [${vida3}]\n\n`;
+ 
+ // RECURSOS
+ conteudo += `=== RECURSOS ===\n`;
+ conteudo += `Dinheiro: ${dinheiro.value || "0"}\n\n`;
+ 
+ if(traumas.value.trim()) {
+  conteudo += `=== TRAUMAS & FOBIAS ===\n`;
+  conteudo += `${traumas.value}\n\n`;
+ }
+ 
+ // ITENS
+ if(itens.value.trim()) {
+  conteudo += `=== ITENS / ACESSÓRIOS ===\n`;
+  conteudo += `${itens.value}\n\n`;
+ }
+ 
+ // HISTÓRICOS
+ conteudo += `=== HISTÓRICO DE TESTES ===\n`;
+ conteudo += `Testes de Atributo:\n`;
+ historico.forEach(item => conteudo += `  ${item}\n`);
+ 
+ conteudo += `\nTestes de Sanidade:\n`;
+ historicoSan.forEach(item => conteudo += `  ${item}\n`);
+ 
+ conteudo += `\nDados Personalizados:\n`;
+ historicoDados.forEach(item => conteudo += `  ${item}\n`);
+ 
+ // Criar e baixar arquivo
+ const blob = new Blob([conteudo], { type: 'text/plain' });
+ const url = URL.createObjectURL(blob);
+ const a = document.createElement('a');
+ a.href = url;
+ a.download = `ficha_${nome.replace(/\s+/g, '_')}_${data.replace(/\//g, '-')}.txt`;
+ document.body.appendChild(a);
+ a.click();
+ document.body.removeChild(a);
+ URL.revokeObjectURL(url);
+ 
+ alert(`Ficha de ${nome} exportada com sucesso!`);
 }
 
 function atualizarHistorico(){
