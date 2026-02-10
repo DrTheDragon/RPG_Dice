@@ -242,7 +242,7 @@ function testeSanidade(){
  setTimeout(()=>dadoEl.classList.remove("rolando"),350);
 
  const d=Math.floor(Math.random()*100)+1;
- const ok=d<=+sanMax.value;
+ const ok=d>=+sanMax.value;
  const r=ok?"SUCESSO":"FALHA";
 
  resSan.innerHTML=`🎲 ${d}<br><span class="${ok?'N':'F'}"><b>${r}</b></span>`;
