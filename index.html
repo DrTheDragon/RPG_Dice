@@ -2,15 +2,15 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Teste RPG</title>
+<title>Noir RPG</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
 
 <style>
 body {
-    background: linear-gradient(180deg, #0a0a0a, #000);
-    color: #d6d6d6;
+    background: radial-gradient(circle at top, #111, #000);
+    color: #e0e0e0;
     font-family: 'Special Elite', monospace;
     height: 100vh;
     display: flex;
@@ -19,44 +19,43 @@ body {
     margin: 0;
 }
 
-.card {
-    background: rgba(10,10,10,0.95);
+.container {
+    background: rgba(8,8,8,0.97);
     border: 1px solid #222;
-    box-shadow: 0 0 40px rgba(0,0,0,0.8);
+    box-shadow: 0 0 60px rgba(0,0,0,0.9);
     padding: 30px;
-    width: 360px;
+    width: 380px;
     text-align: center;
 }
 
-h2 {
+h2, h3 {
     letter-spacing: 2px;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
 }
 
 input, button {
     width: 100%;
-    padding: 12px;
-    margin-top: 12px;
+    padding: 10px;
+    margin-top: 8px;
     background: #050505;
     border: 1px solid #333;
     color: #eee;
-    font-size: 16px;
+    font-size: 15px;
     text-align: center;
 }
 
-button {
-    cursor: pointer;
-    letter-spacing: 2px;
-}
+button { cursor: pointer; }
+button:hover { background: #111; }
 
-button:hover {
-    background: #111;
+.section {
+    margin-top: 25px;
+    border-top: 1px solid #222;
+    padding-top: 20px;
 }
 
 .dado {
-    font-size: 70px;
-    margin: 25px 0;
-    text-shadow: 0 0 12px #000;
+    font-size: 64px;
+    margin: 15px 0;
 }
 
 .girando {
@@ -68,101 +67,147 @@ button:hover {
     to { transform: rotate(360deg); }
 }
 
-.resultado {
-    margin-top: 20px;
-    line-height: 1.8;
-    border-top: 1px solid #222;
-    padding-top: 15px;
+.controls button {
+    width: 48%;
+    margin: 4px 1%;
 }
 
-.N { color: #9acd32; }
-.B { color: #4fa3ff; }
+.resultado {
+    margin-top: 12px;
+    line-height: 1.6;
+}
+
 .E { color: #ff4c4c; }
+.B { color: #4fa3ff; }
+.N { color: #9acd32; }
 .F { color: #777; }
+.C { color: gold; }
 </style>
 </head>
 
 <body>
 
-<div class="card">
-    <h2>TESTE DE ATRIBUTO</h2>
+<div class="container">
 
-    <input id="atributo" type="number" min="1" max="20" placeholder="Valor do atributo (1–20)">
+<h2>NOIR RPG</h2>
 
-    <div class="dado" id="dado">🎲</div>
+<!-- TESTE DE ATRIBUTO -->
+<div class="section">
+<h3>Teste de Atributo</h3>
 
-    <button onclick="rolar()">ROLAR O DADO</button>
+<input id="atributo" type="number" min="1" max="20" placeholder="Atributo (1–20)">
 
-    <div class="resultado" id="resultado"></div>
+<div class="dado" id="dado20">🎲</div>
+<button onclick="rolarAtributo()">ROLAR D20</button>
+
+<div class="resultado" id="resAtributo"></div>
+</div>
+
+<!-- VIDA / SANIDADE -->
+<div class="section">
+<h3>Status</h3>
+
+<input id="vidaMax" type="number" placeholder="Vida Máxima">
+<input id="sanMax" type="number" placeholder="Sanidade Máxima">
+
+<p>❤️ Vida: <span id="vidaAtual"></span></p>
+<div class="controls">
+<button onclick="alterar('vida',-1)">-1</button>
+<button onclick="alterar('vida',1)">+1</button>
+<button onclick="alterar('vida',-5)">-5</button>
+<button onclick="alterar('vida',5)">+5</button>
+</div>
+
+<p>😵 Sanidade: <span id="sanAtual"></span></p>
+<div class="controls">
+<button onclick="alterar('san',-1)">-1</button>
+<button onclick="alterar('san',1)">+1</button>
+<button onclick="alterar('san',-5)">-5</button>
+<button onclick="alterar('san',5)">+5</button>
+</div>
+</div>
+
+<!-- TESTE DE SANIDADE -->
+<div class="section">
+<h3>Teste de Sanidade</h3>
+<div class="dado">🎲</div>
+<button onclick="testeSanidade()">ROLAR D100</button>
+<div class="resultado" id="resSan"></div>
+</div>
+
 </div>
 
 <script>
-// ===== TABELA ORIGINAL =====
+// ===== TABELA =====
 const tabela = {
-  1:{N:20,B:null,E:null},
-  2:{N:19,B:20,E:null},
-  3:{N:18,B:20,E:null},
-  4:{N:17,B:19,E:null},
-  5:{N:16,B:19,E:20},
-  6:{N:15,B:18,E:20},
-  7:{N:14,B:18,E:20},
-  8:{N:13,B:17,E:20},
-  9:{N:12,B:17,E:20},
-  10:{N:11,B:16,E:19},
-  11:{N:10,B:16,E:19},
-  12:{N:9,B:15,E:19},
-  13:{N:8,B:15,E:19},
-  14:{N:7,B:14,E:19},
-  15:{N:6,B:14,E:18},
-  16:{N:5,B:13,E:18},
-  17:{N:4,B:13,E:18},
-  18:{N:3,B:12,E:18},
-  19:{N:2,B:12,E:18},
-  20:{N:1,B:11,E:17}
+  1:{N:20,B:null,E:null},2:{N:19,B:20,E:null},
+  3:{N:18,B:20,E:null},4:{N:17,B:19,E:null},
+  5:{N:16,B:19,E:20},6:{N:15,B:18,E:20},
+  7:{N:14,B:18,E:20},8:{N:13,B:17,E:20},
+  9:{N:12,B:17,E:20},10:{N:11,B:16,E:19},
+  11:{N:10,B:16,E:19},12:{N:9,B:15,E:19},
+  13:{N:8,B:15,E:19},14:{N:7,B:14,E:19},
+  15:{N:6,B:14,E:18},16:{N:5,B:13,E:18},
+  17:{N:4,B:13,E:18},18:{N:3,B:12,E:18},
+  19:{N:2,B:12,E:18},20:{N:1,B:11,E:17}
 };
 
-// ===== LÓGICA CORRETA (>=) =====
-function testar(atributo, dado) {
-    const r = tabela[atributo];
+// ===== ATRIBUTO =====
+function rolarAtributo(){
+    const att = +atributo.value;
+    const dado = Math.floor(Math.random()*20)+1;
+    let txt="", cls="";
 
-    if (r.E !== null && dado >= r.E)
-        return {t:"E", txt:"ExtREMO"};
-
-    if (r.B !== null && dado >= r.B)
-        return {t:"B", txt:"BOM"};
-
-    if (dado >= r.N)
-        return {t:"N", txt:"NORMAL"};
-
-    return {t:"F", txt:"FALHA"};
-}
-
-function rolar() {
-    const atributo = Number(document.getElementById("atributo").value);
-    const dadoEl = document.getElementById("dado");
-    const res = document.getElementById("resultado");
-
-    if (!atributo || atributo < 1 || atributo > 20) {
-        res.innerHTML = "Valor de atributo inválido.";
-        return;
+    if(dado===1){ txt="FALHA CRÍTICA"; cls="F"; }
+    else if(dado===20){ txt="SUCESSO CRÍTICO"; cls="C"; }
+    else {
+        const r = tabela[att];
+        if(r.E && dado>=r.E){ txt="EXTREMO"; cls="E"; }
+        else if(r.B && dado>=r.B){ txt="BOM"; cls="B"; }
+        else if(dado>=r.N){ txt="NORMAL"; cls="N"; }
+        else { txt="FALHA"; cls="F"; }
     }
 
-    dadoEl.classList.add("girando");
-    res.innerHTML = "";
-
-    setTimeout(() => {
-        dadoEl.classList.remove("girando");
-
-        const dado = Math.floor(Math.random() * 20) + 1;
-        const r = testar(atributo, dado);
-
-        res.innerHTML = `
-            Atributo: <b>${atributo}</b><br>
-            Dado: <b>${dado}</b><br>
-            Resultado: <span class="${r.t}"><b>${r.txt}</b></span>
-        `;
-    }, 900);
+    resAtributo.innerHTML = `
+    Atributo: <b>${att}</b><br>
+    Dado: <b>${dado}</b><br>
+    Resultado: <span class="${cls}"><b>${txt}</b></span>`;
 }
+
+// ===== STATUS =====
+let vida=0, san=0;
+function salvar(){ localStorage.setItem("noir",JSON.stringify({vida,san,vidaMax:vidaMax.value,sanMax:sanMax.value})); }
+function carregar(){
+    const d=JSON.parse(localStorage.getItem("noir"));
+    if(!d) return;
+    vida=d.vida; san=d.san;
+    vidaMax.value=d.vidaMax; sanMax.value=d.sanMax;
+    atualizar();
+}
+function atualizar(){
+    vidaAtual.textContent=vida;
+    sanAtual.textContent=san;
+}
+function alterar(tipo,v){
+    if(tipo==="vida"){
+        vida=Math.max(0,Math.min(+vidaMax.value,vida+v));
+    }else{
+        san=Math.max(0,Math.min(+sanMax.value,san+v));
+    }
+    salvar(); atualizar();
+}
+vidaMax.onchange=()=>{vida=+vidaMax.value; salvar(); atualizar();}
+sanMax.onchange=()=>{san=+sanMax.value; salvar(); atualizar();}
+
+// ===== SANIDADE =====
+function testeSanidade(){
+    const dado=Math.floor(Math.random()*100)+1;
+    const sucesso=dado<=san;
+    resSan.innerHTML=`Dado: <b>${dado}</b><br>
+    Resultado: <span class="${sucesso?'N':'F'}"><b>${sucesso?'SUCESSO':'FALHA'}</b></span>`;
+}
+
+carregar();
 </script>
 
 </body>
