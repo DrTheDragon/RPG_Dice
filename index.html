@@ -2,7 +2,6 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" type="image/svg+xml" href="favicon.svg">
 <title>Teste RPG</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -18,14 +17,6 @@ body.light{
  --border:#bbb;
 }
 
-@keyframes roll{
- 0%{transform:rotate(0) scale(1)}
- 30%{transform:rotate(25deg) scale(1.05)}
- 60%{transform:rotate(-20deg) scale(1.05)}
- 100%{transform:rotate(0) scale(1)}
-}
-.dado.rolando{animation:roll .35s ease-in-out}
-
 body{
  background:radial-gradient(circle at top,var(--bg1),var(--bg2));
  color:var(--text);
@@ -33,14 +24,17 @@ body{
  margin:0;min-height:100vh;
  display:flex;justify-content:center;align-items:center;
 }
+
 .wrapper{width:100%;display:flex;flex-direction:column;align-items:center}
 .app{display:grid;grid-template-columns:1fr 1fr;gap:20px;width:820px;max-width:95%}
+
 .panel{
  background:var(--panel);
  border:1px solid var(--border);
  box-shadow:0 0 40px rgba(0,0,0,.7);
  padding:25px
 }
+
 h2,h3{text-align:center;letter-spacing:2px}
 .section{border-top:1px solid var(--border);margin-top:20px;padding-top:15px}
 
@@ -51,41 +45,28 @@ input,button,textarea{
  font-family:'Special Elite',monospace;
  font-size:15px
 }
-textarea{min-height:140px;text-align:left}
+
 button{cursor:pointer}
 button:hover{background:rgba(255,255,255,.05)}
 button:active{transform:scale(.97)}
-
-.dado{font-size:58px;text-align:center;margin:10px 0}
-.resultado{min-height:90px;text-align:center;margin-top:10px}
 
 .controls{display:flex;gap:6px;flex-wrap:wrap}
 .controls button{flex:1 1 48%}
 
 .checkbox-row{
  display:flex;
- gap:15px;
  justify-content:center;
- margin-top:10px;
+ gap:25px;
+ margin-top:15px;
 }
-.checkbox-row label{
+
+.checkbox-col{
  display:flex;
+ flex-direction:column;
  align-items:center;
  gap:6px;
+ font-size:14px;
 }
-
-.E{color:#ff4c4c}
-.B{color:#4fa3ff}
-.N{color:#9acd32}
-.F{color:#777}
-
-.historico{margin-top:15px;font-size:14px}
-.historico ul{list-style:none;padding:0;margin:0}
-.historico li{padding:6px;border-bottom:1px solid var(--border)}
-.fade-0{color:var(--text)}
-.fade-1{color:#aaa}
-.fade-2{color:#888}
-.fade-3{color:#666}
 
 .toggle{
  margin-bottom:15px;
@@ -97,7 +78,6 @@ button:active{transform:scale(.97)}
 .itens{width:820px;max-width:95%;margin-top:25px}
 
 @media(max-width:768px){
- body{align-items:flex-start}
  .app{grid-template-columns:1fr}
 }
 </style>
@@ -114,46 +94,18 @@ button:active{transform:scale(.97)}
 <div class="app">
 
 <div class="panel">
-<h2>TESTES</h2>
-
-<div class="section">
-<h3>Teste de Atributo</h3>
-<input id="atributo" type="number" min="1" max="20" placeholder="Atributo (1–20)">
-<div class="dado">🎲</div>
-<button onclick="testeAtributo()">ROLAR D20</button>
-<div class="resultado" id="resAtributo"></div>
-
-<div class="historico">
-<h3>📜 Histórico</h3>
-<ul id="listaHistorico"></ul>
-</div>
-</div>
-
-<div class="section">
-<h3>Teste de Sanidade</h3>
-<div class="dado">🎲</div>
-<button onclick="testeSanidade()">ROLAR D100</button>
-<div class="resultado" id="resSan"></div>
-
-<div class="historico">
-<h3>🧠 Histórico de Sanidade</h3>
-<ul id="listaHistoricoSan"></ul>
-</div>
-</div>
-</div>
-
-<div class="panel">
 <h2>STATUS</h2>
 
 <div class="section">
 <h3>Vida</h3>
 <input id="vidaMax" type="number" placeholder="Vida Máxima">
 <p>Atual: <b><span id="vidaAtual">0</span></b></p>
+
 <div class="controls">
-<button onclick="alterar('vida',-1)">-1</button>
-<button onclick="alterar('vida',1)">+1</button>
-<button onclick="alterar('vida',-5)">-5</button>
-<button onclick="alterar('vida',5)">+5</button>
+<button onclick="alterarVida(-1)">-1</button>
+<button onclick="alterarVida(1)">+1</button>
+<button onclick="alterarVida(-5)">-5</button>
+<button onclick="alterarVida(5)">+5</button>
 </div>
 
 <div class="checkbox-row">
@@ -163,8 +115,14 @@ button:active{transform:scale(.97)}
 </div>
 
 <div class="checkbox-row">
-<label><input type="checkbox" id="grave"> Gravemente Ferido</label>
-<label><input type="checkbox" id="caido"> Caído</label>
+<div class="checkbox-col">
+<input type="checkbox" id="grave">
+<div>🩸 Gravemente Ferido</div>
+</div>
+<div class="checkbox-col">
+<input type="checkbox" id="caido">
+<div>☠️ Caído</div>
+</div>
 </div>
 </div>
 
@@ -172,17 +130,19 @@ button:active{transform:scale(.97)}
 <h3>Sanidade</h3>
 <input id="sanMax" type="number" placeholder="Sanidade Máxima">
 <p>Atual: <b><span id="sanAtual">0</span></b></p>
+
 <div class="controls">
-<button onclick="alterar('san',-1)">-1</button>
-<button onclick="alterar('san',1)">+1</button>
-<button onclick="alterar('san',-5)">-5</button>
-<button onclick="alterar('san',5)">+5</button>
+<button onclick="alterarSan(-1)">-1</button>
+<button onclick="alterarSan(1)">+1</button>
+<button onclick="alterarSan(-5)">-5</button>
+<button onclick="alterarSan(5)">+5</button>
 </div>
 </div>
 
 <div class="section">
 <h3>Horas de Sono</h3>
 <p>Atual: <b><span id="sonoAtual">0</span></b></p>
+
 <div class="controls">
 <button onclick="alterarSono(-1)">-1</button>
 <button onclick="alterarSono(1)">+1</button>
@@ -196,14 +156,24 @@ button:active{transform:scale(.97)}
 
 <div class="panel itens">
 <h2>ITENS / ACESSÓRIOS</h2>
-<textarea id="itens" placeholder="Anota aqui armas, pistas, acessórios, contatos, segredos..."></textarea>
+<textarea id="itens"></textarea>
 </div>
 
 </div>
 
 <script>
-let sono=0;
+let vida=0, san=0, sono=0;
 
+function alterarVida(v){
+ vida=Math.max(0,Math.min(+vidaMax.value||0,vida+v));
+ vidaAtual.textContent=vida;
+ salvar();
+}
+function alterarSan(v){
+ san=Math.max(0,Math.min(+sanMax.value||0,san+v));
+ sanAtual.textContent=san;
+ salvar();
+}
 function alterarSono(v){
  sono=Math.max(0,sono+v);
  sonoAtual.textContent=sono;
@@ -214,35 +184,39 @@ grave.onchange=()=>{ if(grave.checked) caido.checked=false; salvar(); }
 caido.onchange=()=>{ if(caido.checked) grave.checked=false; salvar(); }
 
 nomePersonagem.oninput=salvar;
+itens.oninput=salvar;
 
 function salvar(){
  localStorage.setItem("noir",JSON.stringify({
   nome:nomePersonagem.value,
   vida,san,sono,
-  chk1:chk1.checked,chk2:chk2.checked,chk3:chk3.checked,
-  grave:grave.checked,caido:caido.checked,
   vidaMax:+vidaMax.value||0,
   sanMax:+sanMax.value||0,
+  chk1:chk1.checked,chk2:chk2.checked,chk3:chk3.checked,
+  grave:grave.checked,caido:caido.checked,
   itens:itens.value,
-  historico,historicoSan,
   tema:document.body.className
  }));
 }
 
 function carregar(){
- const d=JSON.parse(localStorage.getItem("noir"));if(!d)return;
+ const d=JSON.parse(localStorage.getItem("noir"));
+ if(!d)return;
  nomePersonagem.value=d.nome||"";
- vida=d.vida||0;san=d.san||0;sono=d.sono||0;
- chk1.checked=!!d.chk1;chk2.checked=!!d.chk2;chk3.checked=!!d.chk3;
- grave.checked=!!d.grave;caido.checked=!!d.caido;
- vidaMax.value=d.vidaMax||0;sanMax.value=d.sanMax||0;
+ vida=d.vida||0; san=d.san||0; sono=d.sono||0;
+ vidaMax.value=d.vidaMax||0; sanMax.value=d.sanMax||0;
+ chk1.checked=!!d.chk1; chk2.checked=!!d.chk2; chk3.checked=!!d.chk3;
+ grave.checked=!!d.grave; caido.checked=!!d.caido;
  itens.value=d.itens||"";
- historico=d.historico||[];historicoSan=d.historicoSan||[];
  if(d.tema)document.body.className=d.tema;
  vidaAtual.textContent=vida;
  sanAtual.textContent=san;
  sonoAtual.textContent=sono;
- atualizarHistorico();atualizarHistoricoSan();
+}
+
+function toggleTema(){
+ document.body.classList.toggle("light");
+ salvar();
 }
 
 carregar();
