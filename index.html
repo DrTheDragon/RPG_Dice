@@ -69,8 +69,8 @@ button:active{transform:scale(.97)}
 .F{color:#777}
 
 .historico{margin-top:15px;font-size:14px}
-.historico ul{list-style:none;padding:0;margin:0;height:165px;overflow:hidden}
-.historico li{padding:5px 6px;border-bottom:1px solid var(--border);line-height:1.3}
+.historico ul{list-style:none;padding:0;margin:0;height:180px;overflow:hidden}
+.historico li{padding:5px 6px;border-bottom:1px solid var(--border);line-height:1.3;min-height:28px;display:flex;align-items:center}
 .fade-0{color:var(--text)}
 .fade-1{color:var(--text)}
 .fade-2{color:var(--text)}
@@ -226,13 +226,13 @@ button:active{transform:scale(.97)}
  width: 100%;
 }
 
-/* Melhorias para mobile - ARRUMADO E CENTRALIZADO */
+/* Melhorias para mobile - HISTÓRICOS VISÍVEIS */
 @media(max-width:768px){
- body{align-items:flex-start; padding:15px 10px; justify-content:flex-start;}
+ body{align-items:flex-start; padding:10px; justify-content:flex-start; min-height:100vh;}
  .wrapper{width:100%; align-items:center;}
- .app{grid-template-columns:1fr; width:100%; max-width:100%; gap:15px;}
- .atributos-extras{grid-template-columns:1fr; width:100%; gap:15px; margin-top:15px;}
- .recursos{grid-template-columns:1fr; width:100%; gap:15px; margin-top:15px;}
+ .app{grid-template-columns:1fr; width:100%; max-width:100%; gap:12px;}
+ .atributos-extras{grid-template-columns:1fr; width:100%; gap:12px; margin-top:12px;}
+ .recursos{grid-template-columns:1fr; width:100%; gap:12px; margin-top:12px;}
  .nome-personagem, .toggle, .itens, .atributos-extras, .peso-container{width:100%; max-width:100%;}
  .panel{padding:15px; width:100%; box-sizing:border-box;}
  .controls button{padding:8px; font-size:14px; min-height:40px;}
@@ -240,14 +240,14 @@ button:active{transform:scale(.97)}
  .exposicao-input input{width:120px;}
  
  /* Ajuste para os painéis ficarem mais compactos */
- .section{margin-top:15px; padding-top:10px;}
- h2{font-size:1.3em; margin:8px 0; text-align:center;}
- h3{font-size:1.1em; margin:10px 0; text-align:center;}
+ .section{margin-top:12px; padding-top:10px;}
+ h2{font-size:1.3em; margin:5px 0; text-align:center;}
+ h3{font-size:1.1em; margin:8px 0; text-align:center;}
  
- /* Ajuste para históricos em mobile - 6 ITENS SEM SCROLL */
- .historico{margin-top:12px;}
- .historico ul{height:155px; overflow:hidden !important;}
- .historico li{padding:4px 6px; font-size:13px; line-height:1.4; min-height:25px;}
+ /* HISTÓRICOS VISÍVEIS NO MOBILE - MAIOR ALTURA */
+ .historico{margin-top:10px;}
+ .historico ul{height:165px; overflow:hidden !important;}
+ .historico li{padding:4px 6px; font-size:13px; line-height:1.4; min-height:26px;}
  
  /* Melhor espaçamento geral */
  input, button, textarea{font-size:14px; padding:8px; margin-top:6px;}
@@ -256,31 +256,34 @@ button:active{transform:scale(.97)}
  /* Centralizar melhor */
  .toggle{margin-bottom:10px; text-align:center;}
  .toggle button{width:auto; min-width:150px; display:inline-block;}
- .itens{margin-top:15px;}
- .recursos, .atributos-extras, .peso-container{margin-top:15px;}
+ .itens{margin-top:12px;}
+ .recursos, .atributos-extras, .peso-container{margin-top:12px;}
  
  /* Checkboxes de vida mais organizados */
- .checkboxes-vida{justify-content:center; gap:25px; margin:12px 0;}
+ .checkboxes-vida{justify-content:center; gap:25px; margin:10px 0;}
  .checkbox-vida{width:28px; height:28px;}
  
  /* Status mais compactos */
- .checkboxes-status{margin-top:12px;}
- .checkbox-status{margin:6px 0; font-size:14px;}
+ .checkboxes-status{margin-top:10px;}
+ .checkbox-status{margin:5px 0; font-size:14px;}
  
  /* Centralizar melhor os containers */
  .atributo-extra, .recurso-item, .peso-container{text-align:center;}
  
  /* Rolagem de detalhes dos dados personalizados - SEM SCROLL */
  .roll-details{font-size:13px; max-height:80px; overflow:hidden;}
+ 
+ /* Reduzir um pouco a altura dos resultados para dar mais espaço aos históricos */
+ .resultado{min-height:65px;}
 }
 
 @media(max-width:480px){
- .controls{flex-direction:row; gap:5px;}
+ .controls{flex-direction:row; gap:4px;}
  .controls button{flex:1 1 46%; margin-bottom:0; font-size:13px; padding:7px;}
  .checkboxes-vida{gap:20px;}
  .panel{padding:12px;}
  .historico{font-size:12px;}
- .historico ul{height:150px;}
+ .historico ul{height:160px;}
  .dado{font-size:42px;}
  
  /* Títulos ajustados */
@@ -288,7 +291,7 @@ button:active{transform:scale(.97)}
  h3{font-size:1em;}
  
  /* Seções mais compactas */
- .section{margin-top:12px; padding-top:8px;}
+ .section{margin-top:10px; padding-top:8px;}
  .resultado{min-height:60px; font-size:13px;}
  
  /* Botões menores mas funcionais */
@@ -301,6 +304,10 @@ button:active{transform:scale(.97)}
  /* Centralizar tudo melhor */
  .exposicao-container{padding:5px 0;}
  .exposicao-input{margin-top:5px;}
+ 
+ /* Históricos ainda mais visíveis */
+ .historico ul{height:155px;}
+ .historico li{min-height:25px;}
 }
 </style>
 </head>
@@ -473,7 +480,7 @@ button:active{transform:scale(.97)}
 <div class="recursos">
 <div class="recurso-item">
 <h3>💰 DINHEIRO</h3>
-<input id="dinheiro" type="text" placeholder="Digite fórmula (ex: 100+50-30) ou número">
+<input id="dinheiro" type="text" placeholder="Dinheiro obtido">
 </div>
 
 <div class="recurso-item">
@@ -595,7 +602,6 @@ function testeAtributo(){
  `🎲 ${d}<br>📊 Atributo ${att}<br><span class="${c}"><b>${t}</b></span>`;
 
  historico.unshift(`🎲 ${d} | Atributo ${att} → ${t}`);
- // MANTENDO 6 ITENS NO HISTÓRICO
  if(historico.length>6)historico.pop();
  salvar();atualizarHistorico();
 }
@@ -617,7 +623,6 @@ function testeSanidade(){
  resSan.innerHTML=`🎲 ${d}<br><span class="${ok?'N':'F'}"><b>${r}</b></span>`;
 
  historicoSan.unshift(`🧠 ${d} / San Máx: ${sanMaxVal} → ${r}`);
- // MANTENDO 6 ITENS NO HISTÓRICO
  if(historicoSan.length>6)historicoSan.pop();
  salvar();atualizarHistoricoSan();
 }
@@ -682,7 +687,6 @@ function rolarDadoPersonalizado(){
   detalhes.innerHTML = `<p><b>Detalhes:</b></p>${detalhesText}`;
   
   historicoDados.unshift(`🎲 ${input} → ${total}`);
-  // MANTENDO 6 ITENS NO HISTÓRICO
   if(historicoDados.length>6)historicoDados.pop();
   atualizarHistoricoDados();
   
@@ -754,10 +758,6 @@ function atualizarHistorico(){
  listaHistorico.innerHTML="";
  historico.forEach((h,i)=>{
   const li=document.createElement("li");
-  // 0-2: normal (todos fade-0, fade-1, fade-2 com cor normal)
-  // 3: fade-3 (cinza claro)
-  // 4: fade-4 (cinza médio)
-  // 5: fade-5 (cinza escuro)
   li.className = i<3 ? `fade-${i}` : i===3 ? "fade-3" : i===4 ? "fade-4" : "fade-5";
   li.textContent=h;
   listaHistorico.appendChild(li);
