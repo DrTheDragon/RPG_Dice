@@ -140,12 +140,49 @@ button:active{transform:scale(.97)}
  margin-bottom:15px;
 }
 
+/* Estilos para Atributos Extras */
+.atributos-extras{
+ width:820px;
+ max-width:95%;
+ margin-top:25px;
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:20px;
+}
+.atributo-extra{
+ background:var(--panel);
+ border:1px solid var(--border);
+ box-shadow:0 0 40px rgba(0,0,0,.7);
+ padding:25px;
+}
+.atributo-extra h3{
+ margin-top:0;
+ margin-bottom:15px;
+}
+
+/* Estilos para Peso */
+.peso-container{
+ width:820px;
+ max-width:95%;
+ margin-top:25px;
+ background:var(--panel);
+ border:1px solid var(--border);
+ box-shadow:0 0 40px rgba(0,0,0,.7);
+ padding:25px;
+ text-align:center;
+}
+.peso-container h3{
+ margin-top:0;
+ margin-bottom:15px;
+}
+
 @media(max-width:768px){
  body{align-items:flex-start}
  .app{grid-template-columns:1fr}
  .nome-personagem{text-align:center}
  .checkboxes-vida{justify-content:space-around}
  .recursos{grid-template-columns:1fr}
+ .atributos-extras{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -248,10 +285,54 @@ button:active{transform:scale(.97)}
 </div>
 </div>
 
+<!-- Atributos Extras -->
+<div class="atributos-extras">
+<div class="atributo-extra">
+<h3>👁️ EXPOSIÇÃO PARANORMAL</h3>
+<input id="exposicao" type="range" min="0" max="100" value="0" oninput="exposicaoValor.value = this.value">
+<p>Valor: <b><output id="exposicaoValor">0</output>%</b></p>
+</div>
+
+<div class="atributo-extra">
+<h3>✨ PONTOS DE PODER</h3>
+<input id="poderMax" type="number" placeholder="Poder Máximo" min="0">
+<p>Atual: <b><span id="poderAtual">0</span></b></p>
+<div class="controls">
+<button onclick="alterar('poder',-1)">-1</button>
+<button onclick="alterar('poder',1)">+1</button>
+<button onclick="alterar('poder',-5)">-5</button>
+<button onclick="alterar('poder',5)">+5</button>
+</div>
+
+<h3 style="margin-top:20px;">🛡️ DEFESA</h3>
+<input id="defesa" type="number" placeholder="Defesa" min="0">
+</div>
+</div>
+
+<!-- Peso -->
+<div class="peso-container">
+<h3>⚖️ PESO</h3>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+<div>
+<input id="pesoMax" type="number" placeholder="Peso Máximo" min="0">
+</div>
+<div>
+<p>Atual: <b><span id="pesoAtual">0</span></b></p>
+<div class="controls">
+<button onclick="alterar('peso',-1)">-1</button>
+<button onclick="alterar('peso',1)">+1</button>
+<button onclick="alterar('peso',-5)">-5</button>
+<button onclick="alterar('peso',5)">+5</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Recursos -->
 <div class="recursos">
 <div class="recurso-item">
 <h3>💰 DINHEIRO</h3>
-<textarea id="dinheiro" placeholder="Anote seu dinheiro e recursos financeiros aqui..."></textarea>
+<input id="dinheiro" type="number" placeholder="Valor em moedas" min="0">
 </div>
 
 <div class="recurso-item">
@@ -260,6 +341,7 @@ button:active{transform:scale(.97)}
 </div>
 </div>
 
+<!-- Itens -->
 <div class="panel itens">
 <h2>ITENS / ACESSÓRIOS</h2>
 <textarea id="itens" placeholder="Anota aqui armas, pistas, acessórios, contatos, segredos..."></textarea>
@@ -367,12 +449,15 @@ function atualizarHistoricoSan(){
  });
 }
 
-let vida=0,san=0,descanso=0;
+let vida=0,san=0,descanso=0,poder=0,peso=0,defesa=0,exposicao=0;
 function salvar(){
  localStorage.setItem("noir",JSON.stringify({
-  vida,san,descanso,
+  vida,san,descanso,poder,peso,defesa,exposicao,
   vidaMax:Math.max(0,+vidaMax.value||0),
   sanMax:Math.max(0,+sanMax.value||0),
+  poderMax:Math.max(0,+poderMax.value||0),
+  pesoMax:Math.max(0,+pesoMax.value||0),
+  defesaVal:Math.max(0,+defesa.value||0),
   itens:itens.value,
   dinheiro:dinheiro.value,
   traumas:traumas.value,
@@ -390,8 +475,12 @@ function salvar(){
 function carregar(){
  const d=JSON.parse(localStorage.getItem("noir"));if(!d)return;
  vida=d.vida||0;san=d.san||0;descanso=d.descanso||0;
+ poder=d.poder||0;peso=d.peso||0;defesa=d.defesa||0;exposicao=d.exposicao||0;
  vidaMax.value=Math.max(0,d.vidaMax||0);
  sanMax.value=Math.max(0,d.sanMax||0);
+ poderMax.value=Math.max(0,d.poderMax||0);
+ pesoMax.value=Math.max(0,d.pesoMax||0);
+ defesa.value=Math.max(0,d.defesaVal||0);
  itens.value=d.itens||"";
  dinheiro.value=d.dinheiro||"";
  traumas.value=d.traumas||"";
@@ -410,11 +499,17 @@ function atualizar(){
  vidaAtual.textContent=vida;
  sanAtual.textContent=san;
  descansoAtual.textContent=descanso;
+ poderAtual.textContent=poder;
+ pesoAtual.textContent=peso;
+ exposicaoValor.value=exposicao;
+ exposicao.value=exposicao;
 }
 function alterar(t,v){
  if(t==="vida")vida=Math.max(0,Math.min(+vidaMax.value,vida+v));
  else if(t==="san")san=Math.max(0,Math.min(+sanMax.value,san+v));
  else if(t==="descanso")descanso=Math.max(0,descanso+v);
+ else if(t==="poder")poder=Math.max(0,Math.min(+poderMax.value,poder+v));
+ else if(t==="peso")peso=Math.max(0,Math.min(+pesoMax.value,peso+v));
  salvar();atualizar();
 }
 
@@ -427,6 +522,25 @@ sanMax.onchange=()=>{
  sanMax.value=Math.max(0,+sanMax.value||0);
  san=sanMax.value;
  salvar();atualizar();
+};
+poderMax.onchange=()=>{
+ poderMax.value=Math.max(0,+poderMax.value||0);
+ poder=poderMax.value;
+ salvar();atualizar();
+};
+pesoMax.onchange=()=>{
+ pesoMax.value=Math.max(0,+pesoMax.value||0);
+ peso=pesoMax.value;
+ salvar();atualizar();
+};
+defesa.onchange=()=>{
+ defesa.value=Math.max(0,+defesa.value||0);
+ salvar();
+};
+exposicao.oninput=()=>{
+ exposicaoValor.value=exposicao.value;
+ exposicao=exposicao.value;
+ salvar();
 };
 
 itens.oninput=salvar;
