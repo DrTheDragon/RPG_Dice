@@ -9,17 +9,26 @@
 <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
 
 <style>
-@keyframes roll {
-  0% {transform:rotate(0) scale(1)}
-  30%{transform:rotate(25deg) scale(1.05)}
-  60%{transform:rotate(-20deg) scale(1.05)}
-  100%{transform:rotate(0) scale(1)}
+:root{
+ --bg1:#111;--bg2:#000;--panel:#080808;--text:#e0e0e0;
+ --border:#222;
+}
+body.light{
+ --bg1:#e6e6e6;--bg2:#cfcfcf;--panel:#f5f5f5;--text:#111;
+ --border:#bbb;
+}
+
+@keyframes roll{
+ 0%{transform:rotate(0) scale(1)}
+ 30%{transform:rotate(25deg) scale(1.05)}
+ 60%{transform:rotate(-20deg) scale(1.05)}
+ 100%{transform:rotate(0) scale(1)}
 }
 .dado.rolando{animation:roll .35s ease-in-out}
 
 body{
- background:radial-gradient(circle at top,#111,#000);
- color:#e0e0e0;
+ background:radial-gradient(circle at top,var(--bg1),var(--bg2));
+ color:var(--text);
  font-family:'Special Elite',monospace;
  margin:0;min-height:100vh;
  display:flex;justify-content:center;align-items:center;
@@ -27,25 +36,29 @@ body{
 .wrapper{width:100%;display:flex;flex-direction:column;align-items:center}
 .app{display:grid;grid-template-columns:1fr 1fr;gap:20px;width:820px;max-width:95%}
 .panel{
- background:rgba(8,8,8,.97);
- border:1px solid #222;
- box-shadow:0 0 50px rgba(0,0,0,.9);
+ background:var(--panel);
+ border:1px solid var(--border);
+ box-shadow:0 0 40px rgba(0,0,0,.7);
  padding:25px
 }
 h2,h3{text-align:center;letter-spacing:2px}
-.section{border-top:1px solid #222;margin-top:20px;padding-top:15px}
+.section{border-top:1px solid var(--border);margin-top:20px;padding-top:15px}
+
 input,button,textarea{
  width:100%;padding:10px;margin-top:8px;
- background:#050505;border:1px solid #333;
- color:#eee;text-align:center;
- font-family:'Special Elite',monospace
+ background:transparent;border:1px solid var(--border);
+ color:var(--text);text-align:center;
+ font-family:'Special Elite',monospace;
+ font-size:15px
 }
-textarea{min-height:140px;resize:vertical;text-align:left}
+textarea{min-height:140px;text-align:left}
 button{cursor:pointer}
-button:hover{background:#111}
-button:active{transform:scale(.97);background:#0e0e0e}
+button:hover{background:rgba(255,255,255,.05)}
+button:active{transform:scale(.97)}
+
 .dado{font-size:58px;text-align:center;margin:10px 0}
-.resultado{min-height:70px;text-align:center;margin-top:10px;line-height:1.6}
+.resultado{min-height:90px;text-align:center;margin-top:10px}
+
 .controls{display:flex;gap:6px;flex-wrap:wrap}
 .controls button{flex:1 1 48%}
 
@@ -56,12 +69,18 @@ button:active{transform:scale(.97);background:#0e0e0e}
 
 .historico{margin-top:15px;font-size:14px}
 .historico ul{list-style:none;padding:0;margin:0}
-.historico li{padding:6px;border-bottom:1px solid #222}
-.fade-0{color:#e0e0e0}
-.fade-1{color:#b8b8b8}
-.fade-2{color:#909090}
-.fade-3{color:#707070}
-.fade-4{color:#505050}
+.historico li{padding:6px;border-bottom:1px solid var(--border)}
+.fade-0{color:var(--text)}
+.fade-1{color:#aaa}
+.fade-2{color:#888}
+.fade-3{color:#666}
+
+.toggle{
+ margin-bottom:15px;
+ width:820px;
+ max-width:95%;
+ text-align:right;
+}
 
 .itens{width:820px;max-width:95%;margin-top:25px}
 
@@ -75,9 +94,13 @@ button:active{transform:scale(.97);background:#0e0e0e}
 <body>
 <div class="wrapper">
 
+<div class="toggle">
+<button onclick="toggleTema()">🌗 Alternar Tema</button>
+</div>
+
 <div class="app">
 
-<!-- ESQUERDA -->
+<!-- TESTES -->
 <div class="panel">
 <h2>TESTES</h2>
 
@@ -102,7 +125,7 @@ button:active{transform:scale(.97);background:#0e0e0e}
 </div>
 </div>
 
-<!-- DIREITA -->
+<!-- STATUS -->
 <div class="panel">
 <h2>STATUS</h2>
 
@@ -135,7 +158,7 @@ button:active{transform:scale(.97);background:#0e0e0e}
 
 <div class="panel itens">
 <h2>ITENS / ACESSÓRIOS</h2>
-<textarea id="itens"></textarea>
+<textarea id="itens" placeholder="Anota aqui armas, pistas, acessórios, contatos, segredos..."></textarea>
 </div>
 
 </div>
@@ -143,21 +166,20 @@ button:active{transform:scale(.97);background:#0e0e0e}
 <script>
 let historico=[];
 
-// SOM
-function somDado(){
+/* ===== SONS ===== */
+function somBase(freq){
  const ctx=new (window.AudioContext||webkitAudioContext)();
- let t=ctx.currentTime;
- for(let i=0;i<8;i++){
-  const o=ctx.createOscillator(),g=ctx.createGain();
-  o.frequency.value=120+Math.random()*400;
-  g.gain.setValueAtTime(.15,t);
-  g.gain.exponentialRampToValueAtTime(.001,t+.08);
-  o.connect(g).connect(ctx.destination);
-  o.start(t);o.stop(t+.08);t+=.04;
- }
+ const o=ctx.createOscillator(),g=ctx.createGain();
+ o.frequency.value=freq;
+ g.gain.value=.15;
+ o.connect(g).connect(ctx.destination);
+ o.start();o.stop(ctx.currentTime+.15);
 }
+function somNormal(){somBase(220)}
+function somExtremo(){somBase(520)}
+function somCritico(){somBase(90)}
 
-// TABELA
+/* ===== TABELA ===== */
 const tabela={
 1:{N:20,B:null,E:null},2:{N:19,B:20,E:null},
 3:{N:18,B:20,E:null},4:{N:17,B:19,E:null},
@@ -171,7 +193,7 @@ const tabela={
 19:{N:2,B:12,E:18},20:{N:1,B:11,E:17}
 };
 
-// TESTE ATRIBUTO
+/* ===== ATRIBUTO ===== */
 function testeAtributo(){
  let att=parseInt(atributo.value)||1;
  att=Math.min(20,Math.max(1,att));
@@ -180,51 +202,54 @@ function testeAtributo(){
  const dadoEl=document.querySelectorAll(".dado")[0];
  dadoEl.classList.add("rolando");
  setTimeout(()=>dadoEl.classList.remove("rolando"),350);
- somDado();
 
  const d=Math.floor(Math.random()*20)+1;
  let t,c;
 
- if(d===1){t="FALHA CRÍTICA";c="F";}
+ if(d===1){t="FALHA CRÍTICA";c="F";somCritico();}
  else{
   const r=tabela[att];
-  if(r.E&&d>=r.E){t="EXTREMO";c="E";}
-  else if(r.B&&d>=r.B){t="BOM";c="B";}
-  else if(d>=r.N){t="NORMAL";c="N";}
-  else{t="FALHA";c="F";}
+  if(r.E&&d>=r.E){t="EXTREMO";c="E";somExtremo();}
+  else if(r.B&&d>=r.B){t="BOM";c="B";somNormal();}
+  else if(d>=r.N){t="NORMAL";c="N";somNormal();}
+  else{t="FALHA";c="F";somNormal();}
  }
 
  resAtributo.innerHTML=
- `🎲 Dado: <b>${d}</b><br>
- 📊 Atributo: <b>${att}</b><br>
- <span class="${c}"><b>${t}</b></span>`;
+ `🎲 ${d}<br>📊 Atributo ${att}<br><span class="${c}"><b>${t}</b></span>`;
 
  historico.unshift(`🎲 ${d} | Atributo ${att} → ${t}`);
- if(historico.length>10)historico.pop();
+ if(historico.length>6)historico.pop();
+ salvar();
  atualizarHistorico();
 }
 
-// HISTÓRICO
+/* ===== HISTÓRICO ===== */
 function atualizarHistorico(){
  listaHistorico.innerHTML="";
  historico.forEach((h,i)=>{
   const li=document.createElement("li");
-  li.className="fade-"+(i<5?0:Math.min(i-4,4));
+  li.className="fade-"+(i<3?0:i);
   li.textContent=h;
   listaHistorico.appendChild(li);
  });
 }
 
-// STATUS
+/* ===== STATUS + STORAGE ===== */
 let vida=0,san=0;
 function salvar(){
- localStorage.setItem("noir",JSON.stringify({vida,san,vidaMax:vidaMax.value,sanMax:sanMax.value,itens:itens.value}));
+ localStorage.setItem("noir",JSON.stringify({
+  vida,san,vidaMax:vidaMax.value,sanMax:sanMax.value,
+  itens:itens.value,historico,tema:document.body.className
+ }));
 }
 function carregar(){
  const d=JSON.parse(localStorage.getItem("noir"));if(!d)return;
- vida=d.vida;san=d.san;
- vidaMax.value=d.vidaMax;sanMax.value=d.sanMax;itens.value=d.itens||"";
- atualizar();
+ vida=d.vida||0;san=d.san||0;
+ vidaMax.value=d.vidaMax||"";sanMax.value=d.sanMax||"";
+ itens.value=d.itens||"";historico=d.historico||[];
+ if(d.tema)document.body.className=d.tema;
+ atualizar();atualizarHistorico();
 }
 function atualizar(){vidaAtual.textContent=vida;sanAtual.textContent=san}
 function alterar(t,v){
@@ -236,16 +261,21 @@ vidaMax.onchange=()=>{vida=+vidaMax.value;salvar();atualizar()}
 sanMax.onchange=()=>{san=+sanMax.value;salvar();atualizar()}
 itens.oninput=salvar;
 
-// SANIDADE
+/* ===== SANIDADE ===== */
 function testeSanidade(){
  const dadoEl=document.querySelectorAll(".dado")[1];
  dadoEl.classList.add("rolando");
  setTimeout(()=>dadoEl.classList.remove("rolando"),350);
- somDado();
  const d=Math.floor(Math.random()*100)+1;
  const ok=d<=+sanMax.value;
- resSan.innerHTML=`Dado: <b>${d}</b><br>
- <span class="${ok?'N':'F'}"><b>${ok?'SUCESSO':'FALHA'}</b></span>`;
+ resSan.innerHTML=`🎲 ${d}<br><span class="${ok?'N':'F'}"><b>${ok?'SUCESSO':'FALHA'}</b></span>`;
+ somNormal();
+}
+
+/* ===== TEMA ===== */
+function toggleTema(){
+ document.body.classList.toggle("light");
+ salvar();
 }
 
 carregar();
