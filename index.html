@@ -164,11 +164,18 @@ button:active{transform:scale(.97)}
 </div>
 
 <script>
-/* ===== SOM DE DADO ===== */
-const somDado = new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_7c8c9d2d52.mp3");
-function tocarSom(){
- somDado.currentTime = 0;
- somDado.play();
+// SOM
+function somDado(){
+ const ctx=new (window.AudioContext||webkitAudioContext)();
+ let t=ctx.currentTime;
+ for(let i=0;i<8;i++){
+  const o=ctx.createOscillator(),g=ctx.createGain();
+  o.frequency.value=120+Math.random()*400;
+  g.gain.setValueAtTime(.15,t);
+  g.gain.exponentialRampToValueAtTime(.001,t+.08);
+  o.connect(g).connect(ctx.destination);
+  o.start(t);o.stop(t+.08);t+=.04;
+ }
 }
 
 let historico=[];
@@ -189,7 +196,7 @@ const tabela={
 
 /* ===== TESTE ATRIBUTO ===== */
 function testeAtributo(){
- tocarSom();
+ somDado();
 
  let att=parseInt(atributo.value)||1;
  att=Math.min(20,Math.max(1,att));
@@ -264,7 +271,7 @@ itens.oninput=salvar;
 
 /* ===== SANIDADE ===== */
 function testeSanidade(){
- tocarSom();
+ somDado();
 
  const dadoEl=document.querySelectorAll(".dado")[1];
  dadoEl.classList.add("rolando");
