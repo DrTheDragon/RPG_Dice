@@ -139,7 +139,7 @@ button:active{transform:scale(.97)}
  margin-bottom:15px;
 }
 
-/* Estilos para Peso */
+/* Estilos para Peso - um embaixo do outro */
 .peso-container{
  width:820px;
  max-width:95%;
@@ -148,14 +148,28 @@ button:active{transform:scale(.97)}
  border:1px solid var(--border);
  box-shadow:0 0 40px rgba(0,0,0,.7);
  padding:25px;
- text-align:center;
 }
 .peso-container h3{
  margin-top:0;
  margin-bottom:15px;
+ text-align:center;
+}
+.peso-inputs{
+ display:flex;
+ flex-direction:column;
+ gap:15px;
+}
+.peso-item{
+ text-align:center;
+}
+.peso-item p{
+ margin:8px 0;
+}
+.peso-buttons{
+ margin-top:10px;
 }
 
-/* Estilos para Exposição Paranormal - versão simplificada */
+/* Estilos para Exposição Paranormal */
 .exposicao-container{
  text-align:center;
  padding:10px 0;
@@ -245,6 +259,11 @@ button:active{transform:scale(.97)}
 <div class="dado">🎲</div>
 <button onclick="testeAtributo()">ROLAR D20</button>
 <div class="resultado" id="resAtributo"></div>
+
+<div class="historico">
+<h3>📜 Histórico</h3>
+<ul id="listaHistorico"></ul>
+</div>
 </div>
 
 <div class="section">
@@ -252,6 +271,11 @@ button:active{transform:scale(.97)}
 <div class="dado">🎲</div>
 <button onclick="testeSanidade()">ROLAR D100</button>
 <div class="resultado" id="resSan"></div>
+
+<div class="historico">
+<h3>🧠 Histórico de Sanidade</h3>
+<ul id="listaHistoricoSan"></ul>
+</div>
 </div>
 </div>
 
@@ -311,19 +335,6 @@ button:active{transform:scale(.97)}
 </div>
 </div>
 
-<!-- HISTÓRICOS -->
-<div class="atributos-extras">
-<div class="atributo-extra">
-<h3>📜 Histórico</h3>
-<ul id="listaHistorico"></ul>
-</div>
-
-<div class="atributo-extra">
-<h3>🧠 Histórico de Sanidade</h3>
-<ul id="listaHistoricoSan"></ul>
-</div>
-</div>
-
 <!-- ATRIBUTOS EXTRAS -->
 <div class="atributos-extras">
 <div class="atributo-extra">
@@ -336,6 +347,9 @@ button:active{transform:scale(.97)}
 <button onclick="alterarExposicao(10)">+10%</button>
 </div>
 </div>
+
+<h3 style="margin-top:30px;">🛡️ DEFESA</h3>
+<input id="defesa" type="number" placeholder="Defesa" min="0">
 </div>
 
 <div class="atributo-extra">
@@ -348,21 +362,20 @@ button:active{transform:scale(.97)}
 <button onclick="alterar('poder',-5)">-5</button>
 <button onclick="alterar('poder',5)">+5</button>
 </div>
-
-<h3 style="margin-top:20px;">🛡️ DEFESA</h3>
-<input id="defesa" type="number" placeholder="Defesa" min="0">
 </div>
 </div>
 
 <!-- PESO -->
 <div class="peso-container">
 <h3>⚖️ PESO</h3>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-<div>
+<div class="peso-inputs">
+<div class="peso-item">
 <input id="pesoMax" type="number" placeholder="Peso Máximo" min="0">
 </div>
-<div>
+<div class="peso-item">
 <p>Atual: <b><span id="pesoAtual">0</span></b></p>
+</div>
+<div class="peso-item peso-buttons">
 <div class="controls">
 <button onclick="alterar('peso',-1)">-1</button>
 <button onclick="alterar('peso',1)">+1</button>
@@ -502,7 +515,7 @@ function salvar(){
   sanMax:Math.max(0,+sanMax.value||0),
   poderMax:Math.max(0,+poderMax.value||0),
   pesoMax:Math.max(0,+pesoMax.value||0),
-  defesaVal:Math.max(0,+defesa.value||0),
+  defesa:Math.max(0,+defesa.value||0),
   itens:itens.value,
   dinheiro:dinheiro.value,
   traumas:traumas.value,
@@ -525,7 +538,7 @@ function carregar(){
  sanMax.value=Math.max(0,d.sanMax||0);
  poderMax.value=Math.max(0,d.poderMax||0);
  pesoMax.value=Math.max(0,d.pesoMax||0);
- defesa.value=Math.max(0,d.defesaVal||0);
+ defesa.value=Math.max(0,d.defesa||0);
  exposicaoValor.textContent=exposicao;
  exposicaoInput.value=exposicao;
  itens.value=d.itens||"";
