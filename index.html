@@ -204,6 +204,19 @@ button:active{transform:scale(.97)}
  margin-bottom:15px;
 }
 
+/* Estilos para Dados Personalizados */
+.dados-personalizados{
+ margin-top:15px;
+}
+.roll-details{
+ margin-top:10px;
+ font-size:14px;
+ line-height:1.4;
+}
+.roll-details p{
+ margin:5px 0;
+}
+
 /* Melhorias para mobile */
 @media(max-width:768px){
  body{align-items:flex-start; padding:10px;}
@@ -272,6 +285,15 @@ button:active{transform:scale(.97)}
 <h3>🧠 Histórico de Sanidade</h3>
 <ul id="listaHistoricoSan"></ul>
 </div>
+</div>
+
+<div class="section">
+<h3>🎯 Dados Personalizados</h3>
+<p style="font-size:12px; margin-bottom:10px;">Exemplos: "2d6", "1d20+4", "1d20+1d10"</p>
+<input id="dadoPersonalizado" type="text" placeholder="Digite a fórmula (ex: 2d6)">
+<button onclick="rolarDadoPersonalizado()">ROLAR DADOS</button>
+<div class="resultado" id="resDadoPersonalizado"></div>
+<div id="detalhesRolagem" class="roll-details"></div>
 </div>
 </div>
 
@@ -343,7 +365,7 @@ button:active{transform:scale(.97)}
 </div>
 
 <h3 style="margin-top:30px;">🛡️ DEFESA</h3>
-<input id="defesa" type="number" placeholder="Defesa" min="0">
+<input id="defesa" type="number" placeholder="Defesa" min="0" value="0">
 </div>
 
 <div class="atributo-extra">
@@ -482,6 +504,85 @@ function testeSanidade(){
  salvar();atualizarHistoricoSan();
 }
 
+function rolarDadoPersonalizado(){
+ somDado();
+ const input = document.getElementById('dadoPersonalizado').value.trim();
+ const resultado = document.getElementById('resDadoPersonalizado');
+ const detalhes = document.getElementById('detalhesRolagem');
+ 
+ if(!input) {
+  resultado.innerHTML = 'Digite uma fórmula de dados';
+  detalhes.innerHTML = '';
+  return;
+ }
+ 
+ try {
+  // Interpretar a fórmula
+  const partes = input.split('+');
+  let total = 0;
+  let detalhesText = '';
+  let historicoText = '';
+  
+  for(let parte of partes) {
+   parte = parte.trim();
+   
+   // Se contém 'd' é um dado
+   if(parte.includes('d')) {
+    const [quantidadeStr, facesStr] = parte.split('d');
+    const quantidade = parseInt(quantidadeStr) || 1;
+    const faces = parseInt(facesStr);
+    
+    if(isNaN(faces) || faces <= 0) {
+     throw new Error('Número de faces inválido');
+    }
+    
+    detalhesText += `${parte}: `;
+    historicoText += `${parte}: `;
+    let somaParte = 0;
+    const rolagens = [];
+    
+    for(let i = 0; i < quantidade; i++) {
+     const rolagem = Math.floor(Math.random() * faces) + 1;
+     rolagens.push(rolagem);
+     somaParte += rolagem;
+    }
+    
+    detalhesText += rolagens.join(' + ');
+    historicoText += rolagens.join(' + ');
+    if(quantidade > 1) {
+     detalhesText += ` = ${somaParte}`;
+     historicoText += ` = ${somaParte}`;
+    }
+    
+    total += somaParte;
+    detalhesText += '<br>';
+    historicoText += ' | ';
+   } 
+   // Se não contém 'd', é um número fixo
+   else {
+    const valor = parseInt(parte);
+    if(!isNaN(valor)) {
+     total += valor;
+     detalhesText += `+${valor} (bônus)<br>`;
+     historicoText += `+${valor} | `;
+    }
+   }
+  }
+  
+  resultado.innerHTML = `🎲 ${input}<br>Total: <b>${total}</b>`;
+  detalhes.innerHTML = `<p><b>Detalhes:</b></p>${detalhesText}`;
+  
+  // Adicionar ao histórico de dados personalizados
+  historico.unshift(`🎲 ${input} → Total: ${total}`);
+  if(historico.length>6)historico.pop();
+  atualizarHistorico();
+  
+ } catch(e) {
+  resultado.innerHTML = 'Formato inválido. Use: "2d6", "1d20+4", etc.';
+  detalhes.innerHTML = '';
+ }
+}
+
 function atualizarHistorico(){
  listaHistorico.innerHTML="";
  historico.forEach((h,i)=>{
@@ -512,6 +613,7 @@ function salvar(){
   poderMax:Math.max(0,+poderMax.value||0),
   pesoMax:Math.max(0,+pesoMax.value||0),
   // Outros valores
+  defesaVal:Math.max(0,+defesa.value||0),
   itens:itens.value,
   dinheiro:dinheiro.value,
   traumas:traumas.value,
@@ -538,7 +640,7 @@ function carregar(){
  sanMax.value=Math.max(0,d.sanMax||0);
  poderMax.value=Math.max(0,d.poderMax||0);
  pesoMax.value=Math.max(0,d.pesoMax||0);
- defesa.value=Math.max(0,d.defesa||0);
+ defesa.value=Math.max(0,d.defesaVal||0);
  
  // Carregar exposição
  exposicaoValor.textContent=exposicao;
