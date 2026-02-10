@@ -1,13 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <rect x="8" y="8" width="84" height="84" rx="14"
-        fill="#0a0a0a" stroke="#888" stroke-width="6"/>
+  <!-- fundo -->
+  <polygon points="50,5 95,30 85,85 15,85 5,30"
+           fill="#0a0a0a"
+           stroke="#888"
+           stroke-width="5"/>
 
-  <!-- pontos do dado -->
-  <circle cx="30" cy="30" r="6" fill="#e0e0e0"/>
-  <circle cx="70" cy="70" r="6" fill="#e0e0e0"/>
+  <!-- linhas internas (facetas do d20) -->
+  <line x1="50" y1="5" x2="15" y2="85" stroke="#444" stroke-width="2"/>
+  <line x1="50" y1="5" x2="85" y2="85" stroke="#444" stroke-width="2"/>
+  <line x1="5" y1="30" x2="95" y2="30" stroke="#444" stroke-width="2"/>
+  <line x1="15" y1="85" x2="85" y2="85" stroke="#444" stroke-width="2"/>
 
-  <circle cx="70" cy="30" r="6" fill="#e0e0e0"/>
-  <circle cx="30" cy="70" r="6" fill="#e0e0e0"/>
-
-  <circle cx="50" cy="50" r="6" fill="#e0e0e0"/>
+  <!-- número central -->
+  <text x="50" y="62"
+        font-size="28"
+        text-anchor="middle"
+        fill="#e0e0e0"
+        font-family="monospace"
+        font-weight="bold">
+    20
+  </text>
 </svg>
+
