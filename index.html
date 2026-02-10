@@ -237,7 +237,7 @@ function testeSanidade(){
  sanMax.value=sanMaxVal;
 
  const d=Math.floor(Math.random()*100)+1;
- const ok=d<=sanMaxVal;
+ const ok=d>=sanMaxVal;
  const r=ok?"SUCESSO":"FALHA";
 
  resSan.innerHTML=`🎲 ${d}<br><span class="${ok?'N':'F'}"><b>${r}</b></span>`;
