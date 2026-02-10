@@ -119,6 +119,63 @@ button:hover{background:#111;}
     max-width:95%;
     margin-top:25px;
 }
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+
+  body{
+    align-items:flex-start;
+  }
+
+  .app{
+    grid-template-columns: 1fr;
+    width:100%;
+  }
+
+  .panel{
+    padding:18px;
+  }
+
+  h2{
+    font-size:20px;
+  }
+
+  h3{
+    font-size:16px;
+  }
+
+  input, textarea, button{
+    font-size:16px; /* evita zoom automático */
+    padding:12px;
+  }
+
+  button{
+    margin-top:12px;
+  }
+
+  .controls button{
+    flex:1 1 100%;
+    padding:14px;
+  }
+
+  .dado{
+    font-size:64px;
+  }
+
+  .resultado{
+    min-height:80px;
+    font-size:15px;
+  }
+
+  .itens{
+    margin-bottom:40px;
+  }
+}
+    
+  button:active{
+    transform: scale(0.97);
+    background:#0e0e0e;
+  }
 </style>
 </head>
 
@@ -134,7 +191,7 @@ button:hover{background:#111;}
 
 <div class="section">
 <h3>Teste de Atributo</h3>
-<input id="atributo" type="number" min="1" max="20" placeholder="Atributo (1–20)">
+<input id="atributo" type="number" inputmode="numeric" min="1" max="20" placeholder="Atributo (1–20)">
 <div class="dado">🎲</div>
 <button onclick="testeAtributo()">ROLAR D20</button>
 <div class="resultado" id="resAtributo"></div>
@@ -154,7 +211,7 @@ button:hover{background:#111;}
 
 <div class="section">
 <h3>Vida</h3>
-<input id="vidaMax" type="number" placeholder="Vida Máxima">
+<input id="vidaMax" type="number" inputmode="numeric" placeholder="Vida Máxima">
 <p>Atual: <b><span id="vidaAtual">0</span></b></p>
 <div class="controls">
 <button onclick="alterar('vida',-1)">-1</button>
@@ -166,7 +223,7 @@ button:hover{background:#111;}
 
 <div class="section">
 <h3>Sanidade</h3>
-<input id="sanMax" type="number" placeholder="Sanidade Máxima">
+<input id="sanMax" type="number" inputmode="numeric" placeholder="Sanidade Máxima">
 <p>Atual: <b><span id="sanAtual">0</span></b></p>
 <div class="controls">
 <button onclick="alterar('san',-1)">-1</button>
@@ -188,6 +245,7 @@ button:hover{background:#111;}
 </div>
 
 <script>
+
 // ===== SOM DO DADO =====
 function somDado(){
  const ctx=new (window.AudioContext||window.webkitAudioContext)();
