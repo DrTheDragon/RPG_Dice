@@ -406,7 +406,9 @@ button:active{transform:scale(.97)}
 <div class="recursos">
 <div class="recurso-item">
 <h3>💰 DINHEIRO</h3>
-<input id="dinheiro" type="number" placeholder="Valor em moedas" min="0">
+<input id="dinheiro" type="text" placeholder="Ex: 100+50-30">
+<button onclick="calcularDinheiro()">CALCULAR</button>
+<p>Resultado: <b><span id="dinheiroResultado">0</span></b></p>
 </div>
 
 <div class="recurso-item">
@@ -424,16 +426,47 @@ button:active{transform:scale(.97)}
 </div>
 
 <script>
+// Sistema de som melhorado
+let audioContext = null;
+let audioInitialized = false;
+
+function initAudio() {
+ if (!audioInitialized) {
+  try {
+   audioContext = new (window.AudioContext || window.webkitAudioContext)();
+   audioInitialized = true;
+  } catch(e) {
+   console.log("Áudio não suportado pelo navegador");
+   return false;
+  }
+ }
+ return true;
+}
+
 function somDado(){
- const ctx=new (window.AudioContext||webkitAudioContext)();
- let t=ctx.currentTime;
- for(let i=0;i<8;i++){
-  const o=ctx.createOscillator(),g=ctx.createGain();
-  o.frequency.value=120+Math.random()*400;
-  g.gain.setValueAtTime(.15,t);
-  g.gain.exponentialRampToValueAtTime(.001,t+.08);
-  o.connect(g).connect(ctx.destination);
-  o.start(t);o.stop(t+.08);t+=.04;
+ if (!initAudio()) return;
+ 
+ if (audioContext.state === 'suspended') {
+  audioContext.resume();
+ }
+ 
+ let t = audioContext.currentTime;
+ for(let i = 0; i < 8; i++){
+  try {
+   const o = audioContext.createOscillator();
+   const g = audioContext.createGain();
+   o.frequency.value = 120 + Math.random() * 400;
+   g.gain.setValueAtTime(0.15, t);
+   g.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+   o.connect(g);
+   g.connect(audioContext.destination);
+   o.start(t);
+   o.stop(t + 0.08);
+   t += 0.04;
+  } catch(e) {
+   console.log("Erro ao tocar som do dado");
+   break;
+  }
  }
 }
 
@@ -466,13 +499,32 @@ function testeAtributo(){
  const d=Math.floor(Math.random()*20)+1;
  let t,c;
 
- if(d===1){t="FALHA CRÍTICA";c="F";}
- else{
-  const r=tabela[att];
-  if(r.E&&d>=r.E){t="EXTREMO";c="E";}
-  else if(r.B&&d>=r.B){t="BOM";c="B";}
-  else if(d>=r.N){t="NORMAL";c="N";}
-  else{t="FALHA";c="F";}
+ // CORREÇÃO: Para atributo 20, resultado 1 deve ser NORMAL, não FALHA CRÍTICA
+ const r=tabela[att];
+ 
+ if(d===1){
+  // Verifica se 1 é maior ou igual ao valor necessário para NORMAL
+  if(d >= r.N){
+   t="NORMAL";
+   c="N";
+  } else {
+   t="FALHA CRÍTICA";
+   c="F";
+  }
+ } else {
+  if(r.E && d >= r.E){
+   t="EXTREMO";
+   c="E";
+  } else if(r.B && d >= r.B){
+   t="BOM";
+   c="B";
+  } else if(d >= r.N){
+   t="NORMAL";
+   c="N";
+  } else {
+   t="FALHA";
+   c="F";
+  }
  }
 
  resAtributo.innerHTML=
@@ -517,7 +569,6 @@ function rolarDadoPersonalizado(){
  }
  
  try {
-  // Interpretar a fórmula
   const partes = input.split('+');
   let total = 0;
   let detalhesText = '';
@@ -526,7 +577,6 @@ function rolarDadoPersonalizado(){
   for(let parte of partes) {
    parte = parte.trim();
    
-   // Se contém 'd' é um dado
    if(parte.includes('d')) {
     const [quantidadeStr, facesStr] = parte.split('d');
     const quantidade = parseInt(quantidadeStr) || 1;
@@ -557,9 +607,7 @@ function rolarDadoPersonalizado(){
     total += somaParte;
     detalhesText += '<br>';
     historicoText += ' | ';
-   } 
-   // Se não contém 'd', é um número fixo
-   else {
+   } else {
     const valor = parseInt(parte);
     if(!isNaN(valor)) {
      total += valor;
@@ -572,7 +620,6 @@ function rolarDadoPersonalizado(){
   resultado.innerHTML = `🎲 ${input}<br>Total: <b>${total}</b>`;
   detalhes.innerHTML = `<p><b>Detalhes:</b></p>${detalhesText}`;
   
-  // Adicionar ao histórico de dados personalizados
   historico.unshift(`🎲 ${input} → Total: ${total}`);
   if(historico.length>6)historico.pop();
   atualizarHistorico();
@@ -580,6 +627,47 @@ function rolarDadoPersonalizado(){
  } catch(e) {
   resultado.innerHTML = 'Formato inválido. Use: "2d6", "1d20+4", etc.';
   detalhes.innerHTML = '';
+ }
+}
+
+function calcularDinheiro() {
+ const input = document.getElementById('dinheiro').value.trim();
+ const resultado = document.getElementById('dinheiroResultado');
+ 
+ if(!input) {
+  resultado.textContent = 0;
+  return;
+ }
+ 
+ try {
+  const validInput = input.replace(/\s+/g, '');
+  if(!/^[0-9+\-]+$/.test(validInput)) {
+   throw new Error('Caracteres inválidos');
+  }
+  
+  const numeros = validInput.split(/([+-])/);
+  let total = 0;
+  let operador = '+';
+  
+  for(let parte of numeros) {
+   if(parte === '+' || parte === '-') {
+    operador = parte;
+   } else if(parte !== '') {
+    const valor = parseInt(parte);
+    if(!isNaN(valor)) {
+     if(operador === '+') {
+      total += valor;
+     } else {
+      total -= valor;
+     }
+    }
+   }
+  }
+  
+  resultado.textContent = total;
+  
+ } catch(e) {
+  resultado.textContent = 'Erro';
  }
 }
 
@@ -605,17 +693,15 @@ function atualizarHistoricoSan(){
 let vida=0,san=0,descanso=0,poder=0,peso=0,defesa=0,exposicao=0;
 function salvar(){
  localStorage.setItem("noir",JSON.stringify({
-  // Valores atuais
   vida,san,descanso,poder,peso,defesa,exposicao,
-  // Valores máximos
   vidaMax:Math.max(0,+vidaMax.value||0),
   sanMax:Math.max(0,+sanMax.value||0),
   poderMax:Math.max(0,+poderMax.value||0),
   pesoMax:Math.max(0,+pesoMax.value||0),
-  // Outros valores
-  defesaVal:Math.max(0,+defesa.value||0),
+  defesa:Math.max(0,+defesa.value||0),
   itens:itens.value,
   dinheiro:dinheiro.value,
+  dinheiroResultado:dinheiroResultado.textContent,
   traumas:traumas.value,
   historico,
   historicoSan,
@@ -631,24 +717,22 @@ function salvar(){
 function carregar(){
  const d=JSON.parse(localStorage.getItem("noir"));if(!d)return;
  
- // Carregar valores atuais
  vida=d.vida||0;san=d.san||0;descanso=d.descanso||0;
  poder=d.poder||0;peso=d.peso||0;defesa=d.defesa||0;exposicao=d.exposicao||0;
  
- // Carregar valores máximos
  vidaMax.value=Math.max(0,d.vidaMax||0);
  sanMax.value=Math.max(0,d.sanMax||0);
  poderMax.value=Math.max(0,d.poderMax||0);
  pesoMax.value=Math.max(0,d.pesoMax||0);
- defesa.value=Math.max(0,d.defesaVal||0);
+ defesa.value=Math.max(0,d.defesa||0);
  
- // Carregar exposição
  exposicaoValor.textContent=exposicao;
  exposicaoInput.value=exposicao;
  
- // Carregar outros dados
- itens.value=d.itens||"";
  dinheiro.value=d.dinheiro||"";
+ dinheiroResultado.textContent=d.dinheiroResultado||"0";
+ 
+ itens.value=d.itens||"";
  traumas.value=d.traumas||"";
  historico=d.historico||[];
  historicoSan=d.historicoSan||[];
@@ -679,7 +763,6 @@ function alterar(t,v){
  salvar();atualizar();
 }
 
-// Função para atualizar exposição paranormal
 function atualizarExposicao(){
  let valor = parseInt(exposicaoInput.value) || 0;
  if(valor < 0) valor = 0;
@@ -692,7 +775,6 @@ function atualizarExposicao(){
 
 vidaMax.onchange=()=>{
  vidaMax.value=Math.max(0,+vidaMax.value||0);
- // Se o atual for maior que o novo máximo, ajustar
  if(vida > vidaMax.value) vida = vidaMax.value;
  salvar();atualizar();
 };
@@ -716,12 +798,17 @@ defesa.onchange=()=>{
  salvar();
 };
 
-// Event listener para exposição paranormal
 exposicaoInput.onchange=atualizarExposicao;
 exposicaoInput.oninput=atualizarExposicao;
 
+dinheiro.addEventListener('keypress', function(e){
+ if(e.key === 'Enter') {
+  calcularDinheiro();
+  salvar();
+ }
+});
+
 itens.oninput=salvar;
-dinheiro.oninput=salvar;
 traumas.oninput=salvar;
 nomePersonagem.oninput=salvar;
 checkVida1.onchange=salvar;
@@ -734,6 +821,14 @@ function toggleTema(){
  document.body.classList.toggle("light");
  salvar();
 }
+
+// Inicializar áudio na primeira interação
+document.addEventListener('click', function initAudioOnClick() {
+ if (!audioInitialized) {
+  initAudio();
+ }
+ document.removeEventListener('click', initAudioOnClick);
+});
 
 carregar();
 </script>
