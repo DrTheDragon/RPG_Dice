@@ -2,53 +2,65 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Teste de Atributo RPG</title>
-
+<title>Teste Noir RPG</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&display=swap');
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
 
+<style>
 body {
-    background: radial-gradient(circle at top, #1c1c1c, #0b0b0b);
-    color: #e0e0e0;
-    font-family: 'Cinzel', serif;
+    background: linear-gradient(180deg, #0a0a0a, #000);
+    color: #d6d6d6;
+    font-family: 'Special Elite', monospace;
+    height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
     margin: 0;
 }
 
 .card {
-    background: #111;
-    border: 1px solid #333;
-    border-radius: 14px;
+    background: rgba(10,10,10,0.95);
+    border: 1px solid #222;
+    box-shadow: 0 0 40px rgba(0,0,0,0.8);
     padding: 30px;
-    width: 340px;
+    width: 360px;
     text-align: center;
+}
+
+h2 {
+    letter-spacing: 2px;
+    margin-bottom: 20px;
 }
 
 input, button {
     width: 100%;
     padding: 12px;
-    margin-top: 10px;
-    background: #0e0e0e;
+    margin-top: 12px;
+    background: #050505;
     border: 1px solid #333;
-    color: #fff;
+    color: #eee;
     font-size: 16px;
     text-align: center;
 }
 
-button:hover { background: #222; }
+button {
+    cursor: pointer;
+    letter-spacing: 2px;
+}
+
+button:hover {
+    background: #111;
+}
 
 .dado {
-    font-size: 64px;
-    margin: 20px 0;
+    font-size: 70px;
+    margin: 25px 0;
+    text-shadow: 0 0 12px #000;
 }
 
 .girando {
-    animation: girar 0.15s infinite linear;
+    animation: girar 0.12s infinite linear;
 }
 
 @keyframes girar {
@@ -58,32 +70,34 @@ button:hover { background: #222; }
 
 .resultado {
     margin-top: 20px;
-    line-height: 1.6;
+    line-height: 1.8;
+    border-top: 1px solid #222;
+    padding-top: 15px;
 }
 
-.N { color: #7CFC00; }
-.B { color: #1E90FF; }
-.E { color: #FF3B3B; }
-.F { color: #999; }
+.N { color: #9acd32; }
+.B { color: #4fa3ff; }
+.E { color: #ff4c4c; }
+.F { color: #777; }
 </style>
 </head>
 
 <body>
 
 <div class="card">
-    <h2>Teste de Atributo</h2>
+    <h2>TESTE NOIR</h2>
 
-    <input id="atributo" type="number" min="1" max="20" placeholder="Atributo (1–20)">
+    <input id="atributo" type="number" min="1" max="20" placeholder="Valor do atributo (1–20)">
 
     <div class="dado" id="dado">🎲</div>
 
-    <button onclick="rolar()">ROLAR</button>
+    <button onclick="rolar()">ROLAR O DADO</button>
 
     <div class="resultado" id="resultado"></div>
 </div>
 
 <script>
-// ===== TABELA =====
+// ===== TABELA ORIGINAL =====
 const tabela = {
   1:{N:20,B:null,E:null},
   2:{N:19,B:20,E:null},
@@ -107,49 +121,47 @@ const tabela = {
   20:{N:1,B:11,E:17}
 };
 
-// ===== LÓGICA CORRETA =====
-// SUCESSO = dado <= limite
-function resultadoTeste(atributo, dado) {
+// ===== LÓGICA CORRETA (>=) =====
+function testar(atributo, dado) {
     const r = tabela[atributo];
 
-    if (r.E !== null && dado <= r.E)
-        return { t:"E", txt:"Extremo" };
+    if (r.E !== null && dado >= r.E)
+        return {t:"E", txt:"ExtREMO"};
 
-    if (r.B !== null && dado <= r.B)
-        return { t:"B", txt:"Bom" };
+    if (r.B !== null && dado >= r.B)
+        return {t:"B", txt:"BOM"};
 
-    if (dado <= r.N)
-        return { t:"N", txt:"Normal" };
+    if (dado >= r.N)
+        return {t:"N", txt:"NORMAL"};
 
-    return { t:"F", txt:"Falha" };
+    return {t:"F", txt:"FALHA"};
 }
 
-// ===== ROLAR =====
 function rolar() {
     const atributo = Number(document.getElementById("atributo").value);
     const dadoEl = document.getElementById("dado");
-    const out = document.getElementById("resultado");
+    const res = document.getElementById("resultado");
 
     if (!atributo || atributo < 1 || atributo > 20) {
-        out.innerHTML = "Atributo inválido.";
+        res.innerHTML = "Valor de atributo inválido.";
         return;
     }
 
     dadoEl.classList.add("girando");
-    out.innerHTML = "";
+    res.innerHTML = "";
 
     setTimeout(() => {
         dadoEl.classList.remove("girando");
 
-        const dado = Math.floor(Math.random()*20)+1;
-        const r = resultadoTeste(atributo, dado);
+        const dado = Math.floor(Math.random() * 20) + 1;
+        const r = testar(atributo, dado);
 
-        out.innerHTML = `
-          Atributo: <b>${atributo}</b><br>
-          Dado: <b>${dado}</b><br>
-          Resultado: <span class="${r.t}"><b>${r.t} – ${r.txt}</b></span>
+        res.innerHTML = `
+            Atributo: <b>${atributo}</b><br>
+            Dado: <b>${dado}</b><br>
+            Resultado: <span class="${r.t}"><b>${r.txt}</b></span>
         `;
-    }, 800);
+    }, 900);
 }
 </script>
 
