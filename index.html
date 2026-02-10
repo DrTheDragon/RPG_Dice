@@ -406,9 +406,7 @@ button:active{transform:scale(.97)}
 <div class="recursos">
 <div class="recurso-item">
 <h3>💰 DINHEIRO</h3>
-<input id="dinheiro" type="text" placeholder="Ex: 100+50-30">
-<button onclick="calcularDinheiro()">CALCULAR</button>
-<p>Resultado: <b><span id="dinheiroResultado">0</span></b></p>
+<input id="dinheiro" type="text" placeholder="Digite fórmula (ex: 100+50-30) ou número">
 </div>
 
 <div class="recurso-item">
@@ -630,21 +628,25 @@ function rolarDadoPersonalizado(){
  }
 }
 
+// Função para calcular dinheiro automaticamente
 function calcularDinheiro() {
- const input = document.getElementById('dinheiro').value.trim();
- const resultado = document.getElementById('dinheiroResultado');
+ const input = document.getElementById('dinheiro');
+ const valor = input.value.trim();
  
- if(!input) {
-  resultado.textContent = 0;
-  return;
- }
+ if(!valor) return;
  
  try {
-  const validInput = input.replace(/\s+/g, '');
+  // Remover espaços e validar caracteres (apenas números, +, -)
+  const validInput = valor.replace(/\s+/g, '');
   if(!/^[0-9+\-]+$/.test(validInput)) {
-   throw new Error('Caracteres inválidos');
+   // Se não for uma fórmula válida, apenas salva o valor como número
+   const num = parseInt(valor) || 0;
+   input.value = num;
+   salvar();
+   return;
   }
   
+  // Separar por operadores, mantendo os sinais
   const numeros = validInput.split(/([+-])/);
   let total = 0;
   let operador = '+';
@@ -653,21 +655,26 @@ function calcularDinheiro() {
    if(parte === '+' || parte === '-') {
     operador = parte;
    } else if(parte !== '') {
-    const valor = parseInt(parte);
-    if(!isNaN(valor)) {
+    const num = parseInt(parte);
+    if(!isNaN(num)) {
      if(operador === '+') {
-      total += valor;
+      total += num;
      } else {
-      total -= valor;
+      total -= num;
      }
     }
    }
   }
   
-  resultado.textContent = total;
+  // Atualiza o campo com o resultado calculado
+  input.value = total;
+  salvar();
   
  } catch(e) {
-  resultado.textContent = 'Erro';
+  // Em caso de erro, tenta salvar como número
+  const num = parseInt(valor) || 0;
+  input.value = num;
+  salvar();
  }
 }
 
@@ -693,15 +700,16 @@ function atualizarHistoricoSan(){
 let vida=0,san=0,descanso=0,poder=0,peso=0,defesa=0,exposicao=0;
 function salvar(){
  localStorage.setItem("noir",JSON.stringify({
+  // Valores atuais
   vida,san,descanso,poder,peso,defesa,exposicao,
+  // Valores máximos
   vidaMax:Math.max(0,+vidaMax.value||0),
   sanMax:Math.max(0,+sanMax.value||0),
   poderMax:Math.max(0,+poderMax.value||0),
   pesoMax:Math.max(0,+pesoMax.value||0),
-  defesa:Math.max(0,+defesa.value||0),
-  itens:itens.value,
+  // Outros valores - agora salvando apenas o resultado do dinheiro
   dinheiro:dinheiro.value,
-  dinheiroResultado:dinheiroResultado.textContent,
+  itens:itens.value,
   traumas:traumas.value,
   historico,
   historicoSan,
@@ -717,21 +725,27 @@ function salvar(){
 function carregar(){
  const d=JSON.parse(localStorage.getItem("noir"));if(!d)return;
  
+ // Carregar valores atuais
  vida=d.vida||0;san=d.san||0;descanso=d.descanso||0;
  poder=d.poder||0;peso=d.peso||0;defesa=d.defesa||0;exposicao=d.exposicao||0;
  
+ // Carregar valores máximos
  vidaMax.value=Math.max(0,d.vidaMax||0);
  sanMax.value=Math.max(0,d.sanMax||0);
  poderMax.value=Math.max(0,d.poderMax||0);
  pesoMax.value=Math.max(0,d.pesoMax||0);
- defesa.value=Math.max(0,d.defesa||0);
  
+ // Carregar defesa
+ defesa.value = defesa;
+ 
+ // Carregar exposição
  exposicaoValor.textContent=exposicao;
  exposicaoInput.value=exposicao;
  
+ // Carregar dinheiro (agora apenas o resultado)
  dinheiro.value=d.dinheiro||"";
- dinheiroResultado.textContent=d.dinheiroResultado||"0";
  
+ // Carregar outros dados
  itens.value=d.itens||"";
  traumas.value=d.traumas||"";
  historico=d.historico||[];
@@ -794,17 +808,18 @@ pesoMax.onchange=()=>{
  salvar();atualizar();
 };
 defesa.onchange=()=>{
- defesa.value=Math.max(0,+defesa.value||0);
+ defesa = Math.max(0,+defesa.value||0);
  salvar();
 };
 
 exposicaoInput.onchange=atualizarExposicao;
 exposicaoInput.oninput=atualizarExposicao;
 
+// Event listener para dinheiro (calcular automaticamente ao perder o foco)
+dinheiro.addEventListener('blur', calcularDinheiro);
 dinheiro.addEventListener('keypress', function(e){
  if(e.key === 'Enter') {
   calcularDinheiro();
-  salvar();
  }
 });
 
