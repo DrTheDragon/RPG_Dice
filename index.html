@@ -133,19 +133,20 @@ button:active{transform:scale(.97)}
 <h2>STATUS</h2>
 
 <div class="section">
-<h3>Vida</h3>
-<input id="vidaMax" type="number" placeholder="Vida Máxima">
-<p>Atual: <b><span id="vidaAtual">0</span></b></p>
- <div class="section">
   <h4>Chances de Sobrevivência</h4>
-  <label><input type="checkbox" id="vidaChk1"> Última força</label><br>
-  <label><input type="checkbox" id="vidaChk2"> À beira da morte</label><br>
-  <label><input type="checkbox" id="vidaChk3"> Instinto de sobrevivência</label>
+  <div style="display:flex;gap:12px;justify-content:center">
+    <input type="checkbox" id="vidaChk1">
+    <input type="checkbox" id="vidaChk2">
+    <input type="checkbox" id="vidaChk3">
+  </div>
 
-  <hr style="border:1px solid var(--border);margin:10px 0">
+  <hr style="border:1px solid var(--border);margin:12px 0">
 
-  <p><b>🩸 Extremamente Ferido</b></p>
-  <p><b>☠ Caído</b></p>
+  <h4>Condição</h4>
+  <div style="display:flex;gap:20px;justify-content:center">
+    <label><input type="checkbox" id="ferido"> 🩸 Extremamente Ferido</label>
+    <label><input type="checkbox" id="caido"> ☠ Caído</label>
+  </div>
 </div>
  
 <div class="controls">
@@ -171,25 +172,21 @@ button:active{transform:scale(.97)}
 </div>
 </div>
 
-<div class="panel itens">
-<h2>ITENS / ACESSÓRIOS</h2>
-<textarea id="itens" placeholder="Anota aqui armas, pistas, acessórios, contatos, segredos..."></textarea>
-</div>
-
  <div class="panel itens">
   <h2>CONDIÇÕES & REGISTROS</h2>
   <div class="section">
     <h3>Horas de Sono</h3>
     <p><b><span id="sonoAtual">0</span> horas</b></p>
     <div class="controls">
-      <button onclick="alterarSono(-3)">-3</button>
       <button onclick="alterarSono(-1)">-1</button>
       <button onclick="alterarSono(1)">+1</button>
+      <button onclick="alterarSono(-3)">-3</button>
       <button onclick="alterarSono(3)">+3</button>
     </div>
   </div>
 
-  <div class="section">
+
+   <div class="section">
     <h3>💰 Dinheiro</h3>
     <input id="dinheiro" type="number" placeholder="Dinheiro atual">
   </div>
@@ -202,6 +199,11 @@ button:active{transform:scale(.97)}
   <div class="section">
     <h3>⭐ Vantagens</h3>
     <textarea id="vantagens" placeholder="Habilidades, contatos, vantagens especiais..."></textarea>
+  </div>
+
+  <div class="panel itens">
+<h2>ITENS / ACESSÓRIOS</h2>
+<textarea id="itens" placeholder="Anota aqui armas, pistas, acessórios, contatos, segredos..."></textarea>
   </div>
 </div>
  
@@ -356,7 +358,6 @@ function toggleTema(){
 }
 
 carregar();
- <script>
 /* ===== EXTENSÕES DE STATUS ===== */
 
 let sono = 0;
@@ -439,6 +440,69 @@ carregar = function(){
 vidaChecks.forEach(id=>{
   document.getElementById(id).addEventListener("change",salvar);
 });
+ /* ===== EXTENSÕES FINAIS (SEGURAS) ===== */
+
+let sono = 0;
+
+/* Sono */
+function alterarSono(v){
+  sono = Math.max(0, sono + v);
+  document.getElementById("sonoAtual").textContent = sono;
+  salvar();
+}
+
+/* Condições exclusivas */
+function syncCondicoes(){
+  if(ferido.checked) caido.checked = false;
+  if(caido.checked) ferido.checked = false;
+}
+
+/* salvar estendido */
+const salvarBase = salvar;
+salvar = function(){
+  salvarBase();
+  const d = JSON.parse(localStorage.getItem("noir")) || {};
+  d.sono = sono;
+  d.dinheiro = dinheiro.value;
+  d.traumas = traumas.value;
+  d.vantagens = vantagens.value;
+  d.vidaChecks = [vidaChk1.checked, vidaChk2.checked, vidaChk3.checked];
+  d.ferido = ferido.checked;
+  d.caido = caido.checked;
+  localStorage.setItem("noir", JSON.stringify(d));
+};
+
+/* carregar estendido */
+const carregarBase = carregar;
+carregar = function(){
+  carregarBase();
+  const d = JSON.parse(localStorage.getItem("noir"));
+  if(!d) return;
+
+  sono = d.sono || 0;
+  sonoAtual.textContent = sono;
+
+  dinheiro.value = d.dinheiro || "";
+  traumas.value = d.traumas || "";
+  vantagens.value = d.vantagens || "";
+
+  if(d.vidaChecks){
+    [vidaChk1,vidaChk2,vidaChk3].forEach((c,i)=>c.checked=d.vidaChecks[i]);
+  }
+
+  ferido.checked = !!d.ferido;
+  caido.checked = !!d.caido;
+};
+
+/* eventos */
+[vidaChk1,vidaChk2,vidaChk3,ferido,caido,traumas,vantagens,dinheiro]
+.forEach(el=>{
+  el.addEventListener("change",salvar);
+  el.addEventListener("input",salvar);
+});
+
+ferido.addEventListener("change",syncCondicoes);
+caido.addEventListener("change",syncCondicoes);
 </script>
 </body>
 </html>
