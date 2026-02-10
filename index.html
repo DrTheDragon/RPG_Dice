@@ -71,12 +71,12 @@ button:active{transform:scale(.97)}
 .historico{margin-top:15px;font-size:14px}
 .historico ul{list-style:none;padding:0;margin:0;height:180px;overflow:hidden}
 .historico li{padding:5px 6px;border-bottom:1px solid var(--border);line-height:1.3;min-height:28px;display:flex;align-items:center}
-.fade-0{color:var(--text)}
-.fade-1{color:var(--text)}
-.fade-2{color:var(--text)}
-.fade-3{color:#bbb}
-.fade-4{color:#888}
-.fade-5{color:#555}
+.fade-0{color:var(--text);opacity:1}
+.fade-1{color:var(--text);opacity:1}
+.fade-2{color:var(--text);opacity:1}
+.fade-3{color:var(--text);opacity:0.8}
+.fade-4{color:var(--text);opacity:0.6}
+.fade-5{color:var(--text);opacity:0.4}
 
 .toggle{
  margin-bottom:15px;
@@ -695,10 +695,7 @@ function rolarDadoPersonalizado(){
   
   historicoDados.unshift(`🎲 ${input} → ${total}`);
   if(historicoDados.length>6)historicoDados.pop();
-  
-  // CORREÇÃO: Adicionar salvar() para salvar o histórico no localStorage
-  salvar();
-  atualizarHistoricoDados();
+  salvar();atualizarHistoricoDados();
   
  } catch(e) {
   resultado.innerHTML = 'Formato inválido. Use: "2d6", "1d20+4", etc.';
