@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <title>Teste RPG</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
 
 <style>
@@ -16,6 +15,14 @@ body.light{
  --bg1:#e6e6e6;--bg2:#cfcfcf;--panel:#f5f5f5;--text:#111;
  --border:#bbb;
 }
+
+@keyframes roll{
+ 0%{transform:rotate(0) scale(1)}
+ 30%{transform:rotate(25deg) scale(1.05)}
+ 60%{transform:rotate(-20deg) scale(1.05)}
+ 100%{transform:rotate(0) scale(1)}
+}
+.dado.rolando{animation:roll .35s ease-in-out}
 
 body{
  background:radial-gradient(circle at top,var(--bg1),var(--bg2));
@@ -45,13 +52,16 @@ input,button,textarea{
  font-family:'Special Elite',monospace;
  font-size:15px
 }
+textarea{min-height:140px;text-align:left}
 
 button{cursor:pointer}
 button:hover{background:rgba(255,255,255,.05)}
-button:active{transform:scale(.97)}
 
 .controls{display:flex;gap:6px;flex-wrap:wrap}
 .controls button{flex:1 1 48%}
+
+.dado{font-size:58px;text-align:center;margin:10px 0}
+.resultado{min-height:90px;text-align:center;margin-top:10px}
 
 .checkbox-row{
  display:flex;
@@ -59,7 +69,6 @@ button:active{transform:scale(.97)}
  gap:25px;
  margin-top:15px;
 }
-
 .checkbox-col{
  display:flex;
  flex-direction:column;
@@ -77,6 +86,11 @@ button:active{transform:scale(.97)}
 
 .itens{width:820px;max-width:95%;margin-top:25px}
 
+.E{color:#ff4c4c}
+.B{color:#4fa3ff}
+.N{color:#9acd32}
+.F{color:#777}
+
 @media(max-width:768px){
  .app{grid-template-columns:1fr}
 }
@@ -93,6 +107,27 @@ button:active{transform:scale(.97)}
 
 <div class="app">
 
+<!-- TESTES (ESQUERDA) -->
+<div class="panel">
+<h2>TESTES</h2>
+
+<div class="section">
+<h3>Teste de Atributo</h3>
+<input id="atributo" type="number" min="1" max="20" placeholder="Atributo (1–20)">
+<div class="dado" id="dadoAtt">🎲</div>
+<button onclick="testeAtributo()">ROLAR D20</button>
+<div class="resultado" id="resAtributo"></div>
+</div>
+
+<div class="section">
+<h3>Teste de Sanidade</h3>
+<div class="dado" id="dadoSan">🎲</div>
+<button onclick="testeSanidade()">ROLAR D100</button>
+<div class="resultado" id="resSan"></div>
+</div>
+</div>
+
+<!-- STATUS (DIREITA) -->
 <div class="panel">
 <h2>STATUS</h2>
 
@@ -162,22 +197,35 @@ button:active{transform:scale(.97)}
 </div>
 
 <script>
-let vida=0, san=0, sono=0;
+let vida=0,san=0,sono=0;
+
+function rolar(n){return Math.floor(Math.random()*n)+1}
+
+function testeAtributo(){
+ dadoAtt.classList.add("rolando");
+ setTimeout(()=>dadoAtt.classList.remove("rolando"),350);
+ const d=rolar(20);
+ resAtributo.innerHTML=`🎲 ${d}`;
+}
+
+function testeSanidade(){
+ dadoSan.classList.add("rolando");
+ setTimeout(()=>dadoSan.classList.remove("rolando"),350);
+ const d=rolar(100);
+ resSan.innerHTML=`🎲 ${d}`;
+}
 
 function alterarVida(v){
  vida=Math.max(0,Math.min(+vidaMax.value||0,vida+v));
- vidaAtual.textContent=vida;
- salvar();
+ vidaAtual.textContent=vida; salvar();
 }
 function alterarSan(v){
  san=Math.max(0,Math.min(+sanMax.value||0,san+v));
- sanAtual.textContent=san;
- salvar();
+ sanAtual.textContent=san; salvar();
 }
 function alterarSono(v){
  sono=Math.max(0,sono+v);
- sonoAtual.textContent=sono;
- salvar();
+ sonoAtual.textContent=sono; salvar();
 }
 
 grave.onchange=()=>{ if(grave.checked) caido.checked=false; salvar(); }
