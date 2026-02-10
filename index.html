@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Teste RPG Noir</title>
+<title>Teste RPG</title>
+
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
 
@@ -14,6 +15,15 @@
 body.light{
  --bg1:#e6e6e6;--bg2:#cfcfcf;--panel:#f5f5f5;--text:#111;--border:#bbb;
 }
+
+/* animação curta do dado */
+@keyframes roll{
+ 0%{transform:rotate(0) scale(1)}
+ 30%{transform:rotate(25deg) scale(1.05)}
+ 60%{transform:rotate(-20deg) scale(1.05)}
+ 100%{transform:rotate(0) scale(1)}
+}
+.dado.rolando{animation:roll .35s ease-in-out}
 
 body{
  margin:0;
@@ -100,14 +110,14 @@ button:active{transform:scale(.97)}
 
 <div class="app">
 
-<!-- ESQUERDA -->
+<!-- COLUNA ESQUERDA -->
 <div class="panel">
 <h2>TESTES</h2>
 
 <div class="section">
 <h3>Teste de Atributo</h3>
 <input id="atributo" type="number" min="1" max="20" placeholder="Atributo (1–20)">
-<div class="dado">🎲</div>
+<div class="dado" id="dadoA">🎲</div>
 <button onclick="testeAtributo()">ROLAR D20</button>
 <div class="resultado" id="resAtributo"></div>
 
@@ -119,21 +129,33 @@ button:active{transform:scale(.97)}
 
 <div class="section">
 <h3>Teste de Sanidade</h3>
-<div class="dado">🎲</div>
+<div class="dado" id="dadoS">🎲</div>
 <button onclick="testeSanidade()">ROLAR D100</button>
 <div class="resultado" id="resSan"></div>
 
 <div class="historico">
-<h4>🧠 Histórico</h4>
+<h4>🧠 Histórico de Sanidade</h4>
 <ul id="histSan"></ul>
 </div>
 </div>
 </div>
 
-<!-- DIREITA -->
+<!-- COLUNA DIREITA -->
 <div class="panel">
 <h2>STATUS</h2>
 
+<div class="section">
+<h3>Vida</h3>
+<p>Atual: <b><span id="vidaAtual">0</span></b></p>
+
+<div class="controls">
+<button onclick="alterarVida(-1)">-1</button>
+<button onclick="alterarVida(1)">+1</button>
+<button onclick="alterarVida(-5)">-5</button>
+<button onclick="alterarVida(5)">+5</button>
+</div>
+
+<!-- CHECKBOX LOGO APÓS A VIDA -->
 <div class="section">
 <h4>Chances de Sobrevivência</h4>
 <div style="display:flex;gap:12px;justify-content:center">
@@ -144,26 +166,16 @@ button:active{transform:scale(.97)}
 
 <hr>
 
-<div style="display:flex;gap:15px;justify-content:center">
+<div style="display:flex;gap:18px;justify-content:center">
 <label><input type="checkbox" id="ferido"> 🩸 Extremamente Ferido</label>
 <label><input type="checkbox" id="caido"> ☠ Caído</label>
 </div>
 </div>
-
-<div class="section">
-<h4>Vida</h4>
-<p>Atual: <b><span id="vidaAtual">0</span></b></p>
-<div class="controls">
-<button onclick="alterarVida(-1)">-1</button>
-<button onclick="alterarVida(1)">+1</button>
-<button onclick="alterarVida(-5)">-5</button>
-<button onclick="alterarVida(5)">+5</button>
-</div>
 </div>
 
 <div class="section">
-<h4>Sanidade</h4>
-<input id="sanMax" type="number" min="0" placeholder="Sanidade Máxima">
+<h3>Sanidade</h3>
+<input id="sanMax" type="number" placeholder="Sanidade Máxima">
 <p>Atual: <b><span id="sanAtual">0</span></b></p>
 <div class="controls">
 <button onclick="alterarSan(-1)">-1</button>
@@ -172,12 +184,13 @@ button:active{transform:scale(.97)}
 <button onclick="alterarSan(5)">+5</button>
 </div>
 </div>
-</div>
 
 </div>
+</div>
 
+<!-- REGISTROS -->
 <div class="panel section">
-<h3>😴 Sono</h3>
+<h3>Horas de Sono</h3>
 <p><b><span id="sonoAtual">0</span> horas</b></p>
 <div class="controls">
 <button onclick="alterarSono(-1)">-1</button>
@@ -189,38 +202,38 @@ button:active{transform:scale(.97)}
 
 <div class="panel section">
 <h3>💰 Dinheiro</h3>
-<input id="dinheiro" type="number">
+<input id="dinheiro" type="number" placeholder="Dinheiro atual">
 </div>
 
 <div class="panel section">
 <h3>🧠 Traumas</h3>
-<textarea id="traumas"></textarea>
+<textarea id="traumas" placeholder="Medos, choques, cicatrizes mentais..."></textarea>
 </div>
 
 <div class="panel section">
 <h3>⭐ Vantagens</h3>
-<textarea id="vantagens"></textarea>
+<textarea id="vantagens" placeholder="Habilidades, contatos, vantagens especiais..."></textarea>
 </div>
 
 <div class="panel section">
-<h3>🎒 Itens / Acessórios</h3>
-<textarea id="itens"></textarea>
+<h3>ITENS / ACESSÓRIOS</h3>
+<textarea id="itens" placeholder="Anota aqui armas, pistas, acessórios, contatos, segredos..."></textarea>
 </div>
 
 </div>
 
 <script>
-/* ========= DADOS ========= */
+/* ===== ESTADO ===== */
 let vida=0, san=0, sono=0;
 let histA=[], histS=[];
 
-/* ========= SOM ========= */
+/* ===== SOM ===== */
 function somDado(){
  const ctx=new (window.AudioContext||webkitAudioContext)();
  let t=ctx.currentTime;
  for(let i=0;i<6;i++){
   const o=ctx.createOscillator(),g=ctx.createGain();
-  o.frequency.value=150+Math.random()*300;
+  o.frequency.value=140+Math.random()*320;
   g.gain.setValueAtTime(.12,t);
   g.gain.exponentialRampToValueAtTime(.001,t+.08);
   o.connect(g).connect(ctx.destination);
@@ -228,33 +241,43 @@ function somDado(){
  }
 }
 
-/* ========= TESTES ========= */
+/* ===== TESTE ATRIBUTO ===== */
 function testeAtributo(){
  somDado();
+ dadoA.classList.add("rolando");
+ setTimeout(()=>dadoA.classList.remove("rolando"),350);
+
  let att=Math.min(20,Math.max(1,+atributo.value||1));
  atributo.value=att;
  const d=Math.floor(Math.random()*20)+1;
+
  let r="FALHA",c="F";
- if(d===1){r="FALHA CRÍTICA";}
+ if(d===1) r="FALHA CRÍTICA";
  else if(d>=att){r="NORMAL";c="N";}
+
  resAtributo.innerHTML=`🎲 ${d}<br>📊 Atributo ${att}<br><span class="${c}"><b>${r}</b></span>`;
  histA.unshift(`🎲 ${d} | Atributo ${att} → ${r}`);
  histA=histA.slice(0,6);
  salvar();renderHist();
 }
 
+/* ===== TESTE SANIDADE ===== */
 function testeSanidade(){
  somDado();
+ dadoS.classList.add("rolando");
+ setTimeout(()=>dadoS.classList.remove("rolando"),350);
+
  const max=Math.max(0,+sanMax.value||0);
  const d=Math.floor(Math.random()*100)+1;
  const ok=d<=max;
+
  resSan.innerHTML=`🎲 ${d}<br><b>${ok?"SUCESSO":"FALHA"}</b>`;
  histS.unshift(`🧠 ${d} / San Máx ${max} → ${ok?"SUCESSO":"FALHA"}`);
  histS=histS.slice(0,6);
  salvar();renderHist();
 }
 
-/* ========= HISTÓRICO ========= */
+/* ===== HISTÓRICO ===== */
 function renderHist(){
  histAtributo.innerHTML="";
  histA.forEach((h,i)=>{
@@ -270,7 +293,7 @@ function renderHist(){
  });
 }
 
-/* ========= STATUS ========= */
+/* ===== STATUS ===== */
 function alterarVida(v){vida=Math.max(0,vida+v);vidaAtual.textContent=vida;salvar()}
 function alterarSan(v){san=Math.max(0,san+v);sanAtual.textContent=san;salvar()}
 function alterarSono(v){sono=Math.max(0,sono+v);sonoAtual.textContent=sono;salvar()}
@@ -278,19 +301,16 @@ function alterarSono(v){sono=Math.max(0,sono+v);sonoAtual.textContent=sono;salva
 ferido.onchange=()=>{if(ferido.checked)caido.checked=false;salvar()}
 caido.onchange=()=>{if(caido.checked)ferido.checked=false;salvar()}
 
-/* ========= TEMA ========= */
-function toggleTema(){
- document.body.classList.toggle("light");
- salvar();
-}
+/* ===== TEMA ===== */
+function toggleTema(){document.body.classList.toggle("light");salvar()}
 
-/* ========= STORAGE ========= */
+/* ===== STORAGE ===== */
 function salvar(){
  localStorage.setItem("noir",JSON.stringify({
   vida,san,sono,
   sanMax:sanMax.value,
   histA,histS,
-  checks:[vidaChk1.checked,vidaChk2.checked,vidaChk3.checked],
+  vidaChecks:[vidaChk1.checked,vidaChk2.checked,vidaChk3.checked],
   ferido:ferido.checked,
   caido:caido.checked,
   dinheiro:dinheiro.value,
@@ -302,12 +322,11 @@ function salvar(){
 }
 function carregar(){
  const d=JSON.parse(localStorage.getItem("noir"));if(!d)return;
- ({vida,san,sono}=d);
+ vida=d.vida||0;san=d.san||0;sono=d.sono||0;
  sanMax.value=d.sanMax||0;
  histA=d.histA||[];histS=d.histS||[];
- [vidaChk1.checked,vidaChk2.checked,vidaChk3.checked]=d.checks||[0,0,0];
- ferido.checked=d.ferido||false;
- caido.checked=d.caido||false;
+ [vidaChk1.checked,vidaChk2.checked,vidaChk3.checked]=d.vidaChecks||[0,0,0];
+ ferido.checked=!!d.ferido;caido.checked=!!d.caido;
  dinheiro.value=d.dinheiro||"";
  traumas.value=d.traumas||"";
  vantagens.value=d.vantagens||"";
