@@ -2,283 +2,246 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" type="image/svg+xml" href="favicon.svg">
-<title>Teste RPG</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teste RPG • D20</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
+<!-- ÍCONE DE DADO -->
+<link rel="icon" href="data:image/svg+xml,
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
+<polygon points='50,5 95,35 80,90 20,90 5,35'
+fill='black'/>
+<text x='50' y='65' font-size='40' text-anchor='middle' fill='white'>20</text>
+</svg>">
 
 <style>
 :root{
- --bg1:#111;--bg2:#000;--panel:#080808;--text:#e0e0e0;
- --border:#222;
+  --bg:#0b0b0b;
+  --fg:#e5e5e5;
+  --box:#151515;
+  --accent:#cfcfcf;
 }
-body.light{
- --bg1:#e6e6e6;--bg2:#cfcfcf;--panel:#f5f5f5;--text:#111;
- --border:#bbb;
+.light{
+  --bg:#f2f2f2;
+  --fg:#111;
+  --box:#ffffff;
 }
-
-@keyframes roll{
- 0%{transform:rotate(0) scale(1)}
- 30%{transform:rotate(25deg) scale(1.05)}
- 60%{transform:rotate(-20deg) scale(1.05)}
- 100%{transform:rotate(0) scale(1)}
-}
-.dado.rolando{animation:roll .35s ease-in-out}
-
+*{box-sizing:border-box;font-family:monospace;}
 body{
- background:radial-gradient(circle at top,var(--bg1),var(--bg2));
- color:var(--text);
- font-family:'Special Elite',monospace;
- margin:0;min-height:100vh;
- display:flex;justify-content:center;align-items:center;
+  margin:0;
+  background:var(--bg);
+  color:var(--fg);
 }
-.wrapper{width:100%;display:flex;flex-direction:column;align-items:center}
-.app{display:grid;grid-template-columns:1fr 1fr;gap:20px;width:820px;max-width:95%}
-.panel{
- background:var(--panel);
- border:1px solid var(--border);
- box-shadow:0 0 40px rgba(0,0,0,.7);
- padding:25px
+.container{
+  max-width:900px;
+  margin:auto;
+  padding:15px;
 }
-h2,h3{text-align:center;letter-spacing:2px}
-.section{border-top:1px solid var(--border);margin-top:20px;padding-top:15px}
-
-input,button,textarea{
- width:100%;padding:10px;margin-top:8px;
- background:transparent;border:1px solid var(--border);
- color:var(--text);text-align:center;
- font-family:'Special Elite',monospace;
- font-size:15px
+header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
-textarea{min-height:140px;text-align:left}
-button{cursor:pointer}
-button:hover{background:rgba(255,255,255,.05)}
-button:active{transform:scale(.97)}
-
-.dado{font-size:58px;text-align:center;margin:10px 0}
-.resultado{min-height:90px;text-align:center;margin-top:10px}
-
-.controls{display:flex;gap:6px;flex-wrap:wrap}
-.controls button{flex:1 1 48%}
-
-.E{color:#ff4c4c}
-.B{color:#4fa3ff}
-.N{color:#9acd32}
-.F{color:#777}
-
-.historico{margin-top:15px;font-size:14px}
-.historico ul{list-style:none;padding:0;margin:0}
-.historico li{padding:6px;border-bottom:1px solid var(--border)}
-.fade-0{color:var(--text)}
-.fade-1{color:#aaa}
-.fade-2{color:#888}
-.fade-3{color:#666}
-
-.toggle{
- margin-bottom:15px;
- width:820px;
- max-width:95%;
- text-align:right;
+button{
+  background:var(--box);
+  color:var(--fg);
+  border:1px solid #333;
+  padding:8px 12px;
+  cursor:pointer;
 }
-
-.itens{width:820px;max-width:95%;margin-top:25px}
-
-@media(max-width:768px){
- body{align-items:flex-start}
- .app{grid-template-columns:1fr}
+button:active{
+  transform:scale(0.97);
+}
+.main{
+  display:flex;
+  gap:15px;
+  margin-top:15px;
+}
+.left,.right{
+  flex:1;
+  background:var(--box);
+  padding:12px;
+}
+.section{margin-bottom:15px;}
+input{
+  width:100%;
+  background:#000;
+  color:#fff;
+  border:1px solid #444;
+  padding:6px;
+  margin-top:5px;
+}
+.dice{
+  font-size:48px;
+  text-align:center;
+  margin:10px 0;
+}
+.roll{
+  animation:roll 0.15s linear;
+}
+@keyframes roll{
+  from{transform:rotate(0deg);}
+  to{transform:rotate(15deg);}
+}
+.history div{
+  padding:4px;
+}
+.fade1{opacity:.7}
+.fade2{opacity:.45}
+.fade3{opacity:.25}
+textarea{
+  width:100%;
+  height:80px;
+  background:#000;
+  color:#fff;
+  border:1px solid #444;
+  padding:6px;
+}
+@media(max-width:700px){
+  .main{flex-direction:column;}
 }
 </style>
 </head>
 
 <body>
-<div class="wrapper">
+<div class="container">
+<header>
+  <h2>Noir RPG • D20</h2>
+  <button onclick="toggleTheme()">☼ / ☾</button>
+</header>
 
-<div class="toggle">
-<button onclick="toggleTema()">🌗 Alternar Tema</button>
+<div class="main">
+<!-- ESQUERDA -->
+<div class="left">
+  <div class="section">
+    <h3>Teste de Atributo</h3>
+    <input id="attrName" placeholder="Nome do atributo">
+    <input id="attrValue" type="number" placeholder="Valor do atributo">
+    <button onclick="rollAttribute()">Rolar</button>
+  </div>
+
+  <div class="section">
+    <h3>Teste de Sanidade</h3>
+    <button onclick="rollSanity()">Rolar Sanidade</button>
+  </div>
+
+  <div class="section">
+    <h3>Histórico</h3>
+    <div id="history" class="history"></div>
+  </div>
 </div>
 
-<div class="app">
+<!-- DIREITA -->
+<div class="right">
+  <div class="section">
+    <h3>Vida</h3>
+    Máx: <input id="vidaMax" type="number">
+    Atual: <input id="vidaAtual" type="number">
+  </div>
 
-<!-- TESTES -->
-<div class="panel">
-<h2>TESTES</h2>
+  <div class="section">
+    <h3>Sanidade</h3>
+    Máx: <input id="sanMax" type="number">
+    Atual: <input id="sanAtual" type="number">
+  </div>
 
-<div class="section">
-<h3>Teste de Atributo</h3>
-<input id="atributo" type="number" min="1" max="20" placeholder="Atributo (1–20)">
-<div class="dado">🎲</div>
-<button onclick="testeAtributo()">ROLAR D20</button>
-<div class="resultado" id="resAtributo"></div>
+  <div class="section">
+    <h3>🎲</h3>
+    <div id="dice" class="dice">—</div>
+  </div>
 
-<div class="historico">
-<h3>📜 Histórico</h3>
-<ul id="listaHistorico"></ul>
+  <div class="section">
+    <h3>Itens / Acessórios</h3>
+    <textarea id="items"></textarea>
+  </div>
 </div>
-</div>
-
-<div class="section">
-<h3>Teste de Sanidade</h3>
-<div class="dado">🎲</div>
-<button onclick="testeSanidade()">ROLAR D100</button>
-<div class="resultado" id="resSan"></div>
-</div>
-</div>
-
-<!-- STATUS -->
-<div class="panel">
-<h2>STATUS</h2>
-
-<div class="section">
-<h3>Vida</h3>
-<input id="vidaMax" type="number" placeholder="Vida Máxima">
-<p>Atual: <b><span id="vidaAtual">0</span></b></p>
-<div class="controls">
-<button onclick="alterar('vida',-1)">-1</button>
-<button onclick="alterar('vida',1)">+1</button>
-<button onclick="alterar('vida',-5)">-5</button>
-<button onclick="alterar('vida',5)">+5</button>
-</div>
-</div>
-
-<div class="section">
-<h3>Sanidade</h3>
-<input id="sanMax" type="number" placeholder="Sanidade Máxima">
-<p>Atual: <b><span id="sanAtual">0</span></b></p>
-<div class="controls">
-<button onclick="alterar('san',-1)">-1</button>
-<button onclick="alterar('san',1)">+1</button>
-<button onclick="alterar('san',-5)">-5</button>
-<button onclick="alterar('san',5)">+5</button>
 </div>
 </div>
 
-</div>
-</div>
-
-<div class="panel itens">
-<h2>ITENS / ACESSÓRIOS</h2>
-<textarea id="itens" placeholder="Anota aqui armas, pistas, acessórios, contatos, segredos..."></textarea>
-</div>
-
-</div>
+<audio id="diceSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_7c8c9d2d52.mp3"></audio>
 
 <script>
-let historico=[];
+const diceEl=document.getElementById("dice");
+const historyEl=document.getElementById("history");
+const sound=document.getElementById("diceSound");
 
-/* ===== SONS ===== */
-function somBase(freq){
- const ctx=new (window.AudioContext||webkitAudioContext)();
- const o=ctx.createOscillator(),g=ctx.createGain();
- o.frequency.value=freq;
- g.gain.value=.15;
- o.connect(g).connect(ctx.destination);
- o.start();o.stop(ctx.currentTime+.15);
-}
-function somNormal(){somBase(220)}
-function somExtremo(){somBase(520)}
-function somCritico(){somBase(90)}
+let history=JSON.parse(localStorage.getItem("history"))||[];
 
-/* ===== TABELA ===== */
-const tabela={
-1:{N:20,B:null,E:null},2:{N:19,B:20,E:null},
-3:{N:18,B:20,E:null},4:{N:17,B:19,E:null},
-5:{N:16,B:19,E:20},6:{N:15,B:18,E:20},
-7:{N:14,B:18,E:20},8:{N:13,B:17,E:20},
-9:{N:12,B:17,E:20},10:{N:11,B:16,E:19},
-11:{N:10,B:16,E:19},12:{N:9,B:15,E:19},
-13:{N:8,B:15,E:19},14:{N:7,B:14,E:19},
-15:{N:6,B:14,E:18},16:{N:5,B:13,E:18},
-17:{N:4,B:13,E:18},18:{N:3,B:12,E:18},
-19:{N:2,B:12,E:18},20:{N:1,B:11,E:17}
-};
-
-/* ===== ATRIBUTO ===== */
-function testeAtributo(){
- let att=parseInt(atributo.value)||1;
- att=Math.min(20,Math.max(1,att));
- atributo.value=att;
-
- const dadoEl=document.querySelectorAll(".dado")[0];
- dadoEl.classList.add("rolando");
- setTimeout(()=>dadoEl.classList.remove("rolando"),350);
-
- const d=Math.floor(Math.random()*20)+1;
- let t,c;
-
- if(d===1){t="FALHA CRÍTICA";c="F";somCritico();}
- else{
-  const r=tabela[att];
-  if(r.E&&d>=r.E){t="EXTREMO";c="E";somExtremo();}
-  else if(r.B&&d>=r.B){t="BOM";c="B";somNormal();}
-  else if(d>=r.N){t="NORMAL";c="N";somNormal();}
-  else{t="FALHA";c="F";somNormal();}
- }
-
- resAtributo.innerHTML=
- `🎲 ${d}<br>📊 Atributo ${att}<br><span class="${c}"><b>${t}</b></span>`;
-
- historico.unshift(`🎲 ${d} | Atributo ${att} → ${t}`);
- if(historico.length>6)historico.pop();
- salvar();
- atualizarHistorico();
+function save(){
+  localStorage.setItem("history",JSON.stringify(history));
+  localStorage.setItem("items",items.value);
+  localStorage.setItem("vidaMax",vidaMax.value);
+  localStorage.setItem("vidaAtual",vidaAtual.value);
+  localStorage.setItem("sanMax",sanMax.value);
+  localStorage.setItem("sanAtual",sanAtual.value);
 }
 
-/* ===== HISTÓRICO ===== */
-function atualizarHistorico(){
- listaHistorico.innerHTML="";
- historico.forEach((h,i)=>{
-  const li=document.createElement("li");
-  li.className="fade-"+(i<3?0:i);
-  li.textContent=h;
-  listaHistorico.appendChild(li);
- });
+function load(){
+  items.value=localStorage.getItem("items")||"";
+  vidaMax.value=localStorage.getItem("vidaMax")||"";
+  vidaAtual.value=localStorage.getItem("vidaAtual")||"";
+  sanMax.value=localStorage.getItem("sanMax")||"";
+  sanAtual.value=localStorage.getItem("sanAtual")||"";
+  renderHistory();
 }
 
-/* ===== STATUS + STORAGE ===== */
-let vida=0,san=0;
-function salvar(){
- localStorage.setItem("noir",JSON.stringify({
-  vida,san,vidaMax:vidaMax.value,sanMax:sanMax.value,
-  itens:itens.value,historico,tema:document.body.className
- }));
-}
-function carregar(){
- const d=JSON.parse(localStorage.getItem("noir"));if(!d)return;
- vida=d.vida||0;san=d.san||0;
- vidaMax.value=d.vidaMax||"";sanMax.value=d.sanMax||"";
- itens.value=d.itens||"";historico=d.historico||[];
- if(d.tema)document.body.className=d.tema;
- atualizar();atualizarHistorico();
-}
-function atualizar(){vidaAtual.textContent=vida;sanAtual.textContent=san}
-function alterar(t,v){
- if(t==="vida")vida=Math.max(0,Math.min(+vidaMax.value,vida+v));
- else san=Math.max(0,Math.min(+sanMax.value,san+v));
- salvar();atualizar();
-}
-vidaMax.onchange=()=>{vida=+vidaMax.value;salvar();atualizar()}
-sanMax.onchange=()=>{san=+sanMax.value;salvar();atualizar()}
-itens.oninput=salvar;
-
-/* ===== SANIDADE ===== */
-function testeSanidade(){
- const dadoEl=document.querySelectorAll(".dado")[1];
- dadoEl.classList.add("rolando");
- setTimeout(()=>dadoEl.classList.remove("rolando"),350);
- const d=Math.floor(Math.random()*100)+1;
- const ok=d<=+sanMax.value;
- resSan.innerHTML=`🎲 ${d}<br><span class="${ok?'N':'F'}"><b>${ok?'SUCESSO':'FALHA'}</b></span>`;
- somNormal();
+function roll(){
+  sound.currentTime=0;
+  sound.play();
+  diceEl.classList.add("roll");
+  setTimeout(()=>diceEl.classList.remove("roll"),150);
+  let n=Math.floor(Math.random()*20)+1;
+  diceEl.textContent=n;
+  return n;
 }
 
-/* ===== TEMA ===== */
-function toggleTema(){
- document.body.classList.toggle("light");
- salvar();
+function addHistory(text){
+  history.unshift(text);
+  if(history.length>6)history.pop();
+  save();
+  renderHistory();
 }
 
-carregar();
+function renderHistory(){
+  historyEl.innerHTML="";
+  history.forEach((h,i)=>{
+    let d=document.createElement("div");
+    d.textContent=h;
+    if(i===3)d.className="fade1";
+    if(i===4)d.className="fade2";
+    if(i===5)d.className="fade3";
+    historyEl.appendChild(d);
+  });
+}
+
+function rollAttribute(){
+  let name=attrName.value||"Atributo";
+  let val=parseInt(attrValue.value)||0;
+  let d=roll();
+  if(val<=0){
+    addHistory(`${name}: ${d}`);
+    return;
+  }
+  let res=d<=val?"Sucesso":"Falha";
+  addHistory(`${name} (${val}) → ${d} = ${res}`);
+}
+
+function rollSanity(){
+  let max=parseInt(sanMax.value)||0;
+  let d=Math.floor(Math.random()*100)+1;
+  diceEl.textContent=d;
+  let res=d<=max?"Sucesso":"Falha";
+  addHistory(`Sanidade (${max}) → ${d} = ${res}`);
+}
+
+function toggleTheme(){
+  document.body.classList.toggle("light");
+}
+
+["items","vidaMax","vidaAtual","sanMax","sanAtual"].forEach(id=>{
+  document.getElementById(id).addEventListener("input",save);
+});
+
+load();
 </script>
 </body>
 </html>
