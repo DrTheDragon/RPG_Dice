@@ -582,21 +582,19 @@ function rolarDadoPersonalizado(){
  }
  
  try {
-  // Converter para minúsculas para aceitar tanto 'd' quanto 'D'
-  input = input.toLowerCase();
+  // Remover espaços e converter para minúsculas
+  input = input.replace(/\s+/g, '').toLowerCase();
   
   // Interpretar a fórmula
   const partes = input.split('+');
   let total = 0;
   let detalhesText = '';
-  let historicoText = '';
   
   for(let parte of partes) {
-   parte = parte.trim();
-   
-   // Se contém 'd' é um dado (agora sempre minúsculo)
+   // Verificar se a parte contém 'd' (agora sempre minúsculo)
    if(parte.includes('d')) {
-    const [quantidadeStr, facesStr] = parte.split('d');
+    // Usar expressão regular case-insensitive para dividir
+    const [quantidadeStr, facesStr] = parte.split(/d/i);
     const quantidade = parseInt(quantidadeStr) || 1;
     const faces = parseInt(facesStr);
     
@@ -605,7 +603,6 @@ function rolarDadoPersonalizado(){
     }
     
     detalhesText += `${parte}: `;
-    historicoText += `${parte}: `;
     let somaParte = 0;
     const rolagens = [];
     
@@ -616,15 +613,12 @@ function rolarDadoPersonalizado(){
     }
     
     detalhesText += rolagens.join(' + ');
-    historicoText += rolagens.join(' + ');
     if(quantidade > 1) {
      detalhesText += ` = ${somaParte}`;
-     historicoText += ` = ${somaParte}`;
     }
     
     total += somaParte;
     detalhesText += '<br>';
-    historicoText += ' | ';
    } 
    // Se não contém 'd', é um número fixo
    else {
@@ -632,7 +626,6 @@ function rolarDadoPersonalizado(){
     if(!isNaN(valor)) {
      total += valor;
      detalhesText += `+${valor} (bônus)<br>`;
-     historicoText += `+${valor} | `;
     }
    }
   }
