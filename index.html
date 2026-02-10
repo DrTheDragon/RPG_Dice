@@ -119,27 +119,6 @@ button:active{transform:scale(.97)}
  margin-right:10px;
 }
 
-/* Estilos para Dinheiro e Traumas */
-.recursos{
- width:820px;
- max-width:95%;
- margin-top:25px;
- display:grid;
- grid-template-columns:1fr 1fr;
- gap:20px;
-}
-.recurso-item{
- background:var(--panel);
- border:1px solid var(--border);
- box-shadow:0 0 40px rgba(0,0,0,.7);
- padding:25px;
- text-align:center;
-}
-.recurso-item h3{
- margin-top:0;
- margin-bottom:15px;
-}
-
 /* Estilos para Atributos Extras */
 .atributos-extras{
  width:820px;
@@ -176,13 +155,69 @@ button:active{transform:scale(.97)}
  margin-bottom:15px;
 }
 
+/* Estilos para Exposição Paranormal - versão simplificada */
+.exposicao-container{
+ text-align:center;
+ padding:10px 0;
+}
+.exposicao-input{
+ display:flex;
+ justify-content:center;
+ align-items:center;
+ gap:10px;
+ margin-top:10px;
+}
+.exposicao-input input{
+ width:100px;
+ margin:0;
+}
+
+/* Estilos para Recursos */
+.recursos{
+ width:820px;
+ max-width:95%;
+ margin-top:25px;
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:20px;
+}
+.recurso-item{
+ background:var(--panel);
+ border:1px solid var(--border);
+ box-shadow:0 0 40px rgba(0,0,0,.7);
+ padding:25px;
+ text-align:center;
+}
+.recurso-item h3{
+ margin-top:0;
+ margin-bottom:15px;
+}
+
+/* Melhorias para mobile */
 @media(max-width:768px){
- body{align-items:flex-start}
- .app{grid-template-columns:1fr}
- .nome-personagem{text-align:center}
- .checkboxes-vida{justify-content:space-around}
- .recursos{grid-template-columns:1fr}
- .atributos-extras{grid-template-columns:1fr}
+ body{align-items:flex-start; padding:10px;}
+ .app{grid-template-columns:1fr; width:100%;}
+ .atributos-extras{grid-template-columns:1fr;}
+ .recursos{grid-template-columns:1fr;}
+ .nome-personagem, .toggle, .itens, .atributos-extras, .peso-container{width:100%;}
+ .panel{padding:15px;}
+ .controls button{padding:8px; font-size:14px;}
+ .dado{font-size:48px;}
+ .exposicao-input{flex-direction:column;}
+ .exposicao-input input{width:80%;}
+ 
+ /* Ajuste para os painéis ficarem mais compactos */
+ .section{margin-top:15px; padding-top:10px;}
+ h2{font-size:1.3em;}
+ h3{font-size:1.1em;}
+}
+
+@media(max-width:480px){
+ .controls{flex-direction:column;}
+ .controls button{flex:1 1 100%; margin-bottom:5px;}
+ .checkboxes-vida{justify-content:space-around;}
+ .panel{padding:10px;}
+ .historico{font-size:12px;}
 }
 </style>
 </head>
@@ -200,8 +235,9 @@ button:active{transform:scale(.97)}
 
 <div class="app">
 
+<!-- COLUNA 1: TESTES -->
 <div class="panel">
-<h2>TESTES</h2>
+<h2>🎲 TESTES</h2>
 
 <div class="section">
 <h3>Teste de Atributo</h3>
@@ -209,11 +245,6 @@ button:active{transform:scale(.97)}
 <div class="dado">🎲</div>
 <button onclick="testeAtributo()">ROLAR D20</button>
 <div class="resultado" id="resAtributo"></div>
-
-<div class="historico">
-<h3>📜 Histórico</h3>
-<ul id="listaHistorico"></ul>
-</div>
 </div>
 
 <div class="section">
@@ -221,19 +252,15 @@ button:active{transform:scale(.97)}
 <div class="dado">🎲</div>
 <button onclick="testeSanidade()">ROLAR D100</button>
 <div class="resultado" id="resSan"></div>
-
-<div class="historico">
-<h3>🧠 Histórico de Sanidade</h3>
-<ul id="listaHistoricoSan"></ul>
-</div>
 </div>
 </div>
 
+<!-- COLUNA 2: STATUS -->
 <div class="panel">
-<h2>STATUS</h2>
+<h2>📊 STATUS</h2>
 
 <div class="section">
-<h3>Vida</h3>
+<h3>❤️ Vida</h3>
 <input id="vidaMax" type="number" placeholder="Vida Máxima">
 <p>Atual: <b><span id="vidaAtual">0</span></b></p>
 <div class="controls">
@@ -260,7 +287,7 @@ button:active{transform:scale(.97)}
 </div>
 
 <div class="section">
-<h3>Sanidade</h3>
+<h3>🧠 Sanidade</h3>
 <input id="sanMax" type="number" placeholder="Sanidade Máxima">
 <p>Atual: <b><span id="sanAtual">0</span></b></p>
 <div class="controls">
@@ -272,7 +299,7 @@ button:active{transform:scale(.97)}
 </div>
 
 <div class="section">
-<h3>Horas de Descanso</h3>
+<h3>😴 Horas de Descanso</h3>
 <p>Atual: <b><span id="descansoAtual">0</span></b></p>
 <div class="controls">
 <button onclick="alterar('descanso',-1)">-1</button>
@@ -281,16 +308,34 @@ button:active{transform:scale(.97)}
 <button onclick="alterar('descanso',3)">+3</button>
 </div>
 </div>
-
 </div>
 </div>
 
-<!-- Atributos Extras -->
+<!-- HISTÓRICOS -->
+<div class="atributos-extras">
+<div class="atributo-extra">
+<h3>📜 Histórico</h3>
+<ul id="listaHistorico"></ul>
+</div>
+
+<div class="atributo-extra">
+<h3>🧠 Histórico de Sanidade</h3>
+<ul id="listaHistoricoSan"></ul>
+</div>
+</div>
+
+<!-- ATRIBUTOS EXTRAS -->
 <div class="atributos-extras">
 <div class="atributo-extra">
 <h3>👁️ EXPOSIÇÃO PARANORMAL</h3>
-<input id="exposicao" type="range" min="0" max="100" value="0" oninput="exposicaoValor.value = this.value">
-<p>Valor: <b><output id="exposicaoValor">0</output>%</b></p>
+<div class="exposicao-container">
+<p>Valor: <b><span id="exposicaoValor">0</span>%</b></p>
+<div class="exposicao-input">
+<button onclick="alterarExposicao(-10)">-10%</button>
+<input id="exposicao" type="number" min="0" max="100" value="0" onchange="atualizarExposicao()">
+<button onclick="alterarExposicao(10)">+10%</button>
+</div>
+</div>
 </div>
 
 <div class="atributo-extra">
@@ -309,7 +354,7 @@ button:active{transform:scale(.97)}
 </div>
 </div>
 
-<!-- Peso -->
+<!-- PESO -->
 <div class="peso-container">
 <h3>⚖️ PESO</h3>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
@@ -328,7 +373,7 @@ button:active{transform:scale(.97)}
 </div>
 </div>
 
-<!-- Recursos -->
+<!-- RECURSOS -->
 <div class="recursos">
 <div class="recurso-item">
 <h3>💰 DINHEIRO</h3>
@@ -341,9 +386,9 @@ button:active{transform:scale(.97)}
 </div>
 </div>
 
-<!-- Itens -->
+<!-- ITENS -->
 <div class="panel itens">
-<h2>ITENS / ACESSÓRIOS</h2>
+<h2>🎒 ITENS / ACESSÓRIOS</h2>
 <textarea id="itens" placeholder="Anota aqui armas, pistas, acessórios, contatos, segredos..."></textarea>
 </div>
 
@@ -481,6 +526,8 @@ function carregar(){
  poderMax.value=Math.max(0,d.poderMax||0);
  pesoMax.value=Math.max(0,d.pesoMax||0);
  defesa.value=Math.max(0,d.defesaVal||0);
+ exposicaoValor.textContent=exposicao;
+ exposicaoInput.value=exposicao;
  itens.value=d.itens||"";
  dinheiro.value=d.dinheiro||"";
  traumas.value=d.traumas||"";
@@ -501,8 +548,6 @@ function atualizar(){
  descansoAtual.textContent=descanso;
  poderAtual.textContent=poder;
  pesoAtual.textContent=peso;
- exposicaoValor.value=exposicao;
- exposicao.value=exposicao;
 }
 function alterar(t,v){
  if(t==="vida")vida=Math.max(0,Math.min(+vidaMax.value,vida+v));
@@ -511,6 +556,19 @@ function alterar(t,v){
  else if(t==="poder")poder=Math.max(0,Math.min(+poderMax.value,poder+v));
  else if(t==="peso")peso=Math.max(0,Math.min(+pesoMax.value,peso+v));
  salvar();atualizar();
+}
+
+function alterarExposicao(v){
+ exposicao=Math.max(0,Math.min(100,parseInt(exposicao)+v));
+ exposicaoValor.textContent=exposicao;
+ exposicaoInput.value=exposicao;
+ salvar();
+}
+
+function atualizarExposicao(){
+ exposicao=Math.max(0,Math.min(100,parseInt(exposicaoInput.value)||0));
+ exposicaoValor.textContent=exposicao;
+ salvar();
 }
 
 vidaMax.onchange=()=>{
@@ -535,11 +593,6 @@ pesoMax.onchange=()=>{
 };
 defesa.onchange=()=>{
  defesa.value=Math.max(0,+defesa.value||0);
- salvar();
-};
-exposicao.oninput=()=>{
- exposicaoValor.value=exposicao.value;
- exposicao=exposicao.value;
  salvar();
 };
 
