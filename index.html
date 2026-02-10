@@ -76,16 +76,10 @@ button:active{transform:scale(.97)}
 .fade-3{color:#666}
 
 .toggle{
- margin-bottom:10px;
+ margin-bottom:15px;
  width:820px;
  max-width:95%;
  text-align:right;
-}
-
-.nome{
- width:820px;
- max-width:95%;
- margin-bottom:15px;
 }
 
 .itens{width:820px;max-width:95%;margin-top:25px}
@@ -102,11 +96,6 @@ button:active{transform:scale(.97)}
 
 <div class="toggle">
 <button onclick="toggleTema()">🌗 Alternar Tema</button>
-</div>
-
-<!-- ADIÇÃO MÍNIMA -->
-<div class="nome">
-<input id="nomePersonagem" placeholder="Nome do Personagem">
 </div>
 
 <div class="app">
@@ -178,35 +167,128 @@ button:active{transform:scale(.97)}
 </div>
 
 <script>
-let historico=[],historicoSan=[];
-let vida=0,san=0;
+function somDado(){
+ const ctx=new (window.AudioContext||webkitAudioContext)();
+ let t=ctx.currentTime;
+ for(let i=0;i<8;i++){
+  const o=ctx.createOscillator(),g=ctx.createGain();
+  o.frequency.value=120+Math.random()*400;
+  g.gain.setValueAtTime(.15,t);
+  g.gain.exponentialRampToValueAtTime(.001,t+.08);
+  o.connect(g).connect(ctx.destination);
+  o.start(t);o.stop(t+.08);t+=.04;
+ }
+}
 
+let historico=[];
+let historicoSan=[];
+
+const tabela={
+1:{N:20,B:null,E:null},2:{N:19,B:20,E:null},
+3:{N:18,B:20,E:null},4:{N:17,B:19,E:null},
+5:{N:16,B:19,E:20},6:{N:15,B:18,E:20},
+7:{N:14,B:18,E:20},8:{N:13,B:17,E:20},
+9:{N:12,B:17,E:20},10:{N:11,B:16,E:19},
+11:{N:10,B:16,E:19},12:{N:9,B:15,E:19},
+13:{N:8,B:15,E:19},14:{N:7,B:14,E:19},
+15:{N:6,B:14,E:18},16:{N:5,B:13,E:18},
+17:{N:4,B:13,E:18},18:{N:3,B:12,E:18},
+19:{N:2,B:12,E:18},20:{N:1,B:11,E:17}
+};
+
+function testeAtributo(){
+ somDado();
+ let att=parseInt(atributo.value)||1;
+ att=Math.min(20,Math.max(1,att));
+ atributo.value=att;
+
+ const dadoEl=document.querySelectorAll(".dado")[0];
+ dadoEl.classList.add("rolando");
+ setTimeout(()=>dadoEl.classList.remove("rolando"),350);
+
+ const d=Math.floor(Math.random()*20)+1;
+ let t,c;
+
+ if(d===1){t="FALHA CRÍTICA";c="F";}
+ else{
+  const r=tabela[att];
+  if(r.E&&d>=r.E){t="EXTREMO";c="E";}
+  else if(r.B&&d>=r.B){t="BOM";c="B";}
+  else if(d>=r.N){t="NORMAL";c="N";}
+  else{t="FALHA";c="F";}
+ }
+
+ resAtributo.innerHTML=
+ `🎲 ${d}<br>📊 Atributo ${att}<br><span class="${c}"><b>${t}</b></span>`;
+
+ historico.unshift(`🎲 ${d} | Atributo ${att} → ${t}`);
+ if(historico.length>6)historico.pop();
+ salvar();atualizarHistorico();
+}
+
+function testeSanidade(){
+ somDado();
+
+ const dadoEl=document.querySelectorAll(".dado")[1];
+ dadoEl.classList.add("rolando");
+ setTimeout(()=>dadoEl.classList.remove("rolando"),350);
+
+ const sanMaxVal=Math.max(0,+sanMax.value||0);
+ sanMax.value=sanMaxVal;
+
+ const d=Math.floor(Math.random()*100)+1;
+ const ok=d>=sanMaxVal;
+ const r=ok?"SUCESSO":"FALHA";
+
+ resSan.innerHTML=`🎲 ${d}<br><span class="${ok?'N':'F'}"><b>${r}</b></span>`;
+
+ historicoSan.unshift(`🧠 ${d} / San Máx: ${sanMaxVal} → ${r}`);
+ if(historicoSan.length>6)historicoSan.pop();
+ salvar();atualizarHistoricoSan();
+}
+
+function atualizarHistorico(){
+ listaHistorico.innerHTML="";
+ historico.forEach((h,i)=>{
+  const li=document.createElement("li");
+  li.className=i<3?"fade-0":i===3?"fade-1":i===4?"fade-2":"fade-3";
+  li.textContent=h;
+  listaHistorico.appendChild(li);
+ });
+}
+function atualizarHistoricoSan(){
+ listaHistoricoSan.innerHTML="";
+ historicoSan.forEach((h,i)=>{
+  const li=document.createElement("li");
+  li.className=i<3?"fade-0":i===3?"fade-1":i===4?"fade-2":"fade-3";
+  li.textContent=h;
+  listaHistoricoSan.appendChild(li);
+ });
+}
+
+let vida=0,san=0;
 function salvar(){
  localStorage.setItem("noir",JSON.stringify({
   vida,san,
-  vidaMax:+vidaMax.value||0,
-  sanMax:+sanMax.value||0,
+  vidaMax:Math.max(0,+vidaMax.value||0),
+  sanMax:Math.max(0,+sanMax.value||0),
   itens:itens.value,
   historico,
   historicoSan,
-  tema:document.body.className,
-  nome:nomePersonagem.value   // ADIÇÃO
+  tema:document.body.className
  }));
 }
-
 function carregar(){
  const d=JSON.parse(localStorage.getItem("noir"));if(!d)return;
  vida=d.vida||0;san=d.san||0;
- vidaMax.value=d.vidaMax||0;
- sanMax.value=d.sanMax||0;
+ vidaMax.value=Math.max(0,d.vidaMax||0);
+ sanMax.value=Math.max(0,d.sanMax||0);
  itens.value=d.itens||"";
  historico=d.historico||[];
  historicoSan=d.historicoSan||[];
- nomePersonagem.value=d.nome||""; // ADIÇÃO
  if(d.tema)document.body.className=d.tema;
  atualizar();atualizarHistorico();atualizarHistoricoSan();
 }
-
 function atualizar(){vidaAtual.textContent=vida;sanAtual.textContent=san}
 function alterar(t,v){
  if(t==="vida")vida=Math.max(0,Math.min(+vidaMax.value,vida+v));
@@ -214,9 +296,17 @@ function alterar(t,v){
  salvar();atualizar();
 }
 
-nomePersonagem.oninput=salvar;
-vidaMax.oninput=salvar;
-sanMax.oninput=salvar;
+vidaMax.onchange=()=>{
+ vidaMax.value=Math.max(0,+vidaMax.value||0);
+ vida=vidaMax.value;
+ salvar();atualizar();
+};
+sanMax.onchange=()=>{
+ sanMax.value=Math.max(0,+sanMax.value||0);
+ san=sanMax.value;
+ salvar();atualizar();
+};
+
 itens.oninput=salvar;
 
 function toggleTema(){
