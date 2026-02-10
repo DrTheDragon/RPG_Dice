@@ -69,7 +69,7 @@ button:active{transform:scale(.97)}
 .F{color:#777}
 
 .historico{margin-top:15px;font-size:14px}
-.historico ul{list-style:none;padding:0;margin:0}
+.historico ul{list-style:none;padding:0;margin:0;max-height:150px;overflow-y:auto}
 .historico li{padding:6px;border-bottom:1px solid var(--border)}
 .fade-0{color:var(--text)}
 .fade-1{color:#aaa}
@@ -571,7 +571,7 @@ function testeSanidade(){
 
 function rolarDadoPersonalizado(){
  somDado();
- const input = document.getElementById('dadoPersonalizado').value.trim();
+ let input = document.getElementById('dadoPersonalizado').value.trim();
  const resultado = document.getElementById('resDadoPersonalizado');
  const detalhes = document.getElementById('detalhesRolagem');
  
@@ -582,6 +582,10 @@ function rolarDadoPersonalizado(){
  }
  
  try {
+  // Converter para minúsculas para aceitar tanto 'd' quanto 'D'
+  input = input.toLowerCase();
+  
+  // Interpretar a fórmula
   const partes = input.split('+');
   let total = 0;
   let detalhesText = '';
@@ -590,6 +594,7 @@ function rolarDadoPersonalizado(){
   for(let parte of partes) {
    parte = parte.trim();
    
+   // Se contém 'd' é um dado (agora sempre minúsculo)
    if(parte.includes('d')) {
     const [quantidadeStr, facesStr] = parte.split('d');
     const quantidade = parseInt(quantidadeStr) || 1;
@@ -620,7 +625,9 @@ function rolarDadoPersonalizado(){
     total += somaParte;
     detalhesText += '<br>';
     historicoText += ' | ';
-   } else {
+   } 
+   // Se não contém 'd', é um número fixo
+   else {
     const valor = parseInt(parte);
     if(!isNaN(valor)) {
      total += valor;
