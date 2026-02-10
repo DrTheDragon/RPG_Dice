@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
 
 <style>
+/* Todos os estilos anteriores permanecem exatamente iguais */
 :root{
  --bg1:#111;--bg2:#000;--panel:#080808;--text:#e0e0e0;
  --border:#222;
@@ -735,8 +736,8 @@ function carregar(){
  poderMax.value=Math.max(0,d.poderMax||0);
  pesoMax.value=Math.max(0,d.pesoMax||0);
  
- // Carregar defesa
- defesa.value = defesa;
+ // Carregar defesa - CORREÇÃO: usar o valor salvo
+ defesaInput.value = defesa;
  
  // Carregar exposição
  exposicaoValor.textContent=exposicao;
@@ -807,8 +808,11 @@ pesoMax.onchange=()=>{
  if(peso > pesoMax.value) peso = pesoMax.value;
  salvar();atualizar();
 };
-defesa.onchange=()=>{
- defesa = Math.max(0,+defesa.value||0);
+
+// CORREÇÃO: Criar referência ao input de defesa e configurar evento para salvar
+const defesaInput = document.getElementById('defesa');
+defesaInput.onchange = () => {
+ defesa = Math.max(0, +defesaInput.value || 0);
  salvar();
 };
 
