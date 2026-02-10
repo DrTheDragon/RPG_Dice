@@ -2,8 +2,10 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 <title>Teste RPG</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
 
 <style>
@@ -31,17 +33,14 @@ body{
  margin:0;min-height:100vh;
  display:flex;justify-content:center;align-items:center;
 }
-
 .wrapper{width:100%;display:flex;flex-direction:column;align-items:center}
 .app{display:grid;grid-template-columns:1fr 1fr;gap:20px;width:820px;max-width:95%}
-
 .panel{
  background:var(--panel);
  border:1px solid var(--border);
  box-shadow:0 0 40px rgba(0,0,0,.7);
  padding:25px
 }
-
 h2,h3{text-align:center;letter-spacing:2px}
 .section{border-top:1px solid var(--border);margin-top:20px;padding-top:15px}
 
@@ -53,29 +52,28 @@ input,button,textarea{
  font-size:15px
 }
 textarea{min-height:140px;text-align:left}
-
 button{cursor:pointer}
 button:hover{background:rgba(255,255,255,.05)}
-
-.controls{display:flex;gap:6px;flex-wrap:wrap}
-.controls button{flex:1 1 48%}
+button:active{transform:scale(.97)}
 
 .dado{font-size:58px;text-align:center;margin:10px 0}
 .resultado{min-height:90px;text-align:center;margin-top:10px}
 
-.checkbox-row{
- display:flex;
- justify-content:center;
- gap:25px;
- margin-top:15px;
-}
-.checkbox-col{
- display:flex;
- flex-direction:column;
- align-items:center;
- gap:6px;
- font-size:14px;
-}
+.controls{display:flex;gap:6px;flex-wrap:wrap}
+.controls button{flex:1 1 48%}
+
+.E{color:#ff4c4c}
+.B{color:#4fa3ff}
+.N{color:#9acd32}
+.F{color:#777}
+
+.historico{margin-top:15px;font-size:14px}
+.historico ul{list-style:none;padding:0;margin:0}
+.historico li{padding:6px;border-bottom:1px solid var(--border)}
+.fade-0{color:var(--text)}
+.fade-1{color:#aaa}
+.fade-2{color:#888}
+.fade-3{color:#666}
 
 .toggle{
  margin-bottom:15px;
@@ -86,12 +84,8 @@ button:hover{background:rgba(255,255,255,.05)}
 
 .itens{width:820px;max-width:95%;margin-top:25px}
 
-.E{color:#ff4c4c}
-.B{color:#4fa3ff}
-.N{color:#9acd32}
-.F{color:#777}
-
 @media(max-width:768px){
+ body{align-items:flex-start}
  .app{grid-template-columns:1fr}
 }
 </style>
@@ -101,33 +95,40 @@ button:hover{background:rgba(255,255,255,.05)}
 <div class="wrapper">
 
 <div class="toggle">
-<input id="nomePersonagem" placeholder="Nome do Personagem">
 <button onclick="toggleTema()">🌗 Alternar Tema</button>
 </div>
 
 <div class="app">
 
-<!-- TESTES (ESQUERDA) -->
 <div class="panel">
 <h2>TESTES</h2>
 
 <div class="section">
 <h3>Teste de Atributo</h3>
 <input id="atributo" type="number" min="1" max="20" placeholder="Atributo (1–20)">
-<div class="dado" id="dadoAtt">🎲</div>
+<div class="dado">🎲</div>
 <button onclick="testeAtributo()">ROLAR D20</button>
 <div class="resultado" id="resAtributo"></div>
+
+<div class="historico">
+<h3>📜 Histórico</h3>
+<ul id="listaHistorico"></ul>
+</div>
 </div>
 
 <div class="section">
 <h3>Teste de Sanidade</h3>
-<div class="dado" id="dadoSan">🎲</div>
+<div class="dado">🎲</div>
 <button onclick="testeSanidade()">ROLAR D100</button>
 <div class="resultado" id="resSan"></div>
+
+<div class="historico">
+<h3>🧠 Histórico de Sanidade</h3>
+<ul id="listaHistoricoSan"></ul>
+</div>
 </div>
 </div>
 
-<!-- STATUS (DIREITA) -->
 <div class="panel">
 <h2>STATUS</h2>
 
@@ -135,29 +136,11 @@ button:hover{background:rgba(255,255,255,.05)}
 <h3>Vida</h3>
 <input id="vidaMax" type="number" placeholder="Vida Máxima">
 <p>Atual: <b><span id="vidaAtual">0</span></b></p>
-
 <div class="controls">
-<button onclick="alterarVida(-1)">-1</button>
-<button onclick="alterarVida(1)">+1</button>
-<button onclick="alterarVida(-5)">-5</button>
-<button onclick="alterarVida(5)">+5</button>
-</div>
-
-<div class="checkbox-row">
-<input type="checkbox" id="chk1">
-<input type="checkbox" id="chk2">
-<input type="checkbox" id="chk3">
-</div>
-
-<div class="checkbox-row">
-<div class="checkbox-col">
-<input type="checkbox" id="grave">
-<div>🩸 Gravemente Ferido</div>
-</div>
-<div class="checkbox-col">
-<input type="checkbox" id="caido">
-<div>☠️ Caído</div>
-</div>
+<button onclick="alterar('vida',-1)">-1</button>
+<button onclick="alterar('vida',1)">+1</button>
+<button onclick="alterar('vida',-5)">-5</button>
+<button onclick="alterar('vida',5)">+5</button>
 </div>
 </div>
 
@@ -165,24 +148,11 @@ button:hover{background:rgba(255,255,255,.05)}
 <h3>Sanidade</h3>
 <input id="sanMax" type="number" placeholder="Sanidade Máxima">
 <p>Atual: <b><span id="sanAtual">0</span></b></p>
-
 <div class="controls">
-<button onclick="alterarSan(-1)">-1</button>
-<button onclick="alterarSan(1)">+1</button>
-<button onclick="alterarSan(-5)">-5</button>
-<button onclick="alterarSan(5)">+5</button>
-</div>
-</div>
-
-<div class="section">
-<h3>Horas de Sono</h3>
-<p>Atual: <b><span id="sonoAtual">0</span></b></p>
-
-<div class="controls">
-<button onclick="alterarSono(-1)">-1</button>
-<button onclick="alterarSono(1)">+1</button>
-<button onclick="alterarSono(-3)">-3</button>
-<button onclick="alterarSono(3)">+3</button>
+<button onclick="alterar('san',-1)">-1</button>
+<button onclick="alterar('san',1)">+1</button>
+<button onclick="alterar('san',-5)">-5</button>
+<button onclick="alterar('san',5)">+5</button>
 </div>
 </div>
 
@@ -191,76 +161,153 @@ button:hover{background:rgba(255,255,255,.05)}
 
 <div class="panel itens">
 <h2>ITENS / ACESSÓRIOS</h2>
-<textarea id="itens"></textarea>
+<textarea id="itens" placeholder="Anota aqui armas, pistas, acessórios, contatos, segredos..."></textarea>
 </div>
 
 </div>
 
 <script>
-let vida=0,san=0,sono=0;
+function somDado(){
+ const ctx=new (window.AudioContext||webkitAudioContext)();
+ let t=ctx.currentTime;
+ for(let i=0;i<8;i++){
+  const o=ctx.createOscillator(),g=ctx.createGain();
+  o.frequency.value=120+Math.random()*400;
+  g.gain.setValueAtTime(.15,t);
+  g.gain.exponentialRampToValueAtTime(.001,t+.08);
+  o.connect(g).connect(ctx.destination);
+  o.start(t);o.stop(t+.08);t+=.04;
+ }
+}
 
-function rolar(n){return Math.floor(Math.random()*n)+1}
+let historico=[];
+let historicoSan=[];
+
+const tabela={
+1:{N:20,B:null,E:null},2:{N:19,B:20,E:null},
+3:{N:18,B:20,E:null},4:{N:17,B:19,E:null},
+5:{N:16,B:19,E:20},6:{N:15,B:18,E:20},
+7:{N:14,B:18,E:20},8:{N:13,B:17,E:20},
+9:{N:12,B:17,E:20},10:{N:11,B:16,E:19},
+11:{N:10,B:16,E:19},12:{N:9,B:15,E:19},
+13:{N:8,B:15,E:19},14:{N:7,B:14,E:19},
+15:{N:6,B:14,E:18},16:{N:5,B:13,E:18},
+17:{N:4,B:13,E:18},18:{N:3,B:12,E:18},
+19:{N:2,B:12,E:18},20:{N:1,B:11,E:17}
+};
 
 function testeAtributo(){
- dadoAtt.classList.add("rolando");
- setTimeout(()=>dadoAtt.classList.remove("rolando"),350);
- const d=rolar(20);
- resAtributo.innerHTML=`🎲 ${d}`;
+ somDado();
+ let att=parseInt(atributo.value)||1;
+ att=Math.min(20,Math.max(1,att));
+ atributo.value=att;
+
+ const dadoEl=document.querySelectorAll(".dado")[0];
+ dadoEl.classList.add("rolando");
+ setTimeout(()=>dadoEl.classList.remove("rolando"),350);
+
+ const d=Math.floor(Math.random()*20)+1;
+ let t,c;
+
+ if(d===1){t="FALHA CRÍTICA";c="F";}
+ else{
+  const r=tabela[att];
+  if(r.E&&d>=r.E){t="EXTREMO";c="E";}
+  else if(r.B&&d>=r.B){t="BOM";c="B";}
+  else if(d>=r.N){t="NORMAL";c="N";}
+  else{t="FALHA";c="F";}
+ }
+
+ resAtributo.innerHTML=
+ `🎲 ${d}<br>📊 Atributo ${att}<br><span class="${c}"><b>${t}</b></span>`;
+
+ historico.unshift(`🎲 ${d} | Atributo ${att} → ${t}`);
+ if(historico.length>6)historico.pop();
+ salvar();atualizarHistorico();
 }
 
 function testeSanidade(){
- dadoSan.classList.add("rolando");
- setTimeout(()=>dadoSan.classList.remove("rolando"),350);
- const d=rolar(100);
- resSan.innerHTML=`🎲 ${d}`;
+ somDado();
+
+ const dadoEl=document.querySelectorAll(".dado")[1];
+ dadoEl.classList.add("rolando");
+ setTimeout(()=>dadoEl.classList.remove("rolando"),350);
+
+ const sanMaxVal=Math.max(0,+sanMax.value||0);
+ sanMax.value=sanMaxVal;
+
+ const d=Math.floor(Math.random()*100)+1;
+ const ok=d>=sanMaxVal;
+ const r=ok?"SUCESSO":"FALHA";
+
+ resSan.innerHTML=`🎲 ${d}<br><span class="${ok?'N':'F'}"><b>${r}</b></span>`;
+
+ historicoSan.unshift(`🧠 ${d} / San Máx: ${sanMaxVal} → ${r}`);
+ if(historicoSan.length>6)historicoSan.pop();
+ salvar();atualizarHistoricoSan();
 }
 
-function alterarVida(v){
- vida=Math.max(0,Math.min(+vidaMax.value||0,vida+v));
- vidaAtual.textContent=vida; salvar();
+function atualizarHistorico(){
+ listaHistorico.innerHTML="";
+ historico.forEach((h,i)=>{
+  const li=document.createElement("li");
+  li.className=i<3?"fade-0":i===3?"fade-1":i===4?"fade-2":"fade-3";
+  li.textContent=h;
+  listaHistorico.appendChild(li);
+ });
 }
-function alterarSan(v){
- san=Math.max(0,Math.min(+sanMax.value||0,san+v));
- sanAtual.textContent=san; salvar();
-}
-function alterarSono(v){
- sono=Math.max(0,sono+v);
- sonoAtual.textContent=sono; salvar();
+function atualizarHistoricoSan(){
+ listaHistoricoSan.innerHTML="";
+ historicoSan.forEach((h,i)=>{
+  const li=document.createElement("li");
+  li.className=i<3?"fade-0":i===3?"fade-1":i===4?"fade-2":"fade-3";
+  li.textContent=h;
+  listaHistoricoSan.appendChild(li);
+ });
 }
 
-grave.onchange=()=>{ if(grave.checked) caido.checked=false; salvar(); }
-caido.onchange=()=>{ if(caido.checked) grave.checked=false; salvar(); }
-
-nomePersonagem.oninput=salvar;
-itens.oninput=salvar;
-
+let vida=0,san=0;
 function salvar(){
  localStorage.setItem("noir",JSON.stringify({
-  nome:nomePersonagem.value,
-  vida,san,sono,
-  vidaMax:+vidaMax.value||0,
-  sanMax:+sanMax.value||0,
-  chk1:chk1.checked,chk2:chk2.checked,chk3:chk3.checked,
-  grave:grave.checked,caido:caido.checked,
+  vida,san,
+  vidaMax:Math.max(0,+vidaMax.value||0),
+  sanMax:Math.max(0,+sanMax.value||0),
   itens:itens.value,
+  historico,
+  historicoSan,
   tema:document.body.className
  }));
 }
-
 function carregar(){
- const d=JSON.parse(localStorage.getItem("noir"));
- if(!d)return;
- nomePersonagem.value=d.nome||"";
- vida=d.vida||0; san=d.san||0; sono=d.sono||0;
- vidaMax.value=d.vidaMax||0; sanMax.value=d.sanMax||0;
- chk1.checked=!!d.chk1; chk2.checked=!!d.chk2; chk3.checked=!!d.chk3;
- grave.checked=!!d.grave; caido.checked=!!d.caido;
+ const d=JSON.parse(localStorage.getItem("noir"));if(!d)return;
+ vida=d.vida||0;san=d.san||0;
+ vidaMax.value=Math.max(0,d.vidaMax||0);
+ sanMax.value=Math.max(0,d.sanMax||0);
  itens.value=d.itens||"";
+ historico=d.historico||[];
+ historicoSan=d.historicoSan||[];
  if(d.tema)document.body.className=d.tema;
- vidaAtual.textContent=vida;
- sanAtual.textContent=san;
- sonoAtual.textContent=sono;
+ atualizar();atualizarHistorico();atualizarHistoricoSan();
 }
+function atualizar(){vidaAtual.textContent=vida;sanAtual.textContent=san}
+function alterar(t,v){
+ if(t==="vida")vida=Math.max(0,Math.min(+vidaMax.value,vida+v));
+ else san=Math.max(0,Math.min(+sanMax.value,san+v));
+ salvar();atualizar();
+}
+
+vidaMax.onchange=()=>{
+ vidaMax.value=Math.max(0,+vidaMax.value||0);
+ vida=vidaMax.value;
+ salvar();atualizar();
+};
+sanMax.onchange=()=>{
+ sanMax.value=Math.max(0,+sanMax.value||0);
+ san=sanMax.value;
+ salvar();atualizar();
+};
+
+itens.oninput=salvar;
 
 function toggleTema(){
  document.body.classList.toggle("light");
