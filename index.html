@@ -13,9 +13,16 @@ body{
     color:#e0e0e0;
     font-family:'Special Elite',monospace;
     margin:0;
-    height:100vh;
+    min-height:100vh;
     display:flex;
     justify-content:center;
+    align-items:center;
+}
+
+.wrapper{
+    width:100%;
+    display:flex;
+    flex-direction:column;
     align-items:center;
 }
 
@@ -46,7 +53,7 @@ h2,h3{
     margin-top:20px;
 }
 
-input,button{
+input,button,textarea{
     width:100%;
     padding:10px;
     margin-top:8px;
@@ -55,6 +62,13 @@ input,button{
     color:#eee;
     text-align:center;
     font-size:15px;
+    font-family:'Special Elite',monospace;
+}
+
+textarea{
+    min-height:140px;
+    resize:vertical;
+    text-align:left;
 }
 
 button{cursor:pointer;}
@@ -70,7 +84,7 @@ button:hover{background:#111;}
     margin-top:10px;
     line-height:1.6;
     text-align:center;
-    min-height:70px; /* FIXA ALTURA */
+    min-height:70px;
 }
 
 .controls{
@@ -87,11 +101,18 @@ button:hover{background:#111;}
 .B{color:#4fa3ff;}
 .N{color:#9acd32;}
 .F{color:#777;}
-.C{color:gold;}
+
+.itens{
+    width:820px;
+    max-width:95%;
+    margin-top:25px;
+}
 </style>
 </head>
 
 <body>
+
+<div class="wrapper">
 
 <div class="app">
 
@@ -146,7 +167,31 @@ button:hover{background:#111;}
 </div>
 </div>
 
+<!-- ITENS / ACESSÓRIOS -->
+<div class="panel itens">
+<h2>ITENS / ACESSÓRIOS</h2>
+<textarea id="itens" placeholder="Anota aqui armas, pistas, acessórios, contatos, segredos..."></textarea>
+</div>
+
+</div>
+
 <script>
+// ===== SOM DO DADO =====
+function somDado(){
+ const ctx=new (window.AudioContext||window.webkitAudioContext)();
+ let t=ctx.currentTime;
+ for(let i=0;i<8;i++){
+  const o=ctx.createOscillator();
+  const g=ctx.createGain();
+  o.frequency.value=120+Math.random()*400;
+  g.gain.setValueAtTime(0.15,t);
+  g.gain.exponentialRampToValueAtTime(0.001,t+0.08);
+  o.connect(g).connect(ctx.destination);
+  o.start(t);o.stop(t+0.08);
+  t+=0.04;
+ }
+}
+
 // ===== TABELA =====
 const tabela={
 1:{N:20,B:null,E:null},2:{N:19,B:20,E:null},
@@ -164,19 +209,21 @@ const tabela={
 // ===== TESTE DE ATRIBUTO =====
 function testeAtributo(){
  const att=+atributo.value;
+ if(!att){
+  resAtributo.innerHTML="<span class='F'><b>Defina um atributo primeiro</b></span>";
+  return;
+ }
+ somDado();
  const d=Math.floor(Math.random()*20)+1;
  let t,c;
-
  if(d===1){t="FALHA CRÍTICA";c="F";}
- else if(d===20){t="SUCESSO CRÍTICO";c="C";}
  else{
   const r=tabela[att];
-  if(r.E && d>=r.E){t="EXTREMO";c="E";}
-  else if(r.B && d>=r.B){t="BOM";c="B";}
+  if(r.E&&d>=r.E){t="EXTREMO";c="E";}
+  else if(r.B&&d>=r.B){t="BOM";c="B";}
   else if(d>=r.N){t="NORMAL";c="N";}
   else{t="FALHA";c="F";}
  }
-
  resAtributo.innerHTML=`Dado: <b>${d}</b><br><span class="${c}"><b>${t}</b></span>`;
 }
 
@@ -184,7 +231,7 @@ function testeAtributo(){
 let vida=0,san=0;
 function salvar(){
  localStorage.setItem("noir",JSON.stringify({
-  vida,san,vidaMax:vidaMax.value,sanMax:sanMax.value
+  vida,san,vidaMax:vidaMax.value,sanMax:sanMax.value,itens:itens.value
  }));
 }
 function carregar(){
@@ -193,6 +240,7 @@ function carregar(){
  vida=d.vida;san=d.san;
  vidaMax.value=d.vidaMax;
  sanMax.value=d.sanMax;
+ itens.value=d.itens||"";
  atualizar();
 }
 function atualizar(){
@@ -200,21 +248,22 @@ function atualizar(){
  sanAtual.textContent=san;
 }
 function alterar(t,v){
- if(t==="vida")vida=Math.max(0,Math.min(+vidaMax.value,vida+v));
+ if(t==="vida") vida=Math.max(0,Math.min(+vidaMax.value,vida+v));
  else san=Math.max(0,Math.min(+sanMax.value,san+v));
  salvar();atualizar();
 }
 vidaMax.onchange=()=>{vida=+vidaMax.value;salvar();atualizar();}
 sanMax.onchange=()=>{san=+sanMax.value;salvar();atualizar();}
+itens.oninput=salvar;
 
-// ===== TESTE DE SANIDADE =====
+// ===== TESTE SANIDADE =====
 function testeSanidade(){
+ somDado();
  const d=Math.floor(Math.random()*100)+1;
- const sanidadeMax=+sanMax.value;
- const sucesso=d<=sanidadeMax;
-
+ const max=+sanMax.value;
+ const ok=d<=max;
  resSan.innerHTML=`Dado: <b>${d}</b><br>
- <span class="${sucesso?'N':'F'}"><b>${sucesso?'SUCESSO':'FALHA'}</b></span>`;
+ <span class="${ok?'N':'F'}"><b>${ok?'SUCESSO':'FALHA'}</b></span>`;
 }
 
 carregar();
