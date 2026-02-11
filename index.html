@@ -897,7 +897,21 @@ function carregar() {
 // ============================================================================
 
 function exportarDados() {
-  const nome = nomePersonagem.value || "PersonagemSemNome";
+  const nomePadrao = nomePersonagem.value || "PersonagemSemNome";
+  
+  // Solicitar ao usuário o nome do arquivo
+  let nomeArquivo = prompt("Digite o nome para o arquivo de exportação (sem extensão):", nomePadrao);
+  
+  // Se o usuário cancelar, não fazer nada
+  if (nomeArquivo === null) {
+    return;
+  }
+  
+  // Se o usuário não digitar nada, usar o nome padrão
+  if (nomeArquivo.trim() === "") {
+    nomeArquivo = nomePadrao;
+  }
+  
   const data = new Date().toLocaleDateString('pt-BR');
   const hora = new Date().toLocaleTimeString('pt-BR');
   
@@ -907,7 +921,7 @@ function exportarDados() {
       versao: "1.0",
       dataExportacao: new Date().toISOString(),
       dataLegivel: `${data} ${hora}`,
-      nomePersonagem: nome
+      nomePersonagem: nomePersonagem.value || "PersonagemSemNome"
     },
     
     status: {
@@ -952,16 +966,21 @@ function exportarDados() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `ficha_rpg_${nome.replace(/\s+/g, '_')}_${data.replace(/\//g, '-')}.json`;
+  
+  // Usar o nome fornecido pelo usuário
+  a.download = `${nomeArquivo.replace(/\s+/g, '_')}.json`;
+  
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
   
-  alert(`Ficha de ${nome} exportada como JSON com sucesso!`);
+  alert(`Ficha "${nomeArquivo}" exportada como JSON com sucesso!`);
 }
 
 function importarDados() {
+  // Limpar o input para permitir importar o mesmo arquivo novamente
+  document.getElementById('fileInput').value = '';
   document.getElementById('fileInput').click();
 }
 
@@ -980,10 +999,14 @@ function processarArquivo(files) {
       alert('Erro ao ler o arquivo. Certifique-se de que é um arquivo JSON válido exportado deste sistema.');
       console.error(error);
     }
+    // Limpar o input para permitir importar o mesmo arquivo novamente
+    document.getElementById('fileInput').value = '';
   };
   
   reader.onerror = function() {
     alert('Erro ao ler o arquivo.');
+    // Limpar o input mesmo em caso de erro
+    document.getElementById('fileInput').value = '';
   };
   
   reader.readAsText(file);
