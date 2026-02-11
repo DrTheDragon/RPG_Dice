@@ -71,13 +71,12 @@ button:active{transform:scale(.97)}
 .historico{margin-top:15px;font-size:14px}
 .historico ul{list-style:none;padding:0;margin:0;height:180px;overflow:hidden}
 .historico li{padding:5px 6px;border-bottom:1px solid var(--border);line-height:1.3;min-height:28px;display:flex;align-items:center}
-.fade-0{color:var(--text);opacity:1}
-.fade-1{color:var(--text);opacity:1}
-.fade-2{color:var(--text);opacity:1}
-.fade-3{color:var(--text);opacity:0.8}
-.fade-4{color:var(--text);opacity:0.6}
-.fade-5{color:var(--text);opacity:0.4}
-.fade-6{color:var(--text);opacity:0.2}
+.fade-0{color:var(--text)}
+.fade-1{color:var(--text)}
+.fade-2{color:var(--text)}
+.fade-3{color:#bbb}
+.fade-4{color:#888}
+.fade-5{color:#555}
 
 .toggle{
  margin-bottom:15px;
@@ -86,10 +85,12 @@ button:active{transform:scale(.97)}
  display:flex;
  justify-content:space-between;
  align-items:center;
+ gap:10px;
 }
 .toggle button{
  width:auto;
  min-width:150px;
+ flex:1;
 }
 
 .itens{width:820px;max-width:95%;margin-top:25px}
@@ -233,6 +234,11 @@ button:active{transform:scale(.97)}
  width: 100%;
 }
 
+/* Input de arquivo escondido */
+.file-input {
+ display: none;
+}
+
 /* Melhorias para mobile - HISTÓRICOS VISÍVEIS */
 @media(max-width:768px){
  body{align-items:flex-start; padding:10px; justify-content:flex-start; min-height:100vh;}
@@ -261,7 +267,7 @@ button:active{transform:scale(.97)}
  .resultado{min-height:70px; padding:8px 0; font-size:14px; text-align:center;}
  
  /* Centralizar melhor */
- .toggle{flex-direction:column; gap:10px; align-items:center;}
+ .toggle{flex-direction:column; gap:8px; align-items:center;}
  .toggle button{width:100%; max-width:250px;}
  .itens{margin-top:12px;}
  .recursos, .atributos-extras, .peso-container{margin-top:12px;}
@@ -324,7 +330,9 @@ button:active{transform:scale(.97)}
 
 <div class="toggle">
 <button onclick="toggleTema()">🌗 Alternar Tema</button>
-<button onclick="exportarDados()">📤 Exportar Dados</button>
+<button onclick="exportarDados()">📤 Exportar JSON</button>
+<button onclick="importarDados()">📥 Importar JSON</button>
+<input type="file" id="fileInput" class="file-input" accept=".json,.txt" onchange="processarArquivo(this.files)">
 </div>
 
 <div class="nome-personagem">
@@ -506,525 +514,683 @@ button:active{transform:scale(.97)}
 </div>
 
 <script>
-// Sistema de som melhorado
+// ============================================================================
+// VARIÁVEIS GLOBAIS E CONFIGURAÇÕES
+// ============================================================================
+
+// Sistema de áudio
 let audioContext = null;
 let audioInitialized = false;
 
-function initAudio() {
- if (!audioInitialized) {
-  try {
-   audioContext = new (window.AudioContext || window.webkitAudioContext)();
-   audioInitialized = true;
-  } catch(e) {
-   console.log("Áudio não suportado pelo navegador");
-   return false;
-  }
- }
- return true;
-}
+// Históricos
+let historico = [];
+let historicoSan = [];
+let historicoDados = [];
 
-function somDado(){
- if (!initAudio()) return;
- 
- if (audioContext.state === 'suspended') {
-  audioContext.resume();
- }
- 
- let t = audioContext.currentTime;
- for(let i = 0; i < 8; i++){
-  try {
-   const o = audioContext.createOscillator();
-   const g = audioContext.createGain();
-   o.frequency.value = 120 + Math.random() * 400;
-   g.gain.setValueAtTime(0.15, t);
-   g.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
-   o.connect(g);
-   g.connect(audioContext.destination);
-   o.start(t);
-   o.stop(t + 0.08);
-   t += 0.04;
-  } catch(e) {
-   console.log("Erro ao tocar som do dado");
-   break;
-  }
- }
-}
+// Status do personagem
+let vida = 0, san = 0, descanso = 0, poder = 0, peso = 0, defesa = 0, exposicao = 0;
 
-let historico=[];
-let historicoSan=[];
-let historicoDados=[];
-
-const tabela={
-1:{N:20,B:null,E:null},2:{N:19,B:20,E:null},
-3:{N:18,B:20,E:null},4:{N:17,B:19,E:null},
-5:{N:16,B:19,E:20},6:{N:15,B:18,E:20},
-7:{N:14,B:18,E:20},8:{N:13,B:17,E:20},
-9:{N:12,B:17,E:20},10:{N:11,B:16,E:19},
-11:{N:10,B:16,E:19},12:{N:9,B:15,E:19},
-13:{N:8,B:15,E:19},14:{N:7,B:14,E:19},
-15:{N:6,B:14,E:18},16:{N:5,B:13,E:18},
-17:{N:4,B:13,E:18},18:{N:3,B:12,E:18},
-19:{N:2,B:12,E:18},20:{N:1,B:11,E:17}
+// Tabela para testes de atributo
+const tabela = {
+  1:{N:20,B:null,E:null}, 2:{N:19,B:20,E:null},
+  3:{N:18,B:20,E:null}, 4:{N:17,B:19,E:null},
+  5:{N:16,B:19,E:20}, 6:{N:15,B:18,E:20},
+  7:{N:14,B:18,E:20}, 8:{N:13,B:17,E:20},
+  9:{N:12,B:17,E:20}, 10:{N:11,B:16,E:19},
+  11:{N:10,B:16,E:19}, 12:{N:9,B:15,E:19},
+  13:{N:8,B:15,E:19}, 14:{N:7,B:14,E:19},
+  15:{N:6,B:14,E:18}, 16:{N:5,B:13,E:18},
+  17:{N:4,B:13,E:18}, 18:{N:3,B:12,E:18},
+  19:{N:2,B:12,E:18}, 20:{N:1,B:11,E:17}
 };
 
-function testeAtributo(){
- somDado();
- let att=parseInt(atributo.value)||1;
- att=Math.min(20,Math.max(1,att));
- atributo.value=att;
+// Elementos DOM importantes
+const defesaInput = document.getElementById('defesa');
 
- const dadoEl=document.querySelectorAll(".dado")[0];
- dadoEl.classList.add("rolando");
- setTimeout(()=>dadoEl.classList.remove("rolando"),350);
+// ============================================================================
+// SISTEMA DE ÁUDIO
+// ============================================================================
 
- const d=Math.floor(Math.random()*20)+1;
- let t,c;
+function initAudio() {
+  if (!audioInitialized) {
+    try {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      audioInitialized = true;
+    } catch(e) {
+      console.log("Áudio não suportado pelo navegador");
+      return false;
+    }
+  }
+  return true;
+}
 
- const r=tabela[att];
- 
- if(d===1){
-  if(d >= r.N){
-   t="NORMAL";
-   c="N";
+function somDado() {
+  if (!initAudio()) return;
+  
+  if (audioContext.state === 'suspended') {
+    audioContext.resume();
+  }
+  
+  let t = audioContext.currentTime;
+  for(let i = 0; i < 8; i++) {
+    try {
+      const o = audioContext.createOscillator();
+      const g = audioContext.createGain();
+      o.frequency.value = 120 + Math.random() * 400;
+      g.gain.setValueAtTime(0.15, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+      o.connect(g);
+      g.connect(audioContext.destination);
+      o.start(t);
+      o.stop(t + 0.08);
+      t += 0.04;
+    } catch(e) {
+      console.log("Erro ao tocar som do dado");
+      break;
+    }
+  }
+}
+
+// ============================================================================
+// TESTES E ROLAGENS DE DADOS
+// ============================================================================
+
+function testeAtributo() {
+  somDado();
+  let att = parseInt(atributo.value) || 1;
+  att = Math.min(20, Math.max(1, att));
+  atributo.value = att;
+
+  const dadoEl = document.querySelectorAll(".dado")[0];
+  dadoEl.classList.add("rolando");
+  setTimeout(() => dadoEl.classList.remove("rolando"), 350);
+
+  const d = Math.floor(Math.random() * 20) + 1;
+  let t, c;
+  const r = tabela[att];
+  
+  if(d === 1) {
+    if(d >= r.N) {
+      t = "NORMAL";
+      c = "N";
+    } else {
+      t = "FALHA CRÍTICA";
+      c = "F";
+    }
   } else {
-   t="FALHA CRÍTICA";
-   c="F";
+    if(r.E && d >= r.E) {
+      t = "EXTREMO";
+      c = "E";
+    } else if(r.B && d >= r.B) {
+      t = "BOM";
+      c = "B";
+    } else if(d >= r.N) {
+      t = "NORMAL";
+      c = "N";
+    } else {
+      t = "FALHA";
+      c = "F";
+    }
   }
- } else {
-  if(r.E && d >= r.E){
-   t="EXTREMO";
-   c="E";
-  } else if(r.B && d >= r.B){
-   t="BOM";
-   c="B";
-  } else if(d >= r.N){
-   t="NORMAL";
-   c="N";
-  } else {
-   t="FALHA";
-   c="F";
-  }
- }
 
- resAtributo.innerHTML=
- `🎲 ${d}<br>📊 Atributo ${att}<br><span class="${c}"><b>${t}</b></span>`;
-
- historico.unshift(`🎲 ${d} | Atributo ${att} → ${t}`);
- if(historico.length>6)historico.pop();
- salvar();atualizarHistorico();
+  resAtributo.innerHTML = `🎲 ${d}<br>📊 Atributo ${att}<br><span class="${c}"><b>${t}</b></span>`;
+  historico.unshift(`🎲 ${d} | Atributo ${att} → ${t}`);
+  if(historico.length > 6) historico.pop();
+  salvar(); atualizarHistorico();
 }
 
-function testeSanidade(){
- somDado();
+function testeSanidade() {
+  somDado();
+  const dadoEl = document.querySelectorAll(".dado")[1];
+  dadoEl.classList.add("rolando");
+  setTimeout(() => dadoEl.classList.remove("rolando"), 350);
 
- const dadoEl=document.querySelectorAll(".dado")[1];
- dadoEl.classList.add("rolando");
- setTimeout(()=>dadoEl.classList.remove("rolando"),350);
+  const sanAtualVal = Math.max(0, san);
+  const d = Math.floor(Math.random() * 100) + 1;
+  const ok = d >= sanAtualVal;
+  const r = ok ? "SUCESSO" : "FALHA";
 
- // MODIFICAÇÃO: Agora compara com a sanidade ATUAL, não máxima
- const sanAtualVal = Math.max(0, san); // san é a variável que guarda a sanidade atual
-
- const d=Math.floor(Math.random()*100)+1;
- const ok=d>=sanAtualVal;
- const r=ok?"SUCESSO":"FALHA";
-
- resSan.innerHTML=`🎲 ${d}<br>Sanidade Atual: ${sanAtualVal}<br><span class="${ok?'N':'F'}"><b>${r}</b></span>`;
-
- historicoSan.unshift(`🧠 ${d} / San Atual: ${sanAtualVal} → ${r}`);
- if(historicoSan.length>6)historicoSan.pop();
- salvar();atualizarHistoricoSan();
+  resSan.innerHTML = `🎲 ${d}<br>Sanidade Atual: ${sanAtualVal}<br><span class="${ok?'N':'F'}"><b>${r}</b></span>`;
+  historicoSan.unshift(`🧠 ${d} / San Atual: ${sanAtualVal} → ${r}`);
+  if(historicoSan.length > 6) historicoSan.pop();
+  salvar(); atualizarHistoricoSan();
 }
 
-function rolarDadoPersonalizado(){
- somDado();
- let input = document.getElementById('dadoPersonalizado').value.trim();
- const resultado = document.getElementById('resDadoPersonalizado');
- const detalhes = document.getElementById('detalhesRolagem');
- 
- if(!input) {
-  resultado.innerHTML = 'Digite uma fórmula de dados';
-  detalhes.innerHTML = '';
-  return;
- }
- 
- try {
-  input = input.replace(/\s+/g, '').toLowerCase();
+function rolarDadoPersonalizado() {
+  somDado();
+  let input = document.getElementById('dadoPersonalizado').value.trim();
+  const resultado = document.getElementById('resDadoPersonalizado');
+  const detalhes = document.getElementById('detalhesRolagem');
   
-  const partes = input.split('+');
-  let total = 0;
-  let detalhesText = '';
-  
-  for(let parte of partes) {
-   if(parte.includes('d')) {
-    const [quantidadeStr, facesStr] = parte.split(/d/i);
-    const quantidade = parseInt(quantidadeStr) || 1;
-    const faces = parseInt(facesStr);
-    
-    if(isNaN(faces) || faces <= 0) {
-     throw new Error('Número de faces inválido');
-    }
-    
-    detalhesText += `${parte}: `;
-    let somaParte = 0;
-    const rolagens = [];
-    
-    for(let i = 0; i < quantidade; i++) {
-     const rolagem = Math.floor(Math.random() * faces) + 1;
-     rolagens.push(rolagem);
-     somaParte += rolagem;
-    }
-    
-    detalhesText += rolagens.join(' + ');
-    if(quantidade > 1) {
-     detalhesText += ` = ${somaParte}`;
-    }
-    
-    total += somaParte;
-    detalhesText += '<br>';
-   } 
-   else {
-    const valor = parseInt(parte);
-    if(!isNaN(valor)) {
-     total += valor;
-     detalhesText += `+${valor} (bônus)<br>`;
-    }
-   }
+  if(!input) {
+    resultado.innerHTML = 'Digite uma fórmula de dados';
+    detalhes.innerHTML = '';
+    return;
   }
   
-  resultado.innerHTML = `🎲 ${input}<br>Total: <b>${total}</b>`;
-  detalhes.innerHTML = `<p><b>Detalhes:</b></p>${detalhesText}`;
-  
-  historicoDados.unshift(`🎲 ${input} → ${total}`);
-  if(historicoDados.length>6)historicoDados.pop();
-  salvar();atualizarHistoricoDados();
-  
- } catch(e) {
-  resultado.innerHTML = 'Formato inválido. Use: "2d6", "1d20+4", etc.';
-  detalhes.innerHTML = '';
- }
+  try {
+    input = input.replace(/\s+/g, '').toLowerCase();
+    const partes = input.split('+');
+    let total = 0;
+    let detalhesText = '';
+    
+    for(let parte of partes) {
+      if(parte.includes('d')) {
+        const [quantidadeStr, facesStr] = parte.split(/d/i);
+        const quantidade = parseInt(quantidadeStr) || 1;
+        const faces = parseInt(facesStr);
+        
+        if(isNaN(faces) || faces <= 0) {
+          throw new Error('Número de faces inválido');
+        }
+        
+        detalhesText += `${parte}: `;
+        let somaParte = 0;
+        const rolagens = [];
+        
+        for(let i = 0; i < quantidade; i++) {
+          const rolagem = Math.floor(Math.random() * faces) + 1;
+          rolagens.push(rolagem);
+          somaParte += rolagem;
+        }
+        
+        detalhesText += rolagens.join(' + ');
+        if(quantidade > 1) {
+          detalhesText += ` = ${somaParte}`;
+        }
+        
+        total += somaParte;
+        detalhesText += '<br>';
+      } else {
+        const valor = parseInt(parte);
+        if(!isNaN(valor)) {
+          total += valor;
+          detalhesText += `+${valor} (bônus)<br>`;
+        }
+      }
+    }
+    
+    resultado.innerHTML = `🎲 ${input}<br>Total: <b>${total}</b>`;
+    detalhes.innerHTML = `<p><b>Detalhes:</b></p>${detalhesText}`;
+    historicoDados.unshift(`🎲 ${input} → ${total}`);
+    if(historicoDados.length > 6) historicoDados.pop();
+    atualizarHistoricoDados();
+    
+  } catch(e) {
+    resultado.innerHTML = 'Formato inválido. Use: "2d6", "1d20+4", etc.';
+    detalhes.innerHTML = '';
+  }
 }
 
-// Função para calcular dinheiro automaticamente
-function calcularDinheiro() {
- const input = document.getElementById('dinheiro');
- const valor = input.value.trim();
- 
- if(!valor) return;
- 
- try {
-  const validInput = valor.replace(/\s+/g, '');
-  if(!/^[0-9+\-]+$/.test(validInput)) {
-   const num = parseInt(valor) || 0;
-   input.value = num;
-   salvar();
-   return;
-  }
-  
-  const numeros = validInput.split(/([+-])/);
-  let total = 0;
-  let operador = '+';
-  
-  for(let parte of numeros) {
-   if(parte === '+' || parte === '-') {
-    operador = parte;
-   } else if(parte !== '') {
-    const num = parseInt(parte);
-    if(!isNaN(num)) {
-     if(operador === '+') {
-      total += num;
-     } else {
-      total -= num;
-     }
-    }
-   }
-  }
-  
-  input.value = total;
-  salvar();
-  
- } catch(e) {
-  const num = parseInt(valor) || 0;
-  input.value = num;
-  salvar();
- }
+// ============================================================================
+// GERENCIAMENTO DE STATUS
+// ============================================================================
+
+function atualizar() {
+  vidaAtual.textContent = vida;
+  sanAtual.textContent = san;
+  descansoAtual.textContent = descanso;
+  poderAtual.textContent = poder;
+  pesoAtual.textContent = peso;
+  exposicaoValor.textContent = exposicao;
 }
 
-// Funções para definir valores máximos
+function alterar(t, v) {
+  if(t === "vida") vida = Math.max(0, Math.min(+vidaMax.value, vida + v));
+  else if(t === "san") san = Math.max(0, Math.min(+sanMax.value, san + v));
+  else if(t === "descanso") descanso = Math.max(0, descanso + v);
+  else if(t === "poder") poder = Math.max(0, Math.min(+poderMax.value, poder + v));
+  else if(t === "peso") peso = Math.max(0, Math.min(+pesoMax.value, peso + v));
+  salvar(); atualizar();
+}
+
 function setVidaMaxima() {
- const max = Math.max(0, +vidaMax.value || 0);
- vida = max;
- atualizar();
- salvar();
+  const max = Math.max(0, +vidaMax.value || 0);
+  vida = max;
+  atualizar();
+  salvar();
 }
 
 function setSanidadeMaxima() {
- const max = Math.max(0, +sanMax.value || 0);
- san = max;
- atualizar();
- salvar();
+  const max = Math.max(0, +sanMax.value || 0);
+  san = max;
+  atualizar();
+  salvar();
 }
 
-// Função para exportar dados
+function atualizarExposicao() {
+  let valor = parseInt(exposicaoInput.value) || 0;
+  if(valor < 0) valor = 0;
+  if(valor > 100) valor = 100;
+  exposicao = valor;
+  exposicaoValor.textContent = exposicao;
+  exposicaoInput.value = exposicao;
+  salvar();
+}
+
+// ============================================================================
+// HISTÓRICOS
+// ============================================================================
+
+function atualizarHistorico() {
+  listaHistorico.innerHTML = "";
+  historico.forEach((h, i) => {
+    const li = document.createElement("li");
+    li.className = i < 3 ? `fade-${i}` : i === 3 ? "fade-3" : i === 4 ? "fade-4" : "fade-5";
+    li.textContent = h;
+    listaHistorico.appendChild(li);
+  });
+}
+
+function atualizarHistoricoSan() {
+  listaHistoricoSan.innerHTML = "";
+  historicoSan.forEach((h, i) => {
+    const li = document.createElement("li");
+    li.className = i < 3 ? `fade-${i}` : i === 3 ? "fade-3" : i === 4 ? "fade-4" : "fade-5";
+    li.textContent = h;
+    listaHistoricoSan.appendChild(li);
+  });
+}
+
+function atualizarHistoricoDados() {
+  listaHistoricoDados.innerHTML = "";
+  historicoDados.forEach((h, i) => {
+    const li = document.createElement("li");
+    li.className = i < 3 ? `fade-${i}` : i === 3 ? "fade-3" : i === 4 ? "fade-4" : "fade-5";
+    li.textContent = h;
+    listaHistoricoDados.appendChild(li);
+  });
+}
+
+// ============================================================================
+// SISTEMA DE ARMAZENAMENTO (LOCALSTORAGE)
+// ============================================================================
+
+function salvar() {
+  const dados = {
+    // Status atuais
+    vida, san, descanso, poder, peso, defesa, exposicao,
+    
+    // Valores máximos
+    vidaMax: Math.max(0, +vidaMax.value || 0),
+    sanMax: Math.max(0, +sanMax.value || 0),
+    poderMax: Math.max(0, +poderMax.value || 0),
+    pesoMax: Math.max(0, +pesoMax.value || 0),
+    
+    // Outros valores
+    dinheiro: dinheiro.value,
+    itens: itens.value,
+    traumas: traumas.value,
+    
+    // Históricos
+    historico,
+    historicoSan,
+    historicoDados,
+    
+    // Configurações
+    tema: document.body.className,
+    nomePersonagem: nomePersonagem.value,
+    
+    // Checkboxes
+    checkVida1: checkVida1.checked,
+    checkVida2: checkVida2.checked,
+    checkVida3: checkVida3.checked,
+    checkFerido: checkFerido.checked,
+    checkCaido: checkCaido.checked
+  };
+  
+  localStorage.setItem("noir", JSON.stringify(dados));
+}
+
+function carregar() {
+  const dadosSalvos = JSON.parse(localStorage.getItem("noir"));
+  if(!dadosSalvos) return;
+  
+  // Carregar valores atuais
+  vida = dadosSalvos.vida || 0;
+  san = dadosSalvos.san || 0;
+  descanso = dadosSalvos.descanso || 0;
+  poder = dadosSalvos.poder || 0;
+  peso = dadosSalvos.peso || 0;
+  defesa = dadosSalvos.defesa || 0;
+  exposicao = dadosSalvos.exposicao || 0;
+  
+  // Carregar valores máximos
+  vidaMax.value = Math.max(0, dadosSalvos.vidaMax || 0);
+  sanMax.value = Math.max(0, dadosSalvos.sanMax || 0);
+  poderMax.value = Math.max(0, dadosSalvos.poderMax || 0);
+  pesoMax.value = Math.max(0, dadosSalvos.pesoMax || 0);
+  
+  // Carregar outros valores
+  defesaInput.value = defesa;
+  exposicaoValor.textContent = exposicao;
+  exposicaoInput.value = exposicao;
+  dinheiro.value = dadosSalvos.dinheiro || "";
+  itens.value = dadosSalvos.itens || "";
+  traumas.value = dadosSalvos.traumas || "";
+  
+  // Carregar históricos
+  historico = dadosSalvos.historico || [];
+  historicoSan = dadosSalvos.historicoSan || [];
+  historicoDados = dadosSalvos.historicoDados || [];
+  
+  // Carregar configurações
+  if(dadosSalvos.tema) document.body.className = dadosSalvos.tema;
+  if(dadosSalvos.nomePersonagem) nomePersonagem.value = dadosSalvos.nomePersonagem;
+  
+  // Carregar checkboxes
+  if(dadosSalvos.checkVida1 !== undefined) checkVida1.checked = dadosSalvos.checkVida1;
+  if(dadosSalvos.checkVida2 !== undefined) checkVida2.checked = dadosSalvos.checkVida2;
+  if(dadosSalvos.checkVida3 !== undefined) checkVida3.checked = dadosSalvos.checkVida3;
+  if(dadosSalvos.checkFerido !== undefined) checkFerido.checked = dadosSalvos.checkFerido;
+  if(dadosSalvos.checkCaido !== undefined) checkCaido.checked = dadosSalvos.checkCaido;
+  
+  // Atualizar interface
+  atualizar();
+  atualizarHistorico();
+  atualizarHistoricoSan();
+  atualizarHistoricoDados();
+}
+
+// ============================================================================
+// EXPORTAÇÃO E IMPORTAÇÃO (JSON)
+// ============================================================================
+
 function exportarDados() {
- const nome = nomePersonagem.value || "PersonagemSemNome";
- const data = new Date().toLocaleDateString('pt-BR');
- const hora = new Date().toLocaleTimeString('pt-BR');
- 
- let conteudo = `=== FICHA DE PERSONAGEM ===\n`;
- conteudo += `Nome: ${nome}\n`;
- conteudo += `Exportado em: ${data} às ${hora}\n\n`;
- 
- // STATUS
- conteudo += `=== STATUS ===\n`;
- conteudo += `Vida: ${vida}/${vidaMax.value || 0}\n`;
- conteudo += `Sanidade: ${san}/${sanMax.value || 0}\n`;
- conteudo += `Descanso: ${descanso} horas\n`;
- conteudo += `Poder: ${poder}/${poderMax.value || 0}\n`;
- conteudo += `Peso: ${peso}/${pesoMax.value || 0}\n`;
- conteudo += `Defesa: ${defesa}\n`;
- conteudo += `Exposição Paranormal: ${exposicao}%\n\n`;
- 
- // STATUS DE VIDA
- const ferido = checkFerido.checked ? "Sim" : "Não";
- const caido = checkCaido.checked ? "Sim" : "Não";
- const vida1 = checkVida1.checked ? "✓" : "✗";
- const vida2 = checkVida2.checked ? "✓" : "✗";
- const vida3 = checkVida3.checked ? "✓" : "✗";
- 
- conteudo += `=== ESTADO ===\n`;
- conteudo += `Gravemente Ferido: ${ferido}\n`;
- conteudo += `Caído: ${caido}\n`;
- conteudo += `Marcadores de Vida: [${vida1}] [${vida2}] [${vida3}]\n\n`;
- 
- // RECURSOS
- conteudo += `=== RECURSOS ===\n`;
- conteudo += `Dinheiro: ${dinheiro.value || "0"}\n\n`;
- 
- if(traumas.value.trim()) {
-  conteudo += `=== TRAUMAS & FOBIAS ===\n`;
-  conteudo += `${traumas.value}\n\n`;
- }
- 
- // ITENS
- if(itens.value.trim()) {
-  conteudo += `=== ITENS / ACESSÓRIOS ===\n`;
-  conteudo += `${itens.value}\n\n`;
- }
- 
- // HISTÓRICOS
- conteudo += `=== HISTÓRICO DE TESTES ===\n`;
- conteudo += `Testes de Atributo:\n`;
- historico.forEach(item => conteudo += `  ${item}\n`);
- 
- conteudo += `\nTestes de Sanidade:\n`;
- historicoSan.forEach(item => conteudo += `  ${item}\n`);
- 
- conteudo += `\nDados Personalizados:\n`;
- historicoDados.forEach(item => conteudo += `  ${item}\n`);
- 
- // Criar e baixar arquivo
- const blob = new Blob([conteudo], { type: 'text/plain' });
- const url = URL.createObjectURL(blob);
- const a = document.createElement('a');
- a.href = url;
- a.download = `ficha_${nome.replace(/\s+/g, '_')}_${data.replace(/\//g, '-')}.txt`;
- document.body.appendChild(a);
- a.click();
- document.body.removeChild(a);
- URL.revokeObjectURL(url);
- 
- alert(`Ficha de ${nome} exportada com sucesso!`);
+  const nome = nomePersonagem.value || "PersonagemSemNome";
+  const data = new Date().toLocaleDateString('pt-BR');
+  const hora = new Date().toLocaleTimeString('pt-BR');
+  
+  const dadosParaExportar = {
+    meta: {
+      sistema: "Teste RPG",
+      versao: "1.0",
+      dataExportacao: new Date().toISOString(),
+      dataLegivel: `${data} ${hora}`,
+      nomePersonagem: nome
+    },
+    
+    status: {
+      vida: { atual: vida, max: vidaMax.value || 0 },
+      sanidade: { atual: san, max: sanMax.value || 0 },
+      descanso: descanso,
+      poder: { atual: poder, max: poderMax.value || 0 },
+      peso: { atual: peso, max: pesoMax.value || 0 },
+      defesa: defesa,
+      exposicaoParanormal: exposicao
+    },
+    
+    estado: {
+      gravementeFerido: checkFerido.checked,
+      caido: checkCaido.checked,
+      marcadoresVida: {
+        marcador1: checkVida1.checked,
+        marcador2: checkVida2.checked,
+        marcador3: checkVida3.checked
+      }
+    },
+    
+    recursos: {
+      dinheiro: dinheiro.value || "0",
+      traumas: traumas.value || "",
+      itens: itens.value || ""
+    },
+    
+    historicos: {
+      testesAtributo: historico,
+      testesSanidade: historicoSan,
+      dadosPersonalizados: historicoDados
+    },
+    
+    configuracao: {
+      tema: document.body.className
+    }
+  };
+  
+  const jsonString = JSON.stringify(dadosParaExportar, null, 2);
+  const blob = new Blob([jsonString], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `ficha_rpg_${nome.replace(/\s+/g, '_')}_${data.replace(/\//g, '-')}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  
+  alert(`Ficha de ${nome} exportada como JSON com sucesso!`);
 }
 
-function atualizarHistorico(){
- listaHistorico.innerHTML="";
- historico.forEach((h,i)=>{
-  const li=document.createElement("li");
-  if(i===0) li.className = "fade-0";
-  else if(i===1) li.className = "fade-1";
-  else if(i===2) li.className = "fade-2";
-  else if(i===3) li.className = "fade-3";
-  else if(i===4) li.className = "fade-4";
-  else if(i===5) li.className = "fade-5";
-  else li.className = "fade-6";
-  li.textContent=h;
-  listaHistorico.appendChild(li);
- });
+function importarDados() {
+  document.getElementById('fileInput').click();
 }
 
-function atualizarHistoricoSan(){
- listaHistoricoSan.innerHTML="";
- historicoSan.forEach((h,i)=>{
-  const li=document.createElement("li");
-  if(i===0) li.className = "fade-0";
-  else if(i===1) li.className = "fade-1";
-  else if(i===2) li.className = "fade-2";
-  else if(i===3) li.className = "fade-3";
-  else if(i===4) li.className = "fade-4";
-  else if(i===5) li.className = "fade-5";
-  else li.className = "fade-6";
-  li.textContent=h;
-  listaHistoricoSan.appendChild(li);
- });
+function processarArquivo(files) {
+  if (files.length === 0) return;
+  
+  const file = files[0];
+  const reader = new FileReader();
+  
+  reader.onload = function(e) {
+    try {
+      const conteudo = e.target.result;
+      const dados = JSON.parse(conteudo);
+      aplicarDadosImportados(dados);
+    } catch (error) {
+      alert('Erro ao ler o arquivo. Certifique-se de que é um arquivo JSON válido exportado deste sistema.');
+      console.error(error);
+    }
+  };
+  
+  reader.onerror = function() {
+    alert('Erro ao ler o arquivo.');
+  };
+  
+  reader.readAsText(file);
 }
 
-function atualizarHistoricoDados(){
- listaHistoricoDados.innerHTML="";
- historicoDados.forEach((h,i)=>{
-  const li=document.createElement("li");
-  if(i===0) li.className = "fade-0";
-  else if(i===1) li.className = "fade-1";
-  else if(i===2) li.className = "fade-2";
-  else if(i===3) li.className = "fade-3";
-  else if(i===4) li.className = "fade-4";
-  else if(i===5) li.className = "fade-5";
-  else li.className = "fade-6";
-  li.textContent=h;
-  listaHistoricoDados.appendChild(li);
- });
+function aplicarDadosImportados(dados) {
+  if (!dados || !dados.status || !dados.meta) {
+    alert('Arquivo JSON inválido ou formato incorreto.');
+    return;
+  }
+  
+  // Carregar nome
+  if (dados.meta.nomePersonagem) {
+    nomePersonagem.value = dados.meta.nomePersonagem;
+  }
+  
+  // Carregar status
+  if (dados.status) {
+    vida = dados.status.vida.atual || 0;
+    vidaMax.value = dados.status.vida.max || 0;
+    
+    san = dados.status.sanidade.atual || 0;
+    sanMax.value = dados.status.sanidade.max || 0;
+    
+    descanso = dados.status.descanso || 0;
+    
+    poder = dados.status.poder.atual || 0;
+    poderMax.value = dados.status.poder.max || 0;
+    
+    peso = dados.status.peso.atual || 0;
+    pesoMax.value = dados.status.peso.max || 0;
+    
+    defesa = dados.status.defesa || 0;
+    defesaInput.value = defesa;
+    
+    exposicao = dados.status.exposicaoParanormal || 0;
+    exposicaoInput.value = exposicao;
+  }
+  
+  // Carregar estado
+  if (dados.estado) {
+    checkFerido.checked = dados.estado.gravementeFerido || false;
+    checkCaido.checked = dados.estado.caido || false;
+    
+    if (dados.estado.marcadoresVida) {
+      checkVida1.checked = dados.estado.marcadoresVida.marcador1 || false;
+      checkVida2.checked = dados.estado.marcadoresVida.marcador2 || false;
+      checkVida3.checked = dados.estado.marcadoresVida.marcador3 || false;
+    }
+  }
+  
+  // Carregar recursos
+  if (dados.recursos) {
+    dinheiro.value = dados.recursos.dinheiro || "";
+    traumas.value = dados.recursos.traumas || "";
+    itens.value = dados.recursos.itens || "";
+  }
+  
+  // Carregar históricos
+  if (dados.historicos) {
+    historico = dados.historicos.testesAtributo || [];
+    historicoSan = dados.historicos.testesSanidade || [];
+    historicoDados = dados.historicos.dadosPersonalizados || [];
+    
+    // Limitar a 6 itens cada
+    if (historico.length > 6) historico = historico.slice(0, 6);
+    if (historicoSan.length > 6) historicoSan = historicoSan.slice(0, 6);
+    if (historicoDados.length > 6) historicoDados = historicoDados.slice(0, 6);
+  }
+  
+  // Carregar configuração
+  if (dados.configuracao && dados.configuracao.tema) {
+    document.body.className = dados.configuracao.tema;
+  }
+  
+  // Atualizar interface
+  atualizar();
+  atualizarHistorico();
+  atualizarHistoricoSan();
+  atualizarHistoricoDados();
+  
+  // Salvar no localStorage
+  salvar();
+  
+  alert(`Dados de "${dados.meta.nomePersonagem || 'Personagem'}" importados com sucesso!`);
 }
 
-let vida=0,san=0,descanso=0,poder=0,peso=0,defesa=0,exposicao=0;
-function salvar(){
- localStorage.setItem("noir",JSON.stringify({
-  vida,san,descanso,poder,peso,defesa,exposicao,
-  vidaMax:Math.max(0,+vidaMax.value||0),
-  sanMax:Math.max(0,+sanMax.value||0),
-  poderMax:Math.max(0,+poderMax.value||0),
-  pesoMax:Math.max(0,+pesoMax.value||0),
-  dinheiro:dinheiro.value,
-  itens:itens.value,
-  traumas:traumas.value,
-  historico,
-  historicoSan,
-  historicoDados,
-  tema:document.body.className,
-  nomePersonagem:nomePersonagem.value,
-  checkVida1:checkVida1.checked,
-  checkVida2:checkVida2.checked,
-  checkVida3:checkVida3.checked,
-  checkFerido:checkFerido.checked,
-  checkCaido:checkCaido.checked
- }));
-}
-function carregar(){
- const d=JSON.parse(localStorage.getItem("noir"));if(!d)return;
- 
- vida=d.vida||0;san=d.san||0;descanso=d.descanso||0;
- poder=d.poder||0;peso=d.peso||0;defesa=d.defesa||0;exposicao=d.exposicao||0;
- 
- vidaMax.value=Math.max(0,d.vidaMax||0);
- sanMax.value=Math.max(0,d.sanMax||0);
- poderMax.value=Math.max(0,d.poderMax||0);
- pesoMax.value=Math.max(0,d.pesoMax||0);
- 
- defesaInput.value = defesa;
- 
- exposicaoValor.textContent=exposicao;
- exposicaoInput.value=exposicao;
- 
- dinheiro.value=d.dinheiro||"";
- 
- itens.value=d.itens||"";
- traumas.value=d.traumas||"";
- historico=d.historico||[];
- historicoSan=d.historicoSan||[];
- historicoDados=d.historicoDados||[];
- if(d.tema)document.body.className=d.tema;
- if(d.nomePersonagem)nomePersonagem.value=d.nomePersonagem;
- if(d.checkVida1!==undefined)checkVida1.checked=d.checkVida1;
- if(d.checkVida2!==undefined)checkVida2.checked=d.checkVida2;
- if(d.checkVida3!==undefined)checkVida3.checked=d.checkVida3;
- if(d.checkFerido!==undefined)checkFerido.checked=d.checkFerido;
- if(d.checkCaido!==undefined)checkCaido.checked=d.checkCaido;
- 
- atualizar();atualizarHistorico();atualizarHistoricoSan();atualizarHistoricoDados();
-}
-function atualizar(){
- vidaAtual.textContent=vida;
- sanAtual.textContent=san;
- descansoAtual.textContent=descanso;
- poderAtual.textContent=poder;
- pesoAtual.textContent=peso;
- exposicaoValor.textContent=exposicao;
-}
-function alterar(t,v){
- if(t==="vida")vida=Math.max(0,Math.min(+vidaMax.value,vida+v));
- else if(t==="san")san=Math.max(0,Math.min(+sanMax.value,san+v));
- else if(t==="descanso")descanso=Math.max(0,descanso+v);
- else if(t==="poder")poder=Math.max(0,Math.min(+poderMax.value,poder+v));
- else if(t==="peso")peso=Math.max(0,Math.min(+pesoMax.value,peso+v));
- salvar();atualizar();
+// ============================================================================
+// FUNÇÕES UTILITÁRIAS
+// ============================================================================
+
+function calcularDinheiro() {
+  const input = document.getElementById('dinheiro');
+  const valor = input.value.trim();
+  
+  if(!valor) return;
+  
+  try {
+    const validInput = valor.replace(/\s+/g, '');
+    if(!/^[0-9+\-]+$/.test(validInput)) {
+      const num = parseInt(valor) || 0;
+      input.value = num;
+      salvar();
+      return;
+    }
+    
+    const numeros = validInput.split(/([+-])/);
+    let total = 0;
+    let operador = '+';
+    
+    for(let parte of numeros) {
+      if(parte === '+' || parte === '-') {
+        operador = parte;
+      } else if(parte !== '') {
+        const num = parseInt(parte);
+        if(!isNaN(num)) {
+          if(operador === '+') {
+            total += num;
+          } else {
+            total -= num;
+          }
+        }
+      }
+    }
+    
+    input.value = total;
+    salvar();
+    
+  } catch(e) {
+    const num = parseInt(valor) || 0;
+    input.value = num;
+    salvar();
+  }
 }
 
-function atualizarExposicao(){
- let valor = parseInt(exposicaoInput.value) || 0;
- if(valor < 0) valor = 0;
- if(valor > 100) valor = 100;
- exposicao = valor;
- exposicaoValor.textContent = exposicao;
- exposicaoInput.value = exposicao;
- salvar();
+function toggleTema() {
+  document.body.classList.toggle("light");
+  salvar();
 }
 
-vidaMax.onchange=()=>{
- vidaMax.value=Math.max(0,+vidaMax.value||0);
- if(vida > vidaMax.value) vida = vidaMax.value;
- salvar();atualizar();
+// ============================================================================
+// CONFIGURAÇÃO DE EVENTOS
+// ============================================================================
+
+// Eventos para campos de entrada
+vidaMax.onchange = () => {
+  vidaMax.value = Math.max(0, +vidaMax.value || 0);
+  if(vida > vidaMax.value) vida = vidaMax.value;
+  salvar(); atualizar();
 };
-sanMax.onchange=()=>{
- sanMax.value=Math.max(0,+sanMax.value||0);
- if(san > sanMax.value) san = sanMax.value;
- salvar();atualizar();
-};
-poderMax.onchange=()=>{
- poderMax.value=Math.max(0,+poderMax.value||0);
- if(poder > poderMax.value) poder = poderMax.value;
- salvar();atualizar();
-};
-pesoMax.onchange=()=>{
- pesoMax.value=Math.max(0,+pesoMax.value||0);
- if(peso > pesoMax.value) peso = pesoMax.value;
- salvar();atualizar();
+
+sanMax.onchange = () => {
+  sanMax.value = Math.max(0, +sanMax.value || 0);
+  if(san > sanMax.value) san = sanMax.value;
+  salvar(); atualizar();
 };
 
-const defesaInput = document.getElementById('defesa');
+poderMax.onchange = () => {
+  poderMax.value = Math.max(0, +poderMax.value || 0);
+  if(poder > poderMax.value) poder = poderMax.value;
+  salvar(); atualizar();
+};
+
+pesoMax.onchange = () => {
+  pesoMax.value = Math.max(0, +pesoMax.value || 0);
+  if(peso > pesoMax.value) peso = pesoMax.value;
+  salvar(); atualizar();
+};
+
 defesaInput.onchange = () => {
- defesa = Math.max(0, +defesaInput.value || 0);
- salvar();
+  defesa = Math.max(0, +defesaInput.value || 0);
+  salvar();
 };
 
-exposicaoInput.onchange=atualizarExposicao;
-exposicaoInput.oninput=atualizarExposicao;
+exposicaoInput.onchange = atualizarExposicao;
+exposicaoInput.oninput = atualizarExposicao;
 
 dinheiro.addEventListener('blur', calcularDinheiro);
-dinheiro.addEventListener('keypress', function(e){
- if(e.key === 'Enter') {
-  calcularDinheiro();
- }
+dinheiro.addEventListener('keypress', function(e) {
+  if(e.key === 'Enter') {
+    calcularDinheiro();
+  }
 });
 
-itens.oninput=salvar;
-traumas.oninput=salvar;
-nomePersonagem.oninput=salvar;
-checkVida1.onchange=salvar;
-checkVida2.onchange=salvar;
-checkVida3.onchange=salvar;
-checkFerido.onchange=salvar;
-checkCaido.onchange=salvar;
+// Eventos para salvar automaticamente
+itens.oninput = salvar;
+traumas.oninput = salvar;
+nomePersonagem.oninput = salvar;
+checkVida1.onchange = salvar;
+checkVida2.onchange = salvar;
+checkVida3.onchange = salvar;
+checkFerido.onchange = salvar;
+checkCaido.onchange = salvar;
 
-function toggleTema(){
- document.body.classList.toggle("light");
- salvar();
-}
+// ============================================================================
+// INICIALIZAÇÃO
+// ============================================================================
 
+// Inicializar áudio na primeira interação
 document.addEventListener('click', function initAudioOnClick() {
- if (!audioInitialized) {
-  initAudio();
- }
- document.removeEventListener('click', initAudioOnClick);
+  if (!audioInitialized) {
+    initAudio();
+  }
+  document.removeEventListener('click', initAudioOnClick);
 });
 
+// Carregar dados salvos ao iniciar
 carregar();
 </script>
 </body>
