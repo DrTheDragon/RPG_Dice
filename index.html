@@ -468,6 +468,8 @@ button:active{transform:scale(.97)}
 
 <div class="section">
 <h3>Teste de Atributo</h3>
+<!-- Dado específico para atributo -->
+<div class="dado" id="dadoAtributo">🎲</div>
 <!-- Lista de atributos personalizados (substitui o input antigo) -->
 <div id="listaAtributosPersonalizados" style="margin-bottom:15px;">
   <!-- Itens serão inseridos aqui dinamicamente -->
@@ -488,7 +490,8 @@ button:active{transform:scale(.97)}
 
 <div class="section">
 <h3>Teste de Sanidade</h3>
-<div class="dado">🎲</div>
+<!-- Dado específico para sanidade -->
+<div class="dado" id="dadoSanidade">🎲</div>
 <button onclick="testeSanidade()">ROLAR D100</button>
 <div class="resultado" id="resSan"></div>
 <div class="historico">
@@ -726,8 +729,8 @@ function testeAtributo(nome, valorAtributo) {
   somDado();
   let att = Math.min(20, Math.max(1, valorAtributo));
 
-  // Animar o primeiro dado da página (ícone geral)
-  const dadoEl = document.querySelectorAll(".dado")[0];
+  // Animar o dado específico de atributo
+  const dadoEl = document.getElementById('dadoAtributo');
   if (dadoEl) {
     dadoEl.classList.add("rolando");
     setTimeout(() => dadoEl.classList.remove("rolando"), 350);
@@ -769,9 +772,11 @@ function testeAtributo(nome, valorAtributo) {
 
 function testeSanidade() {
   somDado();
-  const dadoEl = document.querySelectorAll(".dado")[1];
-  dadoEl.classList.add("rolando");
-  setTimeout(() => dadoEl.classList.remove("rolando"), 350);
+  const dadoEl = document.getElementById('dadoSanidade');
+  if (dadoEl) {
+    dadoEl.classList.add("rolando");
+    setTimeout(() => dadoEl.classList.remove("rolando"), 350);
+  }
 
   const sanAtualVal = Math.max(0, san);
   const d = Math.floor(Math.random() * 100) + 1;
@@ -934,7 +939,7 @@ function atualizarHistoricoDados() {
 }
 
 // ============================================================================
-// SISTEMA DE ARMAZENAMENTO (COOKIES - 1 ANO DE VALIDADE)
+// SISTEMA DE ARMAZENAMENTO (COOKIES + JSON)
 // ============================================================================
 
 // Função para definir um cookie
@@ -960,6 +965,11 @@ function getCookie(nome) {
 }
 
 function salvar() {
+  // Capturar imagem do placeholder (se houver)
+  const fotoPlaceholder = document.getElementById('fotoPlaceholder');
+  const img = fotoPlaceholder.querySelector('img');
+  const imagemBase64 = img ? img.src : null;
+
   const dados = {
     // Status atuais
     vida, san, descanso, poder, peso, defesa, exposicao,
@@ -991,14 +1001,14 @@ function salvar() {
     checkFerido: document.getElementById('checkFerido').checked,
     checkCaido: document.getElementById('checkCaido').checked,
 
-    // NOVOS CAMPOS (exceto imagem, que não cabe no cookie)
+    // NOVOS CAMPOS (incluindo imagem)
     idade: document.getElementById('idadePersonagem').value,
     emprego: document.getElementById('empregoPersonagem').value,
     caracteristicas: document.getElementById('caracteristicasPersonagem').value,
     personalidade: document.getElementById('personalidadePersonagem').value,
     historia: document.getElementById('historiaPersonagem').value,
+    imagem: imagemBase64, // imagem salva no cookie
     atributosPersonalizados: atributosPersonalizados
-    // imagem não é salva no cookie (limite de tamanho)
   };
   
   // Salva no cookie com validade de 1 ano
@@ -1054,6 +1064,13 @@ function carregar() {
   if (dadosSalvos.caracteristicas) document.getElementById('caracteristicasPersonagem').value = dadosSalvos.caracteristicas;
   if (dadosSalvos.personalidade) document.getElementById('personalidadePersonagem').value = dadosSalvos.personalidade;
   if (dadosSalvos.historia) document.getElementById('historiaPersonagem').value = dadosSalvos.historia;
+  
+  // Carregar imagem do cookie
+  if (dadosSalvos.imagem) {
+    const fotoPlaceholder = document.getElementById('fotoPlaceholder');
+    fotoPlaceholder.innerHTML = `<img src="${dadosSalvos.imagem}" style="width:100%; height:100%; object-fit:cover;">`;
+  }
+
   if (dadosSalvos.atributosPersonalizados && Array.isArray(dadosSalvos.atributosPersonalizados)) {
     atributosPersonalizados = dadosSalvos.atributosPersonalizados;
     renderizarAtributos();
@@ -1075,13 +1092,10 @@ function exportarDados() {
   const data = new Date().toLocaleDateString('pt-BR');
   const hora = new Date().toLocaleTimeString('pt-BR');
   
-  // Capturar imagem em base64 se existir
+  // Capturar imagem do placeholder
   const fotoPlaceholder = document.getElementById('fotoPlaceholder');
-  let imagemBase64 = null;
   const img = fotoPlaceholder.querySelector('img');
-  if (img) {
-    imagemBase64 = img.src; // já é base64
-  }
+  const imagemBase64 = img ? img.src : null;
   
   const dadosParaExportar = {
     meta: {
@@ -1125,7 +1139,7 @@ function exportarDados() {
       caracteristicas: document.getElementById('caracteristicasPersonagem').value,
       personalidade: document.getElementById('personalidadePersonagem').value,
       historia: document.getElementById('historiaPersonagem').value,
-      imagem: imagemBase64 // salva base64
+      imagem: imagemBase64
     },
     
     atributosPersonalizados: atributosPersonalizados,
@@ -1260,6 +1274,7 @@ function aplicarDadosImportados(dados) {
     if (dados.fichaPersonagem.caracteristicas) document.getElementById('caracteristicasPersonagem').value = dados.fichaPersonagem.caracteristicas;
     if (dados.fichaPersonagem.personalidade) document.getElementById('personalidadePersonagem').value = dados.fichaPersonagem.personalidade;
     if (dados.fichaPersonagem.historia) document.getElementById('historiaPersonagem').value = dados.fichaPersonagem.historia;
+    
     // Restaurar imagem
     if (dados.fichaPersonagem.imagem) {
       const fotoPlaceholder = document.getElementById('fotoPlaceholder');
@@ -1406,15 +1421,17 @@ function removerAtributo(index) {
   }
 }
 
-// Função para carregar imagem e exibir
+// Função para carregar imagem e salvar no cookie (via salvar)
 document.getElementById('fotoInput').addEventListener('change', function(e) {
   const file = e.target.files[0];
   if (file) {
     const reader = new FileReader();
     reader.onload = function(event) {
+      const imagemBase64 = event.target.result;
       const fotoPlaceholder = document.getElementById('fotoPlaceholder');
-      fotoPlaceholder.innerHTML = `<img src="${event.target.result}" style="width:100%; height:100%; object-fit:cover;">`;
-      // Não salvamos no cookie, mas podemos salvar no objeto para exportação futura
+      fotoPlaceholder.innerHTML = `<img src="${imagemBase64}" style="width:100%; height:100%; object-fit:cover;">`;
+      // Salvar no cookie chamando salvar()
+      salvar();
     };
     reader.readAsDataURL(file);
   }
