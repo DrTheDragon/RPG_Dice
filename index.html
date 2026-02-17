@@ -634,10 +634,16 @@ button:active{transform:scale(.97)}
 </div>
 </div>
 
-<!-- ITENS (inalterado) -->
+<!-- ITENS (agora apenas para itens/acessórios) -->
 <div class="panel itens">
 <h2>🎒 ITENS / ACESSÓRIOS</h2>
-<textarea id="itens" placeholder="Anota aqui armas, pistas, acessórios, contatos, segredos..."></textarea>
+<textarea id="itens" placeholder="Armas, pistas, acessórios, contatos, segredos..."></textarea>
+</div>
+
+<!-- NOVA SEÇÃO: ANOTAÇÕES -->
+<div class="panel itens" style="margin-top:25px;">
+<h2>📝 ANOTAÇÕES</h2>
+<textarea id="anotacoes" placeholder="Suas anotações gerais..."></textarea>
 </div>
 
 </div>
@@ -939,30 +945,8 @@ function atualizarHistoricoDados() {
 }
 
 // ============================================================================
-// SISTEMA DE ARMAZENAMENTO (COOKIES + JSON)
+// SISTEMA DE ARMAZENAMENTO (LOCALSTORAGE)
 // ============================================================================
-
-// Função para definir um cookie
-function setCookie(nome, valor, dias) {
-  const data = new Date();
-  data.setTime(data.getTime() + (dias * 24 * 60 * 60 * 1000));
-  const expira = "expires=" + data.toUTCString();
-  document.cookie = nome + "=" + encodeURIComponent(valor) + ";" + expira + ";path=/";
-}
-
-// Função para obter um cookie
-function getCookie(nome) {
-  const nomeEQ = nome + "=";
-  const cookies = document.cookie.split(';');
-  for(let i = 0; i < cookies.length; i++) {
-    let cookie = cookies[i];
-    while (cookie.charAt(0) === ' ') cookie = cookie.substring(1);
-    if (cookie.indexOf(nomeEQ) === 0) {
-      return decodeURIComponent(cookie.substring(nomeEQ.length, cookie.length));
-    }
-  }
-  return null;
-}
 
 function salvar() {
   // Capturar imagem do placeholder (se houver)
@@ -985,6 +969,9 @@ function salvar() {
     itens: document.getElementById('itens').value,
     traumas: document.getElementById('traumas').value,
     
+    // NOVO CAMPO: anotações
+    anotacoes: document.getElementById('anotacoes').value,
+    
     // Históricos
     historico,
     historicoSan,
@@ -1001,22 +988,22 @@ function salvar() {
     checkFerido: document.getElementById('checkFerido').checked,
     checkCaido: document.getElementById('checkCaido').checked,
 
-    // NOVOS CAMPOS (incluindo imagem)
+    // Campos da identidade
     idade: document.getElementById('idadePersonagem').value,
     emprego: document.getElementById('empregoPersonagem').value,
     caracteristicas: document.getElementById('caracteristicasPersonagem').value,
     personalidade: document.getElementById('personalidadePersonagem').value,
     historia: document.getElementById('historiaPersonagem').value,
-    imagem: imagemBase64, // imagem salva no cookie
+    imagem: imagemBase64,
     atributosPersonalizados: atributosPersonalizados
   };
   
-  // Salva no cookie com validade de 1 ano
-  setCookie("noir", JSON.stringify(dados), 365);
+  // Salva no localStorage
+  localStorage.setItem('noir_rpg', JSON.stringify(dados));
 }
 
 function carregar() {
-  const dadosSalvos = JSON.parse(getCookie("noir") || "null");
+  const dadosSalvos = JSON.parse(localStorage.getItem('noir_rpg') || "null");
   if(!dadosSalvos) return;
   
   // Carregar valores atuais
@@ -1041,6 +1028,7 @@ function carregar() {
   document.getElementById('dinheiro').value = dadosSalvos.dinheiro || "";
   document.getElementById('itens').value = dadosSalvos.itens || "";
   document.getElementById('traumas').value = dadosSalvos.traumas || "";
+  document.getElementById('anotacoes').value = dadosSalvos.anotacoes || "";
   
   // Carregar históricos
   historico = dadosSalvos.historico || [];
@@ -1058,14 +1046,14 @@ function carregar() {
   if(dadosSalvos.checkFerido !== undefined) document.getElementById('checkFerido').checked = dadosSalvos.checkFerido;
   if(dadosSalvos.checkCaido !== undefined) document.getElementById('checkCaido').checked = dadosSalvos.checkCaido;
 
-  // NOVOS CAMPOS
+  // Campos da identidade
   if (dadosSalvos.idade) document.getElementById('idadePersonagem').value = dadosSalvos.idade;
   if (dadosSalvos.emprego) document.getElementById('empregoPersonagem').value = dadosSalvos.emprego;
   if (dadosSalvos.caracteristicas) document.getElementById('caracteristicasPersonagem').value = dadosSalvos.caracteristicas;
   if (dadosSalvos.personalidade) document.getElementById('personalidadePersonagem').value = dadosSalvos.personalidade;
   if (dadosSalvos.historia) document.getElementById('historiaPersonagem').value = dadosSalvos.historia;
   
-  // Carregar imagem do cookie
+  // Carregar imagem
   if (dadosSalvos.imagem) {
     const fotoPlaceholder = document.getElementById('fotoPlaceholder');
     fotoPlaceholder.innerHTML = `<img src="${dadosSalvos.imagem}" style="width:100%; height:100%; object-fit:cover;">`;
@@ -1129,10 +1117,10 @@ function exportarDados() {
     recursos: {
       dinheiro: document.getElementById('dinheiro').value || "0",
       traumas: document.getElementById('traumas').value || "",
-      itens: document.getElementById('itens').value || ""
+      itens: document.getElementById('itens').value || "",
+      anotacoes: document.getElementById('anotacoes').value || ""
     },
     
-    // NOVOS CAMPOS
     fichaPersonagem: {
       idade: document.getElementById('idadePersonagem').value,
       emprego: document.getElementById('empregoPersonagem').value,
@@ -1248,6 +1236,7 @@ function aplicarDadosImportados(dados) {
     document.getElementById('dinheiro').value = dados.recursos.dinheiro || "";
     document.getElementById('traumas').value = dados.recursos.traumas || "";
     document.getElementById('itens').value = dados.recursos.itens || "";
+    document.getElementById('anotacoes').value = dados.recursos.anotacoes || "";
   }
   
   // Carregar históricos
@@ -1256,7 +1245,6 @@ function aplicarDadosImportados(dados) {
     historicoSan = dados.historicos.testesSanidade || [];
     historicoDados = dados.historicos.dadosPersonalizados || [];
     
-    // Limitar a 6 itens cada
     if (historico.length > 6) historico = historico.slice(0, 6);
     if (historicoSan.length > 6) historicoSan = historicoSan.slice(0, 6);
     if (historicoDados.length > 6) historicoDados = historicoDados.slice(0, 6);
@@ -1267,7 +1255,7 @@ function aplicarDadosImportados(dados) {
     document.body.className = dados.configuracao.tema;
   }
 
-  // NOVOS CAMPOS
+  // Ficha personagem
   if (dados.fichaPersonagem) {
     if (dados.fichaPersonagem.idade) document.getElementById('idadePersonagem').value = dados.fichaPersonagem.idade;
     if (dados.fichaPersonagem.emprego) document.getElementById('empregoPersonagem').value = dados.fichaPersonagem.emprego;
@@ -1275,7 +1263,6 @@ function aplicarDadosImportados(dados) {
     if (dados.fichaPersonagem.personalidade) document.getElementById('personalidadePersonagem').value = dados.fichaPersonagem.personalidade;
     if (dados.fichaPersonagem.historia) document.getElementById('historiaPersonagem').value = dados.fichaPersonagem.historia;
     
-    // Restaurar imagem
     if (dados.fichaPersonagem.imagem) {
       const fotoPlaceholder = document.getElementById('fotoPlaceholder');
       fotoPlaceholder.innerHTML = `<img src="${dados.fichaPersonagem.imagem}" style="width:100%; height:100%; object-fit:cover;">`;
@@ -1293,7 +1280,7 @@ function aplicarDadosImportados(dados) {
   atualizarHistoricoSan();
   atualizarHistoricoDados();
   
-  // Salvar no cookie
+  // Salvar no localStorage
   salvar();
   
   alert(`Dados de "${dados.meta.nomePersonagem || 'Personagem'}" importados com sucesso!`);
@@ -1353,7 +1340,7 @@ function toggleTema() {
 }
 
 // ============================================================================
-// NOVAS FUNÇÕES PARA ATRIBUTOS PERSONALIZADOS E IMAGEM
+// ATRIBUTOS PERSONALIZADOS
 // ============================================================================
 
 let atributosPersonalizados = [];
@@ -1421,7 +1408,10 @@ function removerAtributo(index) {
   }
 }
 
-// Função para carregar imagem e salvar no cookie (via salvar)
+// ============================================================================
+// EVENTOS DA IMAGEM
+// ============================================================================
+
 document.getElementById('fotoInput').addEventListener('change', function(e) {
   const file = e.target.files[0];
   if (file) {
@@ -1430,7 +1420,6 @@ document.getElementById('fotoInput').addEventListener('change', function(e) {
       const imagemBase64 = event.target.result;
       const fotoPlaceholder = document.getElementById('fotoPlaceholder');
       fotoPlaceholder.innerHTML = `<img src="${imagemBase64}" style="width:100%; height:100%; object-fit:cover;">`;
-      // Salvar no cookie chamando salvar()
       salvar();
     };
     reader.readAsDataURL(file);
@@ -1441,7 +1430,6 @@ document.getElementById('fotoInput').addEventListener('change', function(e) {
 // CONFIGURAÇÃO DE EVENTOS
 // ============================================================================
 
-// Eventos para campos de entrada
 document.getElementById('vidaMax').onchange = () => {
   document.getElementById('vidaMax').value = Math.max(0, +document.getElementById('vidaMax').value || 0);
   if(vida > document.getElementById('vidaMax').value) vida = document.getElementById('vidaMax').value;
@@ -1484,13 +1472,13 @@ document.getElementById('dinheiro').addEventListener('keypress', function(e) {
 // Eventos para salvar automaticamente
 document.getElementById('itens').oninput = salvar;
 document.getElementById('traumas').oninput = salvar;
+document.getElementById('anotacoes').oninput = salvar;
 document.getElementById('checkVida1').onchange = salvar;
 document.getElementById('checkVida2').onchange = salvar;
 document.getElementById('checkVida3').onchange = salvar;
 document.getElementById('checkFerido').onchange = salvar;
 document.getElementById('checkCaido').onchange = salvar;
 
-// NOVOS EVENTOS (identidade)
 document.getElementById('nomePersonagem').addEventListener('input', salvar);
 document.getElementById('idadePersonagem').addEventListener('input', salvar);
 document.getElementById('empregoPersonagem').addEventListener('input', salvar);
@@ -1502,7 +1490,6 @@ document.getElementById('historiaPersonagem').addEventListener('input', salvar);
 // INICIALIZAÇÃO
 // ============================================================================
 
-// Inicializar áudio na primeira interação
 document.addEventListener('click', function initAudioOnClick() {
   if (!audioInitialized) {
     initAudio();
@@ -1510,9 +1497,7 @@ document.addEventListener('click', function initAudioOnClick() {
   document.removeEventListener('click', initAudioOnClick);
 });
 
-// Carregar dados salvos ao iniciar
 carregar();
-// Garantir que a lista de atributos seja renderizada mesmo se não houver dados
 renderizarAtributos();
 </script>
 </body>
