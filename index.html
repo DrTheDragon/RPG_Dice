@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
 <style>
-/* ========== ESTILOS (inalterados, apenas adicionados seletores para labels) ========== */
+/* ========== ESTILOS ========== */
 :root{
  --bg1:#111;--bg2:#000;--panel:#080808;--text:#e0e0e0;
  --border:#222;
@@ -391,7 +391,7 @@ button:active{transform:scale(.97)}
 <input type="file" id="fileInput" class="file-input" accept=".json,.txt" onchange="processarArquivo(this.files)">
 </div>
 
-<!-- ===== IDENTIDADE DO PERSONAGEM (com labels) ===== -->
+<!-- ===== IDENTIDADE DO PERSONAGEM ===== -->
 <div class="identidade-personagem">
   <h3>📋 IDENTIDADE</h3>
   <div class="identidade-grid">
@@ -465,7 +465,7 @@ button:active{transform:scale(.97)}
 </div>
 
 <div class="app">
-  <!-- COLUNA 1 (esquerda): STATUS -->
+  <!-- COLUNA 1: STATUS -->
   <div class="panel">
     <h2>📊 STATUS</h2>
     <div class="section">
@@ -513,7 +513,7 @@ button:active{transform:scale(.97)}
     </div>
   </div>
 
-  <!-- COLUNA 2 (direita): TESTES -->
+  <!-- COLUNA 2: TESTES -->
   <div class="panel">
     <h2>🎲 TESTES</h2>
     <div class="section">
@@ -543,7 +543,7 @@ button:active{transform:scale(.97)}
     </div>
     <div class="section">
       <h3>🎯 Dados Personalizados</h3>
-      <p style="font-size:12px; margin-bottom:10px;">Ex: "2d6", "1d20+4", "2#d20", "2#d4+5"</p>
+      <p style="font-size:12px; margin-bottom:10px;">Ex: "2d6", "1d20+4", "2#d20", "2#d20+2#d3", "2d6-1d4"</p>
       <input id="dadoPersonalizado" type="text" placeholder="Digite a fórmula">
       <button onclick="rolarDadoPersonalizado()">ROLAR DADOS</button>
       <div class="resultado" id="resDadoPersonalizado"></div>
@@ -556,7 +556,7 @@ button:active{transform:scale(.97)}
   </div>
 </div>
 
-<!-- ATRIBUTOS EXTRAS (inalterado) -->
+<!-- ATRIBUTOS EXTRAS -->
 <div class="atributos-extras">
   <div class="atributo-extra">
     <h3>👁️ EXPOSIÇÃO PARANORMAL</h3>
@@ -582,7 +582,7 @@ button:active{transform:scale(.97)}
   </div>
 </div>
 
-<!-- PESO (inalterado) -->
+<!-- PESO -->
 <div class="peso-container">
   <h3>⚖️ PESO</h3>
   <div class="peso-inputs">
@@ -599,7 +599,7 @@ button:active{transform:scale(.97)}
   </div>
 </div>
 
-<!-- RECURSOS: DINHEIRO + TRAUMAS (divididos) -->
+<!-- RECURSOS: DINHEIRO + TRAUMAS -->
 <div class="recursos">
   <div class="recurso-item">
     <h3>💰 DINHEIRO</h3>
@@ -617,7 +617,7 @@ button:active{transform:scale(.97)}
   </div>
 </div>
 
-<!-- NOVO PAINEL: PESSOAS IMPORTANTES E TALENTOS -->
+<!-- PESSOAS IMPORTANTES E TALENTOS -->
 <div class="recursos" style="margin-top:25px;">
   <div class="recurso-item">
     <h3>👥 PESSOAS IMPORTANTES</h3>
@@ -629,13 +629,13 @@ button:active{transform:scale(.97)}
   </div>
 </div>
 
-<!-- ITENS (inalterado) -->
+<!-- ITENS -->
 <div class="panel itens">
   <h2>🎒 ITENS / ACESSÓRIOS</h2>
   <textarea id="itens" placeholder="Armas, acessórios,..."></textarea>
 </div>
 
-<!-- ANOTAÇÕES (inalterado) -->
+<!-- ANOTAÇÕES -->
 <div class="panel itens" style="margin-top:25px;">
   <h2>📝 ANOTAÇÕES</h2>
   <textarea id="anotacoes" placeholder="Suas anotações gerais..."></textarea>
@@ -720,65 +720,162 @@ function testeSanidade() {
   if(historicoSan.length>6) historicoSan.pop();
   salvar(); atualizarHistoricoSan();
 }
+
+// NOVA FUNÇÃO PARA DADOS PERSONALIZADOS (COM SUPORTE A +, - E COMBINAÇÃO DE #)
 function rolarDadoPersonalizado() {
   somDado();
   let input = document.getElementById('dadoPersonalizado').value.trim();
-  const resultado = document.getElementById('resDadoPersonalizado');
-  const detalhes = document.getElementById('detalhesRolagem');
-  if(!input) { resultado.innerHTML='Digite uma fórmula'; detalhes.innerHTML=''; return; }
+  const resultadoDiv = document.getElementById('resDadoPersonalizado');
+  const detalhesDiv = document.getElementById('detalhesRolagem');
+  if (!input) { resultadoDiv.innerHTML = 'Digite uma fórmula'; detalhesDiv.innerHTML = ''; return; }
+
   try {
+    // Remove espaços e converte para minúsculas
     input = input.replace(/\s+/g, '').toLowerCase();
-    const partes = input.split('+');
-    let totalGeral=0, listas=[], modificadores=0, detalhesText='';
-    for(let parte of partes) {
-      if(parte.includes('d')) {
-        if(parte.includes('#')) {
-          const hashIndex = parte.indexOf('#');
-          const dIndex = parte.indexOf('d');
-          const qtdStr = parte.substring(0,hashIndex);
-          const qtd = parseInt(qtdStr);
-          if(isNaN(qtd)||qtd<=0) throw new Error('Quantidade inválida');
-          const facesStr = parte.substring(dIndex+1);
-          const faces = parseInt(facesStr);
-          if(isNaN(faces)||faces<=0) throw new Error('Faces inválidas');
-          const rolagens = [];
-          for(let i=0;i<qtd;i++) rolagens.push(Math.floor(Math.random()*faces)+1);
-          listas.push(rolagens);
-          detalhesText += `${parte}: ${rolagens.join(' + ')}<br>`;
-        } else {
-          const dIndex = parte.indexOf('d');
-          const qtdStr = parte.substring(0,dIndex)||'1';
-          const facesStr = parte.substring(dIndex+1);
-          const qtd = parseInt(qtdStr), faces = parseInt(facesStr);
-          if(isNaN(qtd)||qtd<=0||isNaN(faces)||faces<=0) throw new Error('Valores inválidos');
-          let soma=0; const rols=[];
-          for(let i=0;i<qtd;i++){ const r=Math.floor(Math.random()*faces)+1; rols.push(r); soma+=r; }
-          totalGeral += soma;
-          detalhesText += `${parte}: ${rols.join(' + ')} = ${soma}<br>`;
-        }
+    
+    // Tokeniza a expressão: captura números, expressões de dados e operadores +/-
+    const tokenRegex = /(\d+#?d\d+|\d+|[+-])/g;
+    const tokens = input.match(tokenRegex);
+    if (!tokens) throw new Error('Expressão inválida');
+
+    // Separa operandos e operadores
+    const operadores = [];
+    const operandos = [];
+    for (let token of tokens) {
+      if (token === '+' || token === '-') {
+        operadores.push(token);
       } else {
-        const mod = parseInt(parte);
-        if(!isNaN(mod)){ modificadores += mod; detalhesText += `+${mod} (bônus)<br>`; }
+        operandos.push(token);
       }
     }
-    if(listas.length>0){
-      let resultadosFinais = [];
-      listas.forEach(lista => { const modificada = lista.map(val=>val+modificadores); resultadosFinais.push(...modificada); });
-      resultado.innerHTML = `🎲 ${input}<br>Resultados: <b>${resultadosFinais.join(', ')}</b>`;
-      detalhes.innerHTML = `<p><b>Detalhes:</b></p>${detalhesText}`;
-      historicoDados.unshift(`🎲 ${input} → [${resultadosFinais.join(', ')}]`);
+    if (operandos.length === 0) throw new Error('Nenhum operando');
+    if (operadores.length !== operandos.length - 1) throw new Error('Número de operandos e operadores incompatível');
+
+    // Avalia cada operando (pode ser número ou expressão de dados)
+    const resultados = operandos.map(op => avaliarOperando(op));
+    
+    // Verifica se há listas (resultados do tipo 'lista')
+    const temLista = resultados.some(r => r.tipo === 'lista');
+    
+    // Se houver listas, todos os operandos devem ser convertidos para listas de mesmo tamanho
+    let tamanhoLista = null;
+    if (temLista) {
+      // Descobre o tamanho da primeira lista (assumimos que todas têm o mesmo tamanho)
+      for (let r of resultados) {
+        if (r.tipo === 'lista') {
+          if (tamanhoLista === null) tamanhoLista = r.valores.length;
+          else if (r.valores.length !== tamanhoLista) throw new Error('Listas de tamanhos diferentes');
+        }
+      }
+      // Converte operandos escalares para lista repetindo o valor
+      const resultadosConvertidos = resultados.map(r => {
+        if (r.tipo === 'escalar') {
+          return Array(tamanhoLista).fill(r.valor);
+        } else {
+          return r.valores;
+        }
+      });
+      
+      // Combina as listas elemento a elemento com os operadores
+      const listaFinal = [];
+      for (let i = 0; i < tamanhoLista; i++) {
+        let valor = resultadosConvertidos[0][i];
+        for (let j = 0; j < operadores.length; j++) {
+          const op = operadores[j];
+          const prox = resultadosConvertidos[j+1][i];
+          if (op === '+') valor += prox;
+          else if (op === '-') valor -= prox;
+        }
+        listaFinal.push(valor);
+      }
+      
+      // Exibe resultado
+      resultadoDiv.innerHTML = `🎲 ${input}<br>Resultados: <b>${listaFinal.join(', ')}</b>`;
+      
+      // Gera detalhes das rolagens individuais
+      let detalhesHtml = '<p><b>Detalhes:</b></p>';
+      operandos.forEach((op, idx) => {
+        const r = resultados[idx];
+        if (r.tipo === 'lista') {
+          detalhesHtml += `${op}: [${r.valores.join(', ')}]<br>`;
+        } else {
+          detalhesHtml += `${op}: ${r.valor}<br>`;
+        }
+      });
+      detalhesDiv.innerHTML = detalhesHtml;
+      
+      // Adiciona ao histórico
+      historicoDados.unshift(`🎲 ${input} → [${listaFinal.join(', ')}]`);
     } else {
-      const totalFinal = totalGeral + modificadores;
-      resultado.innerHTML = `🎲 ${input}<br>Total: <b>${totalFinal}</b>`;
-      detalhes.innerHTML = `<p><b>Detalhes:</b></p>${detalhesText}`;
-      historicoDados.unshift(`🎲 ${input} → ${totalFinal}`);
+      // Todos são escalares: faz a conta normalmente
+      let total = resultados[0].valor;
+      for (let j = 0; j < operadores.length; j++) {
+        const op = operadores[j];
+        const prox = resultados[j+1].valor;
+        if (op === '+') total += prox;
+        else if (op === '-') total -= prox;
+      }
+      resultadoDiv.innerHTML = `🎲 ${input}<br>Total: <b>${total}</b>`;
+      
+      let detalhesHtml = '<p><b>Detalhes:</b></p>';
+      operandos.forEach((op, idx) => detalhesHtml += `${op}: ${resultados[idx].valor}<br>`);
+      detalhesDiv.innerHTML = detalhesHtml;
+      
+      historicoDados.unshift(`🎲 ${input} → ${total}`);
     }
-    if(historicoDados.length>6) historicoDados.pop();
+    
+    if (historicoDados.length > 6) historicoDados.pop();
     atualizarHistoricoDados();
-  } catch(e) {
-    resultado.innerHTML = 'Formato inválido. Use "2d6", "1d20+4", "2#d20", "2#d4+5" etc.';
-    detalhes.innerHTML = '';
+    
+  } catch (e) {
+    resultadoDiv.innerHTML = 'Formato inválido. Use expressões como "2d6", "1d20+4", "2#d20", "2#d20+2#d3", "2d6-1d4".';
+    detalhesDiv.innerHTML = '';
   }
+}
+
+// Avalia um token que pode ser um número ou uma expressão de dados (ex: "2d6", "2#d20")
+function avaliarOperando(token) {
+  // Se for apenas número
+  if (/^\d+$/.test(token)) {
+    return { tipo: 'escalar', valor: parseInt(token) };
+  }
+  
+  // Expressão com dados
+  if (token.includes('d')) {
+    // Verifica se tem #
+    if (token.includes('#')) {
+      // Formato: qtd#dfaces
+      const partes = token.split('#');
+      if (partes.length !== 2) throw new Error('Formato # inválido');
+      const qtd = parseInt(partes[0]);
+      const dadosPart = partes[1];
+      if (!dadosPart.startsWith('d')) throw new Error('Esperado d após #');
+      const faces = parseInt(dadosPart.substring(1));
+      if (isNaN(qtd) || qtd <= 0 || isNaN(faces) || faces <= 0) throw new Error('Valores inválidos');
+      
+      const rolagens = [];
+      for (let i = 0; i < qtd; i++) {
+        rolagens.push(Math.floor(Math.random() * faces) + 1);
+      }
+      return { tipo: 'lista', valores: rolagens };
+    } else {
+      // Formato: qtddfaces ou dfaces (qtd=1 implícito)
+      const dIndex = token.indexOf('d');
+      const qtdStr = token.substring(0, dIndex) || '1';
+      const facesStr = token.substring(dIndex + 1);
+      const qtd = parseInt(qtdStr);
+      const faces = parseInt(facesStr);
+      if (isNaN(qtd) || qtd <= 0 || isNaN(faces) || faces <= 0) throw new Error('Valores inválidos');
+      
+      let soma = 0;
+      for (let i = 0; i < qtd; i++) {
+        soma += Math.floor(Math.random() * faces) + 1;
+      }
+      return { tipo: 'escalar', valor: soma };
+    }
+  }
+  
+  throw new Error('Token não reconhecido');
 }
 
 // ==================== STATUS ====================
@@ -809,12 +906,14 @@ function atualizarExposicao() {
   salvar();
 }
 
-// ==================== HISTÓRICOS ====================
+// ==================== HISTÓRICOS (com fade progressivo) ====================
 function atualizarHistorico() {
   const lista = document.getElementById('listaHistorico');
   lista.innerHTML = "";
   historico.forEach((h, i) => {
     const li = document.createElement("li");
+    // i=0,1,2 sem fade (fade-0, fade-1, fade-2 são a cor normal)
+    // i=3 fade-3, i=4 fade-4, i=5 fade-5
     li.className = i < 3 ? `fade-${i}` : i === 3 ? "fade-3" : i === 4 ? "fade-4" : "fade-5";
     li.textContent = h;
     lista.appendChild(li);
@@ -842,7 +941,8 @@ function atualizarHistoricoDados() {
     lista.appendChild(li);
   });
 }
-// ==================== ATRIBUTOS PERSONALIZADOS (ordenados) ====================
+
+// ==================== ATRIBUTOS PERSONALIZADOS ====================
 let atributosPersonalizados = [];
 
 function ordenarAtributos() {
@@ -850,7 +950,7 @@ function ordenarAtributos() {
 }
 
 function renderizarAtributos() {
-  ordenarAtributos(); // garante ordem alfabética antes de renderizar
+  ordenarAtributos();
   const container = document.getElementById('listaAtributosPersonalizados');
   if(!container) return;
   container.innerHTML = '';
@@ -877,7 +977,7 @@ function adicionarAtributoPersonalizado() {
   if (!nome) { alert('Digite um nome.'); return; }
   if (isNaN(valor) || valor<1 || valor>20) { alert('Valor entre 1 e 20.'); return; }
   atributosPersonalizados.push({ nome, valor });
-  ordenarAtributos(); // mantém ordem
+  ordenarAtributos();
   nomeInput.value = ''; valorInput.value = '';
   renderizarAtributos();
   salvar();
@@ -902,7 +1002,7 @@ function editarAtributo(index) {
 function removerAtributo(index) {
   if(confirm('Remover este atributo?')) {
     atributosPersonalizados.splice(index,1);
-    ordenarAtributos(); // desnecessário mas seguro
+    ordenarAtributos();
     renderizarAtributos();
     salvar();
   }
@@ -915,14 +1015,11 @@ function salvar() {
   const imagemBase64 = img ? img.src : null;
 
   const dados = {
-    // status atuais
     vida, san, descanso, poder, peso, defesa, exposicao,
-    // máximos
     vidaMax: Math.max(0, +document.getElementById('vidaMax').value || 0),
     sanMax: Math.max(0, +document.getElementById('sanMax').value || 0),
     poderMax: Math.max(0, +document.getElementById('poderMax').value || 0),
     pesoMax: Math.max(0, +document.getElementById('pesoMax').value || 0),
-    // outros valores
     dinheiro: document.getElementById('dinheiro').value,
     traumasPerm: document.getElementById('traumasPerm').value,
     traumasTemp: document.getElementById('traumasTemp').value,
@@ -930,11 +1027,8 @@ function salvar() {
     talentos: document.getElementById('talentos').value,
     itens: document.getElementById('itens').value,
     anotacoes: document.getElementById('anotacoes').value,
-    // históricos
     historico, historicoSan, historicoDados,
-    // configurações
     tema: document.body.className,
-    // identidade (novos campos)
     nomePersonagem: document.getElementById('nomePersonagem').value,
     apelido: document.getElementById('apelidoPersonagem').value,
     idade: document.getElementById('idadePersonagem').value,
@@ -948,13 +1042,11 @@ function salvar() {
     personalidade: document.getElementById('personalidadePersonagem').value,
     historia: document.getElementById('historiaPersonagem').value,
     imagem: imagemBase64,
-    // checkboxes
     checkVida1: document.getElementById('checkVida1').checked,
     checkVida2: document.getElementById('checkVida2').checked,
     checkVida3: document.getElementById('checkVida3').checked,
     checkFerido: document.getElementById('checkFerido').checked,
     checkCaido: document.getElementById('checkCaido').checked,
-    // atributos personalizados
     atributosPersonalizados
   };
   localStorage.setItem('noir_rpg', JSON.stringify(dados));
@@ -964,7 +1056,6 @@ function carregar() {
   const dadosSalvos = JSON.parse(localStorage.getItem('noir_rpg') || "null");
   if(!dadosSalvos) return;
 
-  // status
   vida = dadosSalvos.vida || 0;
   san = dadosSalvos.san || 0;
   descanso = dadosSalvos.descanso || 0;
@@ -972,7 +1063,6 @@ function carregar() {
   peso = dadosSalvos.peso || 0;
   defesa = dadosSalvos.defesa || 0;
   exposicao = dadosSalvos.exposicao || 0;
-  // máximos
   document.getElementById('vidaMax').value = Math.max(0, dadosSalvos.vidaMax || 0);
   document.getElementById('sanMax').value = Math.max(0, dadosSalvos.sanMax || 0);
   document.getElementById('poderMax').value = Math.max(0, dadosSalvos.poderMax || 0);
@@ -980,7 +1070,6 @@ function carregar() {
   document.getElementById('defesa').value = defesa;
   document.getElementById('exposicaoValor').textContent = exposicao;
   document.getElementById('exposicaoInput').value = exposicao;
-  // textos
   document.getElementById('dinheiro').value = dadosSalvos.dinheiro || "";
   document.getElementById('traumasPerm').value = dadosSalvos.traumasPerm || "";
   document.getElementById('traumasTemp').value = dadosSalvos.traumasTemp || "";
@@ -988,13 +1077,10 @@ function carregar() {
   document.getElementById('talentos').value = dadosSalvos.talentos || "";
   document.getElementById('itens').value = dadosSalvos.itens || "";
   document.getElementById('anotacoes').value = dadosSalvos.anotacoes || "";
-  // históricos
   historico = dadosSalvos.historico || [];
   historicoSan = dadosSalvos.historicoSan || [];
   historicoDados = dadosSalvos.historicoDados || [];
-  // tema
   if(dadosSalvos.tema) document.body.className = dadosSalvos.tema;
-  // identidade
   document.getElementById('nomePersonagem').value = dadosSalvos.nomePersonagem || "";
   document.getElementById('apelidoPersonagem').value = dadosSalvos.apelido || "";
   document.getElementById('idadePersonagem').value = dadosSalvos.idade || "";
@@ -1007,22 +1093,18 @@ function carregar() {
   document.getElementById('caracteristicasPersonagem').value = dadosSalvos.caracteristicas || "";
   document.getElementById('personalidadePersonagem').value = dadosSalvos.personalidade || "";
   document.getElementById('historiaPersonagem').value = dadosSalvos.historia || "";
-  // imagem
   if(dadosSalvos.imagem) {
     document.getElementById('fotoPlaceholder').innerHTML = `<img src="${dadosSalvos.imagem}" style="width:100%; height:100%; object-fit:cover;">`;
   }
-  // checkboxes
   if(dadosSalvos.checkVida1!==undefined) document.getElementById('checkVida1').checked = dadosSalvos.checkVida1;
   if(dadosSalvos.checkVida2!==undefined) document.getElementById('checkVida2').checked = dadosSalvos.checkVida2;
   if(dadosSalvos.checkVida3!==undefined) document.getElementById('checkVida3').checked = dadosSalvos.checkVida3;
   if(dadosSalvos.checkFerido!==undefined) document.getElementById('checkFerido').checked = dadosSalvos.checkFerido;
   if(dadosSalvos.checkCaido!==undefined) document.getElementById('checkCaido').checked = dadosSalvos.checkCaido;
-  // atributos personalizados
   if(dadosSalvos.atributosPersonalizados && Array.isArray(dadosSalvos.atributosPersonalizados)) {
     atributosPersonalizados = dadosSalvos.atributosPersonalizados;
-    ordenarAtributos(); // garante ordem alfabética
+    ordenarAtributos();
   }
-  // atualizar interface
   atualizar();
   atualizarHistorico();
   atualizarHistoricoSan();
@@ -1116,9 +1198,7 @@ function processarArquivo(files) {
 
 function aplicarDadosImportados(dados) {
   if(!dados || !dados.status || !dados.meta) { alert('Arquivo inválido.'); return; }
-  // Nome
   if(dados.meta.nomePersonagem) document.getElementById('nomePersonagem').value = dados.meta.nomePersonagem;
-  // Status
   if(dados.status) {
     vida = dados.status.vida.atual||0; document.getElementById('vidaMax').value = dados.status.vida.max||0;
     san = dados.status.sanidade.atual||0; document.getElementById('sanMax').value = dados.status.sanidade.max||0;
@@ -1128,7 +1208,6 @@ function aplicarDadosImportados(dados) {
     defesa = dados.status.defesa||0; document.getElementById('defesa').value = defesa;
     exposicao = dados.status.exposicaoParanormal||0; document.getElementById('exposicaoInput').value = exposicao;
   }
-  // Estado
   if(dados.estado) {
     document.getElementById('checkFerido').checked = dados.estado.gravementeFerido||false;
     document.getElementById('checkCaido').checked = dados.estado.caido||false;
@@ -1138,7 +1217,6 @@ function aplicarDadosImportados(dados) {
       document.getElementById('checkVida3').checked = dados.estado.marcadoresVida.marcador3||false;
     }
   }
-  // Recursos
   if(dados.recursos) {
     document.getElementById('dinheiro').value = dados.recursos.dinheiro||"";
     document.getElementById('traumasPerm').value = dados.recursos.traumasPerm||"";
@@ -1148,7 +1226,6 @@ function aplicarDadosImportados(dados) {
     document.getElementById('itens').value = dados.recursos.itens||"";
     document.getElementById('anotacoes').value = dados.recursos.anotacoes||"";
   }
-  // Históricos
   if(dados.historicos) {
     historico = dados.historicos.testesAtributo||[];
     historicoSan = dados.historicos.testesSanidade||[];
@@ -1157,9 +1234,7 @@ function aplicarDadosImportados(dados) {
     if(historicoSan.length>6) historicoSan = historicoSan.slice(0,6);
     if(historicoDados.length>6) historicoDados = historicoDados.slice(0,6);
   }
-  // Tema
   if(dados.configuracao && dados.configuracao.tema) document.body.className = dados.configuracao.tema;
-  // Ficha personagem
   if(dados.fichaPersonagem) {
     document.getElementById('apelidoPersonagem').value = dados.fichaPersonagem.apelido||"";
     document.getElementById('idadePersonagem').value = dados.fichaPersonagem.idade||"";
@@ -1176,12 +1251,10 @@ function aplicarDadosImportados(dados) {
       document.getElementById('fotoPlaceholder').innerHTML = `<img src="${dados.fichaPersonagem.imagem}" style="width:100%; height:100%; object-fit:cover;">`;
     }
   }
-  // Atributos personalizados
   if(dados.atributosPersonalizados && Array.isArray(dados.atributosPersonalizados)) {
     atributosPersonalizados = dados.atributosPersonalizados;
     ordenarAtributos();
   }
-  // Atualizar interface
   atualizar();
   atualizarHistorico();
   atualizarHistoricoSan();
@@ -1250,7 +1323,6 @@ document.getElementById('fotoInput').addEventListener('change', function(e) {
   }
 });
 
-// Eventos para salvar automaticamente
 ['vidaMax','sanMax','poderMax','pesoMax','defesa','exposicaoInput',
  'dinheiro','traumasPerm','traumasTemp','pessoasImportantes','talentos',
  'itens','anotacoes','nomePersonagem','apelidoPersonagem','idadePersonagem',
@@ -1264,15 +1336,12 @@ document.getElementById('fotoInput').addEventListener('change', function(e) {
   document.getElementById(id).addEventListener('change', salvar);
 });
 
-// Atualizar exposição
 document.getElementById('exposicaoInput').addEventListener('input', atualizarExposicao);
 document.getElementById('exposicaoInput').addEventListener('change', atualizarExposicao);
 
-// Cálculo do dinheiro ao sair do campo
 document.getElementById('dinheiro').addEventListener('blur', calcularDinheiro);
 document.getElementById('dinheiro').addEventListener('keypress', e => { if(e.key==='Enter') calcularDinheiro(); });
 
-// Validação dos campos de número
 document.getElementById('vidaMax').onchange = function() {
   this.value = Math.max(0, +this.value||0);
   if(vida > this.value) vida = +this.value;
@@ -1298,7 +1367,6 @@ document.getElementById('defesa').onchange = function() {
   salvar();
 };
 
-// NOVAS VALIDAÇÕES: idade, tamanho, aparência, deslocamento
 document.getElementById('idadePersonagem').onchange = function() {
   this.value = Math.max(0, +this.value||0);
   salvar();
@@ -1319,7 +1387,6 @@ document.getElementById('deslocamento').onchange = function() {
   salvar();
 };
 
-// NOVO: caído ativa gravemente ferido
 document.getElementById('checkCaido').addEventListener('change', function() {
   if (this.checked) {
     document.getElementById('checkFerido').checked = true;
