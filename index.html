@@ -450,7 +450,8 @@ button:active{transform:scale(.97)}
     <div class="dados-basicos">
       <input type="text" id="nomePersonagem" placeholder="Nome do Personagem">
       <div style="display:flex; gap:10px;">
-        <input type="text" id="idadePersonagem" placeholder="Idade" style="flex:1;">
+        <!-- MODIFICAÇÃO 1: idade agora aceita apenas números -->
+        <input type="number" id="idadePersonagem" placeholder="Idade" min="0" step="1" style="flex:1;">
         <input type="text" id="empregoPersonagem" placeholder="Emprego / Ex‑emprego" style="flex:2;">
       </div>
       <textarea id="caracteristicasPersonagem" placeholder="Características físicas (altura, cabelo, olhos, marcas...)" rows="2"></textarea>
@@ -502,8 +503,8 @@ button:active{transform:scale(.97)}
 
 <div class="section">
 <h3>🎯 Dados Personalizados</h3>
-<p style="font-size:12px; margin-bottom:10px;">Exemplos: "2d6", "1d20+4", "1d20+1d10"</p>
-<input id="dadoPersonalizado" type="text" placeholder="Digite a fórmula (ex: 2d6)">
+<p style="font-size:12px; margin-bottom:10px;">Exemplos: "2d6", "1d20+4", "2#d20", "2#d4+5" (o # separa dados individuais)</p>
+<input id="dadoPersonalizado" type="text" placeholder="Digite a fórmula (ex: 2d6, 2#d20, 2#d4+5)">
 <button onclick="rolarDadoPersonalizado()">ROLAR DADOS</button>
 <div class="resultado" id="resDadoPersonalizado"></div>
 <div id="detalhesRolagem" class="roll-details"></div>
@@ -795,6 +796,7 @@ function testeSanidade() {
   salvar(); atualizarHistoricoSan();
 }
 
+// MODIFICAÇÃO 2: Nova função para dados personalizados com suporte a "#"
 function rolarDadoPersonalizado() {
   somDado();
   let input = document.getElementById('dadoPersonalizado').value.trim();
@@ -808,55 +810,104 @@ function rolarDadoPersonalizado() {
   }
   
   try {
+    // Remove espaços e converte para minúsculas
     input = input.replace(/\s+/g, '').toLowerCase();
+    
+    // Divide a expressão em partes separadas por '+'
     const partes = input.split('+');
-    let total = 0;
+    
+    let totalGeral = 0;                // usado apenas se não houver dados com '#'
+    let listas = [];                   // guarda arrays de resultados para partes com '#'
+    let modificadores = 0;              // soma dos modificadores numéricos (partes sem 'd')
     let detalhesText = '';
     
-    for(let parte of partes) {
-      if(parte.includes('d')) {
-        const [quantidadeStr, facesStr] = parte.split(/d/i);
-        const quantidade = parseInt(quantidadeStr) || 1;
-        const faces = parseInt(facesStr);
-        
-        if(isNaN(faces) || faces <= 0) {
-          throw new Error('Número de faces inválido');
+    for (let parte of partes) {
+      // Se a parte contém 'd' (é um dado ou grupo de dados)
+      if (parte.includes('d')) {
+        // Verifica se tem '#' (dados individuais)
+        if (parte.includes('#')) {
+          // Formato esperado: <qtd>#d<faces>
+          const hashIndex = parte.indexOf('#');
+          const dIndex = parte.indexOf('d');
+          
+          // Extrai quantidade antes de '#'
+          const qtdStr = parte.substring(0, hashIndex);
+          const qtd = parseInt(qtdStr);
+          if (isNaN(qtd) || qtd <= 0) throw new Error('Quantidade inválida antes de #');
+          
+          // Extrai faces depois de 'd'
+          const facesStr = parte.substring(dIndex + 1);
+          const faces = parseInt(facesStr);
+          if (isNaN(faces) || faces <= 0) throw new Error('Número de faces inválido');
+          
+          // Gera os resultados individuais
+          const rolagens = [];
+          for (let i = 0; i < qtd; i++) {
+            rolagens.push(Math.floor(Math.random() * faces) + 1);
+          }
+          listas.push(rolagens);
+          
+          // Adiciona aos detalhes
+          detalhesText += `${parte}: ${rolagens.join(' + ')}<br>`;
+        } else {
+          // Formato normal: <qtd>d<faces> (sem #)
+          const dIndex = parte.indexOf('d');
+          const qtdStr = parte.substring(0, dIndex) || '1';
+          const facesStr = parte.substring(dIndex + 1);
+          
+          const qtd = parseInt(qtdStr);
+          const faces = parseInt(facesStr);
+          if (isNaN(qtd) || qtd <= 0 || isNaN(faces) || faces <= 0) throw new Error('Valores inválidos');
+          
+          let soma = 0;
+          const rolagens = [];
+          for (let i = 0; i < qtd; i++) {
+            const r = Math.floor(Math.random() * faces) + 1;
+            rolagens.push(r);
+            soma += r;
+          }
+          totalGeral += soma;
+          
+          detalhesText += `${parte}: ${rolagens.join(' + ')} = ${soma}<br>`;
         }
-        
-        detalhesText += `${parte}: `;
-        let somaParte = 0;
-        const rolagens = [];
-        
-        for(let i = 0; i < quantidade; i++) {
-          const rolagem = Math.floor(Math.random() * faces) + 1;
-          rolagens.push(rolagem);
-          somaParte += rolagem;
-        }
-        
-        detalhesText += rolagens.join(' + ');
-        if(quantidade > 1) {
-          detalhesText += ` = ${somaParte}`;
-        }
-        
-        total += somaParte;
-        detalhesText += '<br>';
       } else {
-        const valor = parseInt(parte);
-        if(!isNaN(valor)) {
-          total += valor;
-          detalhesText += `+${valor} (bônus)<br>`;
+        // É um modificador numérico
+        const mod = parseInt(parte);
+        if (!isNaN(mod)) {
+          modificadores += mod;
+          detalhesText += `+${mod} (bônus)<br>`;
         }
       }
     }
     
-    resultado.innerHTML = `🎲 ${input}<br>Total: <b>${total}</b>`;
-    detalhes.innerHTML = `<p><b>Detalhes:</b></p>${detalhesText}`;
-    historicoDados.unshift(`🎲 ${input} → ${total}`);
-    if(historicoDados.length > 6) historicoDados.pop();
+    // Se houver listas (partes com '#')
+    if (listas.length > 0) {
+      // Aplica os modificadores a cada elemento de cada lista
+      let resultadosFinais = [];
+      listas.forEach(lista => {
+        const modificada = lista.map(val => val + modificadores);
+        resultadosFinais.push(...modificada);
+      });
+      
+      // Exibe os resultados individuais
+      resultado.innerHTML = `🎲 ${input}<br>Resultados: <b>${resultadosFinais.join(', ')}</b>`;
+      detalhes.innerHTML = `<p><b>Detalhes:</b></p>${detalhesText}`;
+      
+      // Adiciona ao histórico
+      historicoDados.unshift(`🎲 ${input} → [${resultadosFinais.join(', ')}]`);
+    } else {
+      // Sem '#': exibe o total
+      const totalFinal = totalGeral + modificadores;
+      resultado.innerHTML = `🎲 ${input}<br>Total: <b>${totalFinal}</b>`;
+      detalhes.innerHTML = `<p><b>Detalhes:</b></p>${detalhesText}`;
+      historicoDados.unshift(`🎲 ${input} → ${totalFinal}`);
+    }
+    
+    if (historicoDados.length > 6) historicoDados.pop();
     atualizarHistoricoDados();
     
   } catch(e) {
-    resultado.innerHTML = 'Formato inválido. Use: "2d6", "1d20+4", etc.';
+    resultado.innerHTML = 'Formato inválido. Use: "2d6", "1d20+4", "2#d20", "2#d4+5" etc.';
     detalhes.innerHTML = '';
   }
 }
