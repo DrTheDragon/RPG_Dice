@@ -401,6 +401,12 @@ button:active{transform:scale(.97)}
  justify-content:center;
  border-radius:5px;
  font-size:12px;
+ overflow:hidden;
+}
+.identidade-grid .foto-placeholder img {
+ width:100%;
+ height:100%;
+ object-fit:cover;
 }
 .identidade-grid .dados-basicos {
  display:flex;
@@ -434,7 +440,9 @@ button:active{transform:scale(.97)}
   <div class="identidade-grid">
     <!-- Foto -->
     <div class="foto-area">
-      <div class="foto-placeholder">🖼️ Foto</div>
+      <div class="foto-placeholder" id="fotoPlaceholder">
+        🖼️ Foto
+      </div>
       <input type="file" id="fotoInput" accept="image/*" style="margin-top:10px; font-size:12px; padding:5px; width:100%;">
       <small>(opcional)</small>
     </div>
@@ -713,8 +721,8 @@ function somDado() {
 // TESTES E ROLAGENS DE DADOS
 // ============================================================================
 
-// Função de teste de atributo (agora recebe o valor por parâmetro)
-function testeAtributo(valorAtributo) {
+// Função de teste de atributo (agora recebe o nome e o valor)
+function testeAtributo(nome, valorAtributo) {
   somDado();
   let att = Math.min(20, Math.max(1, valorAtributo));
 
@@ -753,8 +761,8 @@ function testeAtributo(valorAtributo) {
     }
   }
 
-  document.getElementById('resAtributo').innerHTML = `🎲 ${d}<br>📊 Atributo ${att}<br><span class="${c}"><b>${t}</b></span>`;
-  historico.unshift(`🎲 ${d} | Atributo ${att} → ${t}`);
+  document.getElementById('resAtributo').innerHTML = `🎲 ${d}<br>📊 ${nome}: ${att}<br><span class="${c}"><b>${t}</b></span>`;
+  historico.unshift(`🎲 ${d} | ${nome}: ${att} → ${t}`);
   if(historico.length > 6) historico.pop();
   salvar(); atualizarHistorico();
 }
@@ -983,13 +991,14 @@ function salvar() {
     checkFerido: document.getElementById('checkFerido').checked,
     checkCaido: document.getElementById('checkCaido').checked,
 
-    // NOVOS CAMPOS
+    // NOVOS CAMPOS (exceto imagem, que não cabe no cookie)
     idade: document.getElementById('idadePersonagem').value,
     emprego: document.getElementById('empregoPersonagem').value,
     caracteristicas: document.getElementById('caracteristicasPersonagem').value,
     personalidade: document.getElementById('personalidadePersonagem').value,
     historia: document.getElementById('historiaPersonagem').value,
     atributosPersonalizados: atributosPersonalizados
+    // imagem não é salva no cookie (limite de tamanho)
   };
   
   // Salva no cookie com validade de 1 ano
@@ -1066,6 +1075,14 @@ function exportarDados() {
   const data = new Date().toLocaleDateString('pt-BR');
   const hora = new Date().toLocaleTimeString('pt-BR');
   
+  // Capturar imagem em base64 se existir
+  const fotoPlaceholder = document.getElementById('fotoPlaceholder');
+  let imagemBase64 = null;
+  const img = fotoPlaceholder.querySelector('img');
+  if (img) {
+    imagemBase64 = img.src; // já é base64
+  }
+  
   const dadosParaExportar = {
     meta: {
       sistema: "Teste RPG",
@@ -1107,7 +1124,8 @@ function exportarDados() {
       emprego: document.getElementById('empregoPersonagem').value,
       caracteristicas: document.getElementById('caracteristicasPersonagem').value,
       personalidade: document.getElementById('personalidadePersonagem').value,
-      historia: document.getElementById('historiaPersonagem').value
+      historia: document.getElementById('historiaPersonagem').value,
+      imagem: imagemBase64 // salva base64
     },
     
     atributosPersonalizados: atributosPersonalizados,
@@ -1242,6 +1260,11 @@ function aplicarDadosImportados(dados) {
     if (dados.fichaPersonagem.caracteristicas) document.getElementById('caracteristicasPersonagem').value = dados.fichaPersonagem.caracteristicas;
     if (dados.fichaPersonagem.personalidade) document.getElementById('personalidadePersonagem').value = dados.fichaPersonagem.personalidade;
     if (dados.fichaPersonagem.historia) document.getElementById('historiaPersonagem').value = dados.fichaPersonagem.historia;
+    // Restaurar imagem
+    if (dados.fichaPersonagem.imagem) {
+      const fotoPlaceholder = document.getElementById('fotoPlaceholder');
+      fotoPlaceholder.innerHTML = `<img src="${dados.fichaPersonagem.imagem}" style="width:100%; height:100%; object-fit:cover;">`;
+    }
   }
   
   if (dados.atributosPersonalizados && Array.isArray(dados.atributosPersonalizados)) {
@@ -1315,7 +1338,7 @@ function toggleTema() {
 }
 
 // ============================================================================
-// NOVAS FUNÇÕES PARA ATRIBUTOS PERSONALIZADOS
+// NOVAS FUNÇÕES PARA ATRIBUTOS PERSONALIZADOS E IMAGEM
 // ============================================================================
 
 let atributosPersonalizados = [];
@@ -1330,7 +1353,7 @@ function renderizarAtributos() {
     div.innerHTML = `
       <span>${attr.nome}: ${attr.valor}</span>
       <div class="acoes">
-        <button onclick="testeAtributo(${attr.valor})" title="Rolar teste para ${attr.nome}">🎲</button>
+        <button onclick="testeAtributo('${attr.nome}', ${attr.valor})" title="Rolar teste para ${attr.nome}">🎲</button>
         <button onclick="editarAtributo(${index})">✏️</button>
         <button onclick="removerAtributo(${index})">🗑️</button>
       </div>
@@ -1382,6 +1405,20 @@ function removerAtributo(index) {
     salvar();
   }
 }
+
+// Função para carregar imagem e exibir
+document.getElementById('fotoInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      const fotoPlaceholder = document.getElementById('fotoPlaceholder');
+      fotoPlaceholder.innerHTML = `<img src="${event.target.result}" style="width:100%; height:100%; object-fit:cover;">`;
+      // Não salvamos no cookie, mas podemos salvar no objeto para exportação futura
+    };
+    reader.readAsDataURL(file);
+  }
+});
 
 // ============================================================================
 // CONFIGURAÇÃO DE EVENTOS
