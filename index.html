@@ -396,7 +396,8 @@ button:active{transform:scale(.97)}
       <!-- Tamanho, Aparência, Deslocamento (numéricos) -->
       <div style="display:flex; gap:10px;">
         <input type="number" id="tamanho" placeholder="Tamanho (m)" min="0" step="0.01" style="flex:1;">
-        <input type="number" id="aparencia" placeholder="Aparência (1-10)" min="1" max="10" step="1" style="flex:1;">
+        <!-- ALTERAÇÃO: max da aparência agora é 20 -->
+        <input type="number" id="aparencia" placeholder="Aparência (1-20)" min="1" max="20" step="1" style="flex:1;">
         <input type="number" id="deslocamento" placeholder="Deslocamento (m)" min="0" step="0.1" style="flex:1;">
       </div>
       <!-- Características, Personalidade, História -->
@@ -670,7 +671,7 @@ function rolarDadoPersonalizado() {
   const detalhes = document.getElementById('detalhesRolagem');
   if(!input) { resultado.innerHTML='Digite uma fórmula'; detalhes.innerHTML=''; return; }
   try {
-    input = input.replace(/\s+/g,'').toLowerCase();
+    input = input.replace(/\s+/g, '').toLowerCase();
     const partes = input.split('+');
     let totalGeral=0, listas=[], modificadores=0, detalhesText='';
     for(let parte of partes) {
@@ -758,7 +759,8 @@ function atualizarHistorico() {
   lista.innerHTML = "";
   historico.forEach((h, i) => {
     const li = document.createElement("li");
-    li.className = i < 3 ? `fade-${i}` : i === 3 ? "fade-3" : i === 4 ? "fade-4" : "fade-5";
+    // ALTERAÇÃO: índices 4 e 5 agora ambos com fade-5
+    li.className = i < 3 ? `fade-${i}` : i === 3 ? "fade-3" : "fade-5";
     li.textContent = h;
     lista.appendChild(li);
   });
@@ -769,7 +771,8 @@ function atualizarHistoricoSan() {
   lista.innerHTML = "";
   historicoSan.forEach((h, i) => {
     const li = document.createElement("li");
-    li.className = i < 3 ? `fade-${i}` : i === 3 ? "fade-3" : i === 4 ? "fade-4" : "fade-5";
+    // ALTERAÇÃO: índices 4 e 5 agora ambos com fade-5
+    li.className = i < 3 ? `fade-${i}` : i === 3 ? "fade-3" : "fade-5";
     li.textContent = h;
     lista.appendChild(li);
   });
@@ -780,7 +783,8 @@ function atualizarHistoricoDados() {
   lista.innerHTML = "";
   historicoDados.forEach((h, i) => {
     const li = document.createElement("li");
-    li.className = i < 3 ? `fade-${i}` : i === 3 ? "fade-3" : i === 4 ? "fade-4" : "fade-5";
+    // ALTERAÇÃO: índices 4 e 5 agora ambos com fade-5
+    li.className = i < 3 ? `fade-${i}` : i === 3 ? "fade-3" : "fade-5";
     li.textContent = h;
     lista.appendChild(li);
   });
@@ -1240,6 +1244,35 @@ document.getElementById('defesa').onchange = function() {
   defesa = Math.max(0, +this.value||0);
   salvar();
 };
+
+// NOVAS VALIDAÇÕES: idade, tamanho, aparência, deslocamento
+document.getElementById('idadePersonagem').onchange = function() {
+  this.value = Math.max(0, +this.value||0);
+  salvar();
+};
+document.getElementById('tamanho').onchange = function() {
+  this.value = Math.max(0, +this.value||0);
+  salvar();
+};
+document.getElementById('aparencia').onchange = function() {
+  let val = +this.value;
+  if (isNaN(val)) val = 1;
+  val = Math.min(20, Math.max(1, val));
+  this.value = val;
+  salvar();
+};
+document.getElementById('deslocamento').onchange = function() {
+  this.value = Math.max(0, +this.value||0);
+  salvar();
+};
+
+// NOVO: caído ativa gravemente ferido
+document.getElementById('checkCaido').addEventListener('change', function() {
+  if (this.checked) {
+    document.getElementById('checkFerido').checked = true;
+    salvar();
+  }
+});
 
 // ==================== INICIALIZAÇÃO ====================
 document.addEventListener('click', function initAudioOnClick() {
