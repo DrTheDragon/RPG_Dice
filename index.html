@@ -402,6 +402,8 @@ body.light .fade-5 { color: #eee; }
     <div class="foto-area">
       <div class="foto-placeholder" id="fotoPlaceholder">🖼️ Foto</div>
       <input type="file" id="fotoInput" accept="image/*" style="margin-top:10px; font-size:12px; padding:5px; width:100%;">
+      <!-- BOTÃO PARA REMOVER FOTO -->
+      <button onclick="removerFoto()" style="margin-top:5px; padding:5px; font-size:12px;">Remover foto</button>
       <small>(opcional)</small>
     </div>
     <div class="dados-basicos">
@@ -583,7 +585,6 @@ body.light .fade-5 { color: #eee; }
       <button onclick="alterar('poder',-5)">-5</button>
       <button onclick="alterar('poder',5)">+5</button>
     </div>
-    <!-- NOVO BOTÃO: PODER MÁXIMO -->
     <button class="max-button" onclick="setPoderMaximo()">PODER MÁXIMO</button>
   </div>
 </div>
@@ -727,8 +728,8 @@ function testeSanidade() {
   salvar(); atualizarHistoricoSan();
 }
 
-// NOVA FUNÇÃO PARA DADOS PERSONALIZADOS (COM SUPORTE A +, - E COMBINAÇÃO DE #)
-// AGORA GUARDA OS VALORES INDIVIDUAIS DE CADA DADO NO HISTÓRICO
+// FUNÇÃO PARA DADOS PERSONALIZADOS (COM SUPORTE A +, - E COMBINAÇÃO DE #)
+// GUARDA OS VALORES INDIVIDUAIS DE CADA DADO NO HISTÓRICO
 function rolarDadoPersonalizado() {
   somDado();
   let input = document.getElementById('dadoPersonalizado').value.trim();
@@ -763,7 +764,6 @@ function rolarDadoPersonalizado() {
     
     // Verifica se há listas (resultados do tipo 'lista') ou dados individuais
     const temLista = resultados.some(r => r.tipo === 'lista');
-    const temDados = resultados.some(r => r.tipo === 'dados');
     
     // Se houver listas, todos os operandos devem ser convertidos para listas de mesmo tamanho
     let tamanhoLista = null;
@@ -948,7 +948,6 @@ function alterar(t, v) {
 }
 function setVidaMaxima() { vida = Math.max(0, +document.getElementById('vidaMax').value||0); atualizar(); salvar(); }
 function setSanidadeMaxima() { san = Math.max(0, +document.getElementById('sanMax').value||0); atualizar(); salvar(); }
-// NOVA FUNÇÃO: setPoderMaximo
 function setPoderMaximo() { poder = Math.max(0, +document.getElementById('poderMax').value||0); atualizar(); salvar(); }
 function atualizarExposicao() {
   let val = parseInt(document.getElementById('exposicaoInput').value)||0;
@@ -1163,6 +1162,15 @@ function carregar() {
   atualizarHistoricoSan();
   atualizarHistoricoDados();
   renderizarAtributos();
+}
+
+// ==================== FUNÇÃO PARA REMOVER FOTO ====================
+function removerFoto() {
+  const placeholder = document.getElementById('fotoPlaceholder');
+  placeholder.innerHTML = '🖼️ Foto'; // volta ao texto original
+  const inputFile = document.getElementById('fotoInput');
+  inputFile.value = ''; // limpa o input file
+  salvar(); // salva a remoção
 }
 
 // ==================== EXPORTAÇÃO/IMPORTAÇÃO JSON ====================
