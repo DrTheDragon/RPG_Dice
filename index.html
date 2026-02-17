@@ -5,11 +5,9 @@
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <title>Dotor RPG: O Paranormal</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
-
 <style>
-/* Todos os estilos anteriores permanecem exatamente iguais */
+/* ========== ESTILOS (inalterados, apenas adicionados novos seletores) ========== */
 :root{
  --bg1:#111;--bg2:#000;--panel:#080808;--text:#e0e0e0;
  --border:#222;
@@ -18,7 +16,6 @@ body.light{
  --bg1:#e6e6e6;--bg2:#cfcfcf;--panel:#f5f5f5;--text:#111;
  --border:#bbb;
 }
-
 @keyframes roll{
  0%{transform:rotate(0) scale(1)}
  30%{transform:rotate(25deg) scale(1.05)}
@@ -26,7 +23,6 @@ body.light{
  100%{transform:rotate(0) scale(1)}
 }
 .dado.rolando{animation:roll .35s ease-in-out}
-
 body{
  background:radial-gradient(circle at top,var(--bg1),var(--bg2));
  color:var(--text);
@@ -43,8 +39,8 @@ body{
  padding:25px
 }
 h2,h3{text-align:center;letter-spacing:2px}
+h4{text-align:center;letter-spacing:1px;margin:10px 0 5px;font-size:1.1em}
 .section{border-top:1px solid var(--border);margin-top:20px;padding-top:15px}
-
 input,button,textarea{
  width:100%;padding:10px;margin-top:8px;
  background:transparent;border:1px solid var(--border);
@@ -56,18 +52,14 @@ textarea{min-height:140px;text-align:left}
 button{cursor:pointer}
 button:hover{background:rgba(255,255,255,.05)}
 button:active{transform:scale(.97)}
-
 .dado{font-size:58px;text-align:center;margin:10px 0}
 .resultado{min-height:90px;text-align:center;margin-top:10px}
-
 .controls{display:flex;gap:6px;flex-wrap:wrap}
 .controls button{flex:1 1 48%}
-
 .E{color:#ff4c4c}
 .B{color:#4fa3ff}
 .N{color:#9acd32}
 .F{color:#777}
-
 .historico{margin-top:15px;font-size:14px}
 .historico ul{list-style:none;padding:0;margin:0;height:180px;overflow:hidden}
 .historico li{padding:5px 6px;border-bottom:1px solid var(--border);line-height:1.3;min-height:28px;display:flex;align-items:center}
@@ -77,7 +69,6 @@ button:active{transform:scale(.97)}
 .fade-3{color:#bbb}
 .fade-4{color:#888}
 .fade-5{color:#555}
-
 .toggle{
  margin-bottom:15px;
  width:820px;
@@ -92,10 +83,7 @@ button:active{transform:scale(.97)}
  min-width:150px;
  flex:1;
 }
-
 .itens{width:820px;max-width:95%;margin-top:25px}
-
-/* Novos estilos adicionados */
 .nome-personagem{
  width:820px;
  max-width:95%;
@@ -107,7 +95,6 @@ button:active{transform:scale(.97)}
  max-width:100%;
  box-sizing:border-box;
 }
-
 .checkboxes-vida{
  display:flex;
  justify-content:space-between;
@@ -129,8 +116,6 @@ button:active{transform:scale(.97)}
  width:auto;
  margin-right:10px;
 }
-
-/* Estilos para Atributos Extras */
 .atributos-extras{
  width:820px;
  max-width:95%;
@@ -149,8 +134,6 @@ button:active{transform:scale(.97)}
  margin-top:0;
  margin-bottom:15px;
 }
-
-/* Estilos para Peso - um embaixo do outro */
 .peso-container{
  width:820px;
  max-width:95%;
@@ -179,8 +162,6 @@ button:active{transform:scale(.97)}
 .peso-buttons{
  margin-top:10px;
 }
-
-/* Estilos para Exposição Paranormal */
 .exposicao-container{
  text-align:center;
  padding:10px 0;
@@ -193,8 +174,6 @@ button:active{transform:scale(.97)}
  margin:0 auto;
  display:block;
 }
-
-/* Estilos para Recursos */
 .recursos{
  width:820px;
  max-width:95%;
@@ -214,8 +193,6 @@ button:active{transform:scale(.97)}
  margin-top:0;
  margin-bottom:15px;
 }
-
-/* Estilos para Dados Personalizados */
 .dados-personalizados{
  margin-top:15px;
 }
@@ -227,19 +204,14 @@ button:active{transform:scale(.97)}
 .roll-details p{
  margin:5px 0;
 }
-
-/* Estilo para os botões de máximo */
 .max-button{
  margin-top: 10px;
  width: 100%;
 }
-
-/* Input de arquivo escondido */
 .file-input {
  display: none;
 }
-
-/* Melhorias para mobile - HISTÓRICOS VISÍVEIS */
+/* Mobile */
 @media(max-width:768px){
  body{align-items:flex-start; padding:10px; justify-content:flex-start; min-height:100vh;}
  .wrapper{width:100%; align-items:center;}
@@ -251,45 +223,26 @@ button:active{transform:scale(.97)}
  .controls button{padding:8px; font-size:14px; min-height:40px;}
  .dado{font-size:48px; margin:5px 0;}
  .exposicao-input input{width:120px;}
- 
- /* Ajuste para os painéis ficarem mais compactos */
  .section{margin-top:12px; padding-top:10px;}
  h2{font-size:1.3em; margin:5px 0; text-align:center;}
  h3{font-size:1.1em; margin:8px 0; text-align:center;}
- 
- /* HISTÓRICOS VISÍVEIS NO MOBILE - MAIOR ALTURA */
  .historico{margin-top:10px;}
  .historico ul{height:165px; overflow:hidden !important;}
  .historico li{padding:4px 6px; font-size:13px; line-height:1.4; min-height:26px;}
- 
- /* Melhor espaçamento geral */
  input, button, textarea{font-size:14px; padding:8px; margin-top:6px;}
  .resultado{min-height:70px; padding:8px 0; font-size:14px; text-align:center;}
- 
- /* Centralizar melhor */
  .toggle{flex-direction:column; gap:8px; align-items:center;}
  .toggle button{width:100%; max-width:250px;}
  .itens{margin-top:12px;}
  .recursos, .atributos-extras, .peso-container{margin-top:12px;}
- 
- /* Checkboxes de vida mais organizados */
  .checkboxes-vida{justify-content:center; gap:25px; margin:10px 0;}
  .checkbox-vida{width:28px; height:28px;}
- 
- /* Status mais compactos */
  .checkboxes-status{margin-top:10px;}
  .checkbox-status{margin:5px 0; font-size:14px;}
- 
- /* Centralizar melhor os containers */
  .atributo-extra, .recurso-item, .peso-container{text-align:center;}
- 
- /* Rolagem de detalhes dos dados personalizados - SEM SCROLL */
  .roll-details{font-size:13px; max-height:80px; overflow:hidden;}
- 
- /* Reduzir um pouco a altura dos resultados para dar mais espaço aos históricos */
  .resultado{min-height:65px;}
 }
-
 @media(max-width:480px){
  .controls{flex-direction:row; gap:4px;}
  .controls button{flex:1 1 46%; margin-bottom:0; font-size:13px; padding:7px;}
@@ -298,32 +251,18 @@ button:active{transform:scale(.97)}
  .historico{font-size:12px;}
  .historico ul{height:160px;}
  .dado{font-size:42px;}
- 
- /* Títulos ajustados */
  h2{font-size:1.2em;}
  h3{font-size:1em;}
- 
- /* Seções mais compactas */
  .section{margin-top:10px; padding-top:8px;}
  .resultado{min-height:60px; font-size:13px;}
- 
- /* Botões menores mas funcionais */
  .max-button{padding:7px; font-size:13px;}
- 
- /* Ajustes finos para melhor visualização em telas muito pequenas */
  .exposicao-input input{width:100px;}
  .checkbox-vida{width:25px; height:25px;}
- 
- /* Centralizar tudo melhor */
  .exposicao-container{padding:5px 0;}
  .exposicao-input{margin-top:5px;}
- 
- /* Históricos ainda mais visíveis */
  .historico ul{height:155px;}
  .historico li{min-height:25px;}
 }
-
-/* Estilos para a nova seção de ficha do personagem e atributos personalizados */
 .painel-ficha, .painel-atributos {
  background:var(--panel);
  border:1px solid var(--border);
@@ -366,8 +305,6 @@ button:active{transform:scale(.97)}
  .atributo-item { flex-direction:column; align-items:flex-start; gap:5px; }
  .atributo-item .acoes { width:100%; justify-content:space-between; }
 }
-
-/* Estilo para a área de identificação do personagem (agrupada) */
 .identidade-personagem {
  width:820px;
  max-width:95%;
@@ -423,7 +360,6 @@ button:active{transform:scale(.97)}
 }
 </style>
 </head>
-
 <body>
 <div class="wrapper">
 
@@ -434,26 +370,36 @@ button:active{transform:scale(.97)}
 <input type="file" id="fileInput" class="file-input" accept=".json,.txt" onchange="processarArquivo(this.files)">
 </div>
 
-<!-- Área de Identidade do Personagem (agrupada com nome, idade, etc.) -->
+<!-- ===== IDENTIDADE DO PERSONAGEM (com novos campos) ===== -->
 <div class="identidade-personagem">
   <h3>📋 IDENTIDADE</h3>
   <div class="identidade-grid">
-    <!-- Foto -->
     <div class="foto-area">
-      <div class="foto-placeholder" id="fotoPlaceholder">
-        🖼️ Foto
-      </div>
+      <div class="foto-placeholder" id="fotoPlaceholder">🖼️ Foto</div>
       <input type="file" id="fotoInput" accept="image/*" style="margin-top:10px; font-size:12px; padding:5px; width:100%;">
       <small>(opcional)</small>
     </div>
-    <!-- Dados -->
     <div class="dados-basicos">
+      <!-- Nome e Apelido -->
       <input type="text" id="nomePersonagem" placeholder="Nome do Personagem">
+      <input type="text" id="apelidoPersonagem" placeholder="Apelido">
+      <!-- Idade e Emprego -->
       <div style="display:flex; gap:10px;">
-        <!-- MODIFICAÇÃO 1: idade agora aceita apenas números -->
         <input type="number" id="idadePersonagem" placeholder="Idade" min="0" step="1" style="flex:1;">
         <input type="text" id="empregoPersonagem" placeholder="Emprego / Ex‑emprego" style="flex:2;">
       </div>
+      <!-- Cidade Natal e Residente -->
+      <div style="display:flex; gap:10px;">
+        <input type="text" id="cidadeNatal" placeholder="Cidade Natal" style="flex:1;">
+        <input type="text" id="cidadeResidente" placeholder="Cidade Residente" style="flex:1;">
+      </div>
+      <!-- Tamanho, Aparência, Deslocamento (numéricos) -->
+      <div style="display:flex; gap:10px;">
+        <input type="number" id="tamanho" placeholder="Tamanho (m)" min="0" step="0.01" style="flex:1;">
+        <input type="number" id="aparencia" placeholder="Aparência (1-10)" min="1" max="10" step="1" style="flex:1;">
+        <input type="number" id="deslocamento" placeholder="Deslocamento (m)" min="0" step="0.1" style="flex:1;">
+      </div>
+      <!-- Características, Personalidade, História -->
       <textarea id="caracteristicasPersonagem" placeholder="Características físicas (altura, cabelo, olhos, marcas...)" rows="2"></textarea>
       <textarea id="personalidadePersonagem" placeholder="Personalidade (traços, medos, virtudes...)" rows="2"></textarea>
       <textarea id="historiaPersonagem" placeholder="História / Antecedentes" rows="3"></textarea>
@@ -462,460 +408,323 @@ button:active{transform:scale(.97)}
 </div>
 
 <div class="app">
+  <!-- COLUNA 1 (esquerda): STATUS -->
+  <div class="panel">
+    <h2>📊 STATUS</h2>
+    <div class="section">
+      <h3>❤️ Vida</h3>
+      <input id="vidaMax" type="number" placeholder="Vida Máxima">
+      <p>Atual: <b><span id="vidaAtual">0</span></b></p>
+      <div class="controls">
+        <button onclick="alterar('vida',-1)">-1</button>
+        <button onclick="alterar('vida',1)">+1</button>
+        <button onclick="alterar('vida',-5)">-5</button>
+        <button onclick="alterar('vida',5)">+5</button>
+      </div>
+      <button class="max-button" onclick="setVidaMaxima()">VIDA MÁXIMA</button>
+      <div class="checkboxes-vida">
+        <label><input type="checkbox" class="checkbox-vida" id="checkVida1"></label>
+        <label><input type="checkbox" class="checkbox-vida" id="checkVida2"></label>
+        <label><input type="checkbox" class="checkbox-vida" id="checkVida3"></label>
+      </div>
+      <div class="checkboxes-status">
+        <label class="checkbox-status"><input type="checkbox" id="checkFerido"> 🩸 Gravemente ferido</label>
+        <label class="checkbox-status"><input type="checkbox" id="checkCaido"> ☠ Caído</label>
+      </div>
+    </div>
+    <div class="section">
+      <h3>🧠 Sanidade</h3>
+      <input id="sanMax" type="number" placeholder="Sanidade Máxima">
+      <p>Atual: <b><span id="sanAtual">0</span></b></p>
+      <div class="controls">
+        <button onclick="alterar('san',-1)">-1</button>
+        <button onclick="alterar('san',1)">+1</button>
+        <button onclick="alterar('san',-5)">-5</button>
+        <button onclick="alterar('san',5)">+5</button>
+      </div>
+      <button class="max-button" onclick="setSanidadeMaxima()">SANIDADE MÁXIMA</button>
+    </div>
+    <div class="section">
+      <h3>😴 Horas de Descanso</h3>
+      <p>Atual: <b><span id="descansoAtual">0</span></b></p>
+      <div class="controls">
+        <button onclick="alterar('descanso',-1)">-1</button>
+        <button onclick="alterar('descanso',1)">+1</button>
+        <button onclick="alterar('descanso',-3)">-3</button>
+        <button onclick="alterar('descanso',3)">+3</button>
+      </div>
+    </div>
+  </div>
 
-<!-- COLUNA 1: TESTES (com atributos personalizados) -->
-<div class="panel">
-<h2>🎲 TESTES</h2>
-
-<div class="section">
-<h3>Teste de Atributo</h3>
-<!-- Dado específico para atributo -->
-<div class="dado" id="dadoAtributo">🎲</div>
-<!-- Lista de atributos personalizados (substitui o input antigo) -->
-<div id="listaAtributosPersonalizados" style="margin-bottom:15px;">
-  <!-- Itens serão inseridos aqui dinamicamente -->
-</div>
-<!-- Botão para adicionar novo atributo (inline) -->
-<div style="display:flex; gap:10px; margin-top:10px;">
-  <input type="text" id="novoAtributoNome" placeholder="Nome (ex: Força)" style="flex:2;">
-  <input type="number" id="novoAtributoValor" min="1" max="20" placeholder="1–20" style="flex:1;">
-  <button onclick="adicionarAtributoPersonalizado()" style="flex:1;">➕</button>
-</div>
-<!-- Resultado do teste e histórico -->
-<div class="resultado" id="resAtributo"></div>
-<div class="historico">
-  <h3>📜 Histórico de Atributos</h3>
-  <ul id="listaHistorico"></ul>
-</div>
-</div>
-
-<div class="section">
-<h3>Teste de Sanidade</h3>
-<!-- Dado específico para sanidade -->
-<div class="dado" id="dadoSanidade">🎲</div>
-<button onclick="testeSanidade()">ROLAR D100</button>
-<div class="resultado" id="resSan"></div>
-<div class="historico">
-  <h3>🧠 Histórico de Sanidade</h3>
-  <ul id="listaHistoricoSan"></ul>
-</div>
-</div>
-
-<div class="section">
-<h3>🎯 Dados Personalizados</h3>
-<p style="font-size:12px; margin-bottom:10px;">Exemplos: "2d6", "1d20+4", "2#d20", "2#d4+5" (o # separa dados individuais)</p>
-<input id="dadoPersonalizado" type="text" placeholder="Digite a fórmula (ex: 2d6, 2#d20, 2#d4+5)">
-<button onclick="rolarDadoPersonalizado()">ROLAR DADOS</button>
-<div class="resultado" id="resDadoPersonalizado"></div>
-<div id="detalhesRolagem" class="roll-details"></div>
-<div class="historico">
-  <h3>🎲 Histórico de Dados Personalizados</h3>
-  <ul id="listaHistoricoDados"></ul>
-</div>
-</div>
-</div>
-
-<!-- COLUNA 2: STATUS (inalterado) -->
-<div class="panel">
-<h2>📊 STATUS</h2>
-
-<div class="section">
-<h3>❤️ Vida</h3>
-<input id="vidaMax" type="number" placeholder="Vida Máxima">
-<p>Atual: <b><span id="vidaAtual">0</span></b></p>
-<div class="controls">
-<button onclick="alterar('vida',-1)">-1</button>
-<button onclick="alterar('vida',1)">+1</button>
-<button onclick="alterar('vida',-5)">-5</button>
-<button onclick="alterar('vida',5)">+5</button>
-</div>
-<button class="max-button" onclick="setVidaMaxima()">VIDA MÁXIMA</button>
-
-<div class="checkboxes-vida">
-<label><input type="checkbox" class="checkbox-vida" id="checkVida1"></label>
-<label><input type="checkbox" class="checkbox-vida" id="checkVida2"></label>
-<label><input type="checkbox" class="checkbox-vida" id="checkVida3"></label>
-</div>
-
-<div class="checkboxes-status">
-<label class="checkbox-status">
- <input type="checkbox" id="checkFerido"> 🩸 Gravemente ferido
-</label>
-<label class="checkbox-status">
- <input type="checkbox" id="checkCaido"> ☠ Caído
-</label>
-</div>
-</div>
-
-<div class="section">
-<h3>🧠 Sanidade</h3>
-<input id="sanMax" type="number" placeholder="Sanidade Máxima">
-<p>Atual: <b><span id="sanAtual">0</span></b></p>
-<div class="controls">
-<button onclick="alterar('san',-1)">-1</button>
-<button onclick="alterar('san',1)">+1</button>
-<button onclick="alterar('san',-5)">-5</button>
-<button onclick="alterar('san',5)">+5</button>
-</div>
-<button class="max-button" onclick="setSanidadeMaxima()">SANIDADE MÁXIMA</button>
-</div>
-
-<div class="section">
-<h3>😴 Horas de Descanso</h3>
-<p>Atual: <b><span id="descansoAtual">0</span></b></p>
-<div class="controls">
-<button onclick="alterar('descanso',-1)">-1</button>
-<button onclick="alterar('descanso',1)">+1</button>
-<button onclick="alterar('descanso',-3)">-3</button>
-<button onclick="alterar('descanso',3)">+3</button>
-</div>
-</div>
-</div>
+  <!-- COLUNA 2 (direita): TESTES -->
+  <div class="panel">
+    <h2>🎲 TESTES</h2>
+    <div class="section">
+      <h3>Teste de Atributo</h3>
+      <div class="dado" id="dadoAtributo">🎲</div>
+      <div id="listaAtributosPersonalizados" style="margin-bottom:15px;"></div>
+      <div style="display:flex; gap:10px; margin-top:10px;">
+        <input type="text" id="novoAtributoNome" placeholder="Nome (ex: Força)" style="flex:2;">
+        <input type="number" id="novoAtributoValor" min="1" max="20" placeholder="1–20" style="flex:1;">
+        <button onclick="adicionarAtributoPersonalizado()" style="flex:1;">➕</button>
+      </div>
+      <div class="resultado" id="resAtributo"></div>
+      <div class="historico">
+        <h3>📜 Histórico de Atributos</h3>
+        <ul id="listaHistorico"></ul>
+      </div>
+    </div>
+    <div class="section">
+      <h3>Teste de Sanidade</h3>
+      <div class="dado" id="dadoSanidade">🎲</div>
+      <button onclick="testeSanidade()">ROLAR D100</button>
+      <div class="resultado" id="resSan"></div>
+      <div class="historico">
+        <h3>🧠 Histórico de Sanidade</h3>
+        <ul id="listaHistoricoSan"></ul>
+      </div>
+    </div>
+    <div class="section">
+      <h3>🎯 Dados Personalizados</h3>
+      <p style="font-size:12px; margin-bottom:10px;">Ex: "2d6", "1d20+4", "2#d20", "2#d4+5"</p>
+      <input id="dadoPersonalizado" type="text" placeholder="Digite a fórmula">
+      <button onclick="rolarDadoPersonalizado()">ROLAR DADOS</button>
+      <div class="resultado" id="resDadoPersonalizado"></div>
+      <div id="detalhesRolagem" class="roll-details"></div>
+      <div class="historico">
+        <h3>🎲 Histórico de Dados</h3>
+        <ul id="listaHistoricoDados"></ul>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ATRIBUTOS EXTRAS (inalterado) -->
 <div class="atributos-extras">
-<div class="atributo-extra">
-<h3>👁️ EXPOSIÇÃO PARANORMAL</h3>
-<div class="exposicao-container">
-<p>Valor: <b><span id="exposicaoValor">0</span>%</b></p>
-<div class="exposicao-input">
-<input id="exposicaoInput" type="number" min="0" max="100" value="0" placeholder="0-100">
-</div>
-</div>
-
-<h3 style="margin-top:30px;">🛡️ DEFESA</h3>
-<input id="defesa" type="number" placeholder="Defesa" min="0" value="0">
-</div>
-
-<div class="atributo-extra">
-<h3>✨ PONTOS DE PODER</h3>
-<input id="poderMax" type="number" placeholder="Poder Máximo" min="0">
-<p>Atual: <b><span id="poderAtual">0</span></b></p>
-<div class="controls">
-<button onclick="alterar('poder',-1)">-1</button>
-<button onclick="alterar('poder',1)">+1</button>
-<button onclick="alterar('poder',-5)">-5</button>
-<button onclick="alterar('poder',5)">+5</button>
-</div>
-</div>
+  <div class="atributo-extra">
+    <h3>👁️ EXPOSIÇÃO PARANORMAL</h3>
+    <div class="exposicao-container">
+      <p>Valor: <b><span id="exposicaoValor">0</span>%</b></p>
+      <div class="exposicao-input">
+        <input id="exposicaoInput" type="number" min="0" max="100" value="0" placeholder="0-100">
+      </div>
+    </div>
+    <h3 style="margin-top:30px;">🛡️ DEFESA</h3>
+    <input id="defesa" type="number" placeholder="Defesa" min="0" value="0">
+  </div>
+  <div class="atributo-extra">
+    <h3>✨ PONTOS DE PODER</h3>
+    <input id="poderMax" type="number" placeholder="Poder Máximo" min="0">
+    <p>Atual: <b><span id="poderAtual">0</span></b></p>
+    <div class="controls">
+      <button onclick="alterar('poder',-1)">-1</button>
+      <button onclick="alterar('poder',1)">+1</button>
+      <button onclick="alterar('poder',-5)">-5</button>
+      <button onclick="alterar('poder',5)">+5</button>
+    </div>
+  </div>
 </div>
 
 <!-- PESO (inalterado) -->
 <div class="peso-container">
-<h3>⚖️ PESO</h3>
-<div class="peso-inputs">
-<div class="peso-item">
-<input id="pesoMax" type="number" placeholder="Peso Máximo" min="0">
-</div>
-<div class="peso-item">
-<p>Atual: <b><span id="pesoAtual">0</span></b></p>
-</div>
-<div class="peso-item peso-buttons">
-<div class="controls">
-<button onclick="alterar('peso',-1)">-1</button>
-<button onclick="alterar('peso',1)">+1</button>
-<button onclick="alterar('peso',-5)">-5</button>
-<button onclick="alterar('peso',5)">+5</button>
-</div>
-</div>
-</div>
+  <h3>⚖️ PESO</h3>
+  <div class="peso-inputs">
+    <div class="peso-item"><input id="pesoMax" type="number" placeholder="Peso Máximo" min="0"></div>
+    <div class="peso-item"><p>Atual: <b><span id="pesoAtual">0</span></b></p></div>
+    <div class="peso-item peso-buttons">
+      <div class="controls">
+        <button onclick="alterar('peso',-1)">-1</button>
+        <button onclick="alterar('peso',1)">+1</button>
+        <button onclick="alterar('peso',-5)">-5</button>
+        <button onclick="alterar('peso',5)">+5</button>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- RECURSOS (inalterado) -->
+<!-- RECURSOS: DINHEIRO + TRAUMAS (divididos) -->
 <div class="recursos">
-<div class="recurso-item">
-<h3>💰 DINHEIRO</h3>
-<input id="dinheiro" type="text" placeholder="Dinheiro obtido">
+  <div class="recurso-item">
+    <h3>💰 DINHEIRO</h3>
+    <input id="dinheiro" type="text" placeholder="Dinheiro obtido">
+  </div>
+  <div class="recurso-item" style="display: flex; flex-direction: column; gap: 15px;">
+    <div>
+      <h4>😨 TRAUMAS PERMANENTES</h4>
+      <textarea id="traumasPerm" placeholder="Traumas permanentes..." rows="3"></textarea>
+    </div>
+    <div>
+      <h4>😨 TRAUMAS TEMPORÁRIOS</h4>
+      <textarea id="traumasTemp" placeholder="Traumas temporários..." rows="3"></textarea>
+    </div>
+  </div>
 </div>
 
-<div class="recurso-item">
-<h3>😨 TRAUMAS</h3>
-<textarea id="traumas" placeholder="Anote seus traumas e fobias aqui..."></textarea>
-</div>
+<!-- NOVO PAINEL: PESSOAS IMPORTANTES E TALENTOS -->
+<div class="recursos" style="margin-top:25px;">
+  <div class="recurso-item">
+    <h3>👥 PESSOAS IMPORTANTES</h3>
+    <textarea id="pessoasImportantes" placeholder="Pessoas importantes na vida do personagem..." rows="4"></textarea>
+  </div>
+  <div class="recurso-item">
+    <h3>⭐ TALENTOS</h3>
+    <textarea id="talentos" placeholder="Habilidades especiais, talentos..." rows="4"></textarea>
+  </div>
 </div>
 
-<!-- ITENS (agora apenas para itens/acessórios) -->
+<!-- ITENS (inalterado) -->
 <div class="panel itens">
-<h2>🎒 ITENS / ACESSÓRIOS</h2>
-<textarea id="itens" placeholder="Armas, acessórios,..."></textarea>
+  <h2>🎒 ITENS / ACESSÓRIOS</h2>
+  <textarea id="itens" placeholder="Armas, acessórios,..."></textarea>
 </div>
 
-<!-- NOVA SEÇÃO: ANOTAÇÕES -->
+<!-- ANOTAÇÕES (inalterado) -->
 <div class="panel itens" style="margin-top:25px;">
-<h2>📝 ANOTAÇÕES</h2>
-<textarea id="anotacoes" placeholder="Suas anotações gerais..."></textarea>
+  <h2>📝 ANOTAÇÕES</h2>
+  <textarea id="anotacoes" placeholder="Suas anotações gerais..."></textarea>
 </div>
 
-</div>
+</div> <!-- fecha wrapper -->
 
 <script>
-// ============================================================================
-// VARIÁVEIS GLOBAIS E CONFIGURAÇÕES
-// ============================================================================
-
-// Sistema de áudio
+// ==================== VARIÁVEIS GLOBAIS ====================
 let audioContext = null;
 let audioInitialized = false;
 
-// Históricos
 let historico = [];
 let historicoSan = [];
 let historicoDados = [];
 
-// Status do personagem
 let vida = 0, san = 0, descanso = 0, poder = 0, peso = 0, defesa = 0, exposicao = 0;
 
-// Tabela para testes de atributo
 const tabela = {
-  1:{N:20,B:null,E:null}, 2:{N:19,B:20,E:null},
-  3:{N:18,B:20,E:null}, 4:{N:17,B:19,E:null},
-  5:{N:16,B:19,E:20}, 6:{N:15,B:18,E:20},
-  7:{N:14,B:18,E:20}, 8:{N:13,B:17,E:20},
-  9:{N:12,B:17,E:20}, 10:{N:11,B:16,E:19},
-  11:{N:10,B:16,E:19}, 12:{N:9,B:15,E:19},
-  13:{N:8,B:15,E:19}, 14:{N:7,B:14,E:19},
-  15:{N:6,B:14,E:18}, 16:{N:5,B:13,E:18},
-  17:{N:4,B:13,E:18}, 18:{N:3,B:12,E:18},
-  19:{N:2,B:12,E:18}, 20:{N:1,B:11,E:17}
+  1:{N:20,B:null,E:null},2:{N:19,B:20,E:null},3:{N:18,B:20,E:null},
+  4:{N:17,B:19,E:null},5:{N:16,B:19,E:20},6:{N:15,B:18,E:20},
+  7:{N:14,B:18,E:20},8:{N:13,B:17,E:20},9:{N:12,B:17,E:20},
+  10:{N:11,B:16,E:19},11:{N:10,B:16,E:19},12:{N:9,B:15,E:19},
+  13:{N:8,B:15,E:19},14:{N:7,B:14,E:19},15:{N:6,B:14,E:18},
+  16:{N:5,B:13,E:18},17:{N:4,B:13,E:18},18:{N:3,B:12,E:18},
+  19:{N:2,B:12,E:18},20:{N:1,B:11,E:17}
 };
 
-// Elementos DOM importantes
-const defesaInput = document.getElementById('defesa');
-
-// ============================================================================
-// SISTEMA DE ÁUDIO
-// ============================================================================
-
+// ==================== ÁUDIO ====================
 function initAudio() {
   if (!audioInitialized) {
     try {
       audioContext = new (window.AudioContext || window.webkitAudioContext)();
       audioInitialized = true;
-    } catch(e) {
-      console.log("Áudio não suportado pelo navegador");
-      return false;
-    }
+    } catch(e) { return false; }
   }
   return true;
 }
-
 function somDado() {
   if (!initAudio()) return;
-  
-  if (audioContext.state === 'suspended') {
-    audioContext.resume();
-  }
-  
+  if (audioContext.state === 'suspended') audioContext.resume();
   let t = audioContext.currentTime;
-  for(let i = 0; i < 8; i++) {
+  for(let i=0;i<8;i++) {
     try {
       const o = audioContext.createOscillator();
       const g = audioContext.createGain();
-      o.frequency.value = 120 + Math.random() * 400;
-      g.gain.setValueAtTime(0.15, t);
-      g.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
-      o.connect(g);
-      g.connect(audioContext.destination);
-      o.start(t);
-      o.stop(t + 0.08);
+      o.frequency.value = 120 + Math.random()*400;
+      g.gain.setValueAtTime(0.15,t);
+      g.gain.exponentialRampToValueAtTime(0.001,t+0.08);
+      o.connect(g); g.connect(audioContext.destination);
+      o.start(t); o.stop(t+0.08);
       t += 0.04;
-    } catch(e) {
-      console.log("Erro ao tocar som do dado");
-      break;
-    }
+    } catch(e) { break; }
   }
 }
 
-// ============================================================================
-// TESTES E ROLAGENS DE DADOS
-// ============================================================================
-
-// Função de teste de atributo (agora recebe o nome e o valor)
+// ==================== TESTES ====================
 function testeAtributo(nome, valorAtributo) {
   somDado();
   let att = Math.min(20, Math.max(1, valorAtributo));
-
-  // Animar o dado específico de atributo
   const dadoEl = document.getElementById('dadoAtributo');
-  if (dadoEl) {
-    dadoEl.classList.add("rolando");
-    setTimeout(() => dadoEl.classList.remove("rolando"), 350);
-  }
-
-  const d = Math.floor(Math.random() * 20) + 1;
-  let t, c;
-  const r = tabela[att];
-  
-  if(d === 1) {
-    if(d >= r.N) {
-      t = "NORMAL";
-      c = "N";
-    } else {
-      t = "FALHA CRÍTICA";
-      c = "F";
-    }
-  } else {
-    if(r.E && d >= r.E) {
-      t = "EXTREMO";
-      c = "E";
-    } else if(r.B && d >= r.B) {
-      t = "BOM";
-      c = "B";
-    } else if(d >= r.N) {
-      t = "NORMAL";
-      c = "N";
-    } else {
-      t = "FALHA";
-      c = "F";
-    }
-  }
-
+  if (dadoEl) { dadoEl.classList.add("rolando"); setTimeout(()=>dadoEl.classList.remove("rolando"),350); }
+  const d = Math.floor(Math.random()*20)+1;
+  let t,c; const r = tabela[att];
+  if(d===1) { if(d>=r.N) { t="NORMAL"; c="N"; } else { t="FALHA CRÍTICA"; c="F"; } }
+  else { if(r.E && d>=r.E) { t="EXTREMO"; c="E"; } else if(r.B && d>=r.B) { t="BOM"; c="B"; } else if(d>=r.N) { t="NORMAL"; c="N"; } else { t="FALHA"; c="F"; } }
   document.getElementById('resAtributo').innerHTML = `🎲 ${d}<br>📊 ${nome}: ${att}<br><span class="${c}"><b>${t}</b></span>`;
   historico.unshift(`🎲 ${d} | ${nome}: ${att} → ${t}`);
-  if(historico.length > 6) historico.pop();
+  if(historico.length>6) historico.pop();
   salvar(); atualizarHistorico();
 }
-
 function testeSanidade() {
   somDado();
   const dadoEl = document.getElementById('dadoSanidade');
-  if (dadoEl) {
-    dadoEl.classList.add("rolando");
-    setTimeout(() => dadoEl.classList.remove("rolando"), 350);
-  }
-
-  const sanAtualVal = Math.max(0, san);
-  const d = Math.floor(Math.random() * 100) + 1;
+  if(dadoEl){ dadoEl.classList.add("rolando"); setTimeout(()=>dadoEl.classList.remove("rolando"),350); }
+  const sanAtualVal = Math.max(0,san);
+  const d = Math.floor(Math.random()*100)+1;
   const ok = d >= sanAtualVal;
   const r = ok ? "SUCESSO" : "FALHA";
-
   document.getElementById('resSan').innerHTML = `🎲 ${d}<br>Sanidade Atual: ${sanAtualVal}<br><span class="${ok?'N':'F'}"><b>${r}</b></span>`;
   historicoSan.unshift(`🧠 ${d} / San Atual: ${sanAtualVal} → ${r}`);
-  if(historicoSan.length > 6) historicoSan.pop();
+  if(historicoSan.length>6) historicoSan.pop();
   salvar(); atualizarHistoricoSan();
 }
-
-// MODIFICAÇÃO 2: Nova função para dados personalizados com suporte a "#"
 function rolarDadoPersonalizado() {
   somDado();
   let input = document.getElementById('dadoPersonalizado').value.trim();
   const resultado = document.getElementById('resDadoPersonalizado');
   const detalhes = document.getElementById('detalhesRolagem');
-  
-  if(!input) {
-    resultado.innerHTML = 'Digite uma fórmula de dados';
-    detalhes.innerHTML = '';
-    return;
-  }
-  
+  if(!input) { resultado.innerHTML='Digite uma fórmula'; detalhes.innerHTML=''; return; }
   try {
-    // Remove espaços e converte para minúsculas
-    input = input.replace(/\s+/g, '').toLowerCase();
-    
-    // Divide a expressão em partes separadas por '+'
+    input = input.replace(/\s+/g,'').toLowerCase();
     const partes = input.split('+');
-    
-    let totalGeral = 0;                // usado apenas se não houver dados com '#'
-    let listas = [];                   // guarda arrays de resultados para partes com '#'
-    let modificadores = 0;              // soma dos modificadores numéricos (partes sem 'd')
-    let detalhesText = '';
-    
-    for (let parte of partes) {
-      // Se a parte contém 'd' (é um dado ou grupo de dados)
-      if (parte.includes('d')) {
-        // Verifica se tem '#' (dados individuais)
-        if (parte.includes('#')) {
-          // Formato esperado: <qtd>#d<faces>
+    let totalGeral=0, listas=[], modificadores=0, detalhesText='';
+    for(let parte of partes) {
+      if(parte.includes('d')) {
+        if(parte.includes('#')) {
           const hashIndex = parte.indexOf('#');
           const dIndex = parte.indexOf('d');
-          
-          // Extrai quantidade antes de '#'
-          const qtdStr = parte.substring(0, hashIndex);
+          const qtdStr = parte.substring(0,hashIndex);
           const qtd = parseInt(qtdStr);
-          if (isNaN(qtd) || qtd <= 0) throw new Error('Quantidade inválida antes de #');
-          
-          // Extrai faces depois de 'd'
-          const facesStr = parte.substring(dIndex + 1);
+          if(isNaN(qtd)||qtd<=0) throw new Error('Quantidade inválida');
+          const facesStr = parte.substring(dIndex+1);
           const faces = parseInt(facesStr);
-          if (isNaN(faces) || faces <= 0) throw new Error('Número de faces inválido');
-          
-          // Gera os resultados individuais
+          if(isNaN(faces)||faces<=0) throw new Error('Faces inválidas');
           const rolagens = [];
-          for (let i = 0; i < qtd; i++) {
-            rolagens.push(Math.floor(Math.random() * faces) + 1);
-          }
+          for(let i=0;i<qtd;i++) rolagens.push(Math.floor(Math.random()*faces)+1);
           listas.push(rolagens);
-          
-          // Adiciona aos detalhes
           detalhesText += `${parte}: ${rolagens.join(' + ')}<br>`;
         } else {
-          // Formato normal: <qtd>d<faces> (sem #)
           const dIndex = parte.indexOf('d');
-          const qtdStr = parte.substring(0, dIndex) || '1';
-          const facesStr = parte.substring(dIndex + 1);
-          
-          const qtd = parseInt(qtdStr);
-          const faces = parseInt(facesStr);
-          if (isNaN(qtd) || qtd <= 0 || isNaN(faces) || faces <= 0) throw new Error('Valores inválidos');
-          
-          let soma = 0;
-          const rolagens = [];
-          for (let i = 0; i < qtd; i++) {
-            const r = Math.floor(Math.random() * faces) + 1;
-            rolagens.push(r);
-            soma += r;
-          }
+          const qtdStr = parte.substring(0,dIndex)||'1';
+          const facesStr = parte.substring(dIndex+1);
+          const qtd = parseInt(qtdStr), faces = parseInt(facesStr);
+          if(isNaN(qtd)||qtd<=0||isNaN(faces)||faces<=0) throw new Error('Valores inválidos');
+          let soma=0; const rols=[];
+          for(let i=0;i<qtd;i++){ const r=Math.floor(Math.random()*faces)+1; rols.push(r); soma+=r; }
           totalGeral += soma;
-          
-          detalhesText += `${parte}: ${rolagens.join(' + ')} = ${soma}<br>`;
+          detalhesText += `${parte}: ${rols.join(' + ')} = ${soma}<br>`;
         }
       } else {
-        // É um modificador numérico
         const mod = parseInt(parte);
-        if (!isNaN(mod)) {
-          modificadores += mod;
-          detalhesText += `+${mod} (bônus)<br>`;
-        }
+        if(!isNaN(mod)){ modificadores += mod; detalhesText += `+${mod} (bônus)<br>`; }
       }
     }
-    
-    // Se houver listas (partes com '#')
-    if (listas.length > 0) {
-      // Aplica os modificadores a cada elemento de cada lista
+    if(listas.length>0){
       let resultadosFinais = [];
-      listas.forEach(lista => {
-        const modificada = lista.map(val => val + modificadores);
-        resultadosFinais.push(...modificada);
-      });
-      
-      // Exibe os resultados individuais
+      listas.forEach(lista => { const modificada = lista.map(val=>val+modificadores); resultadosFinais.push(...modificada); });
       resultado.innerHTML = `🎲 ${input}<br>Resultados: <b>${resultadosFinais.join(', ')}</b>`;
       detalhes.innerHTML = `<p><b>Detalhes:</b></p>${detalhesText}`;
-      
-      // Adiciona ao histórico
       historicoDados.unshift(`🎲 ${input} → [${resultadosFinais.join(', ')}]`);
     } else {
-      // Sem '#': exibe o total
       const totalFinal = totalGeral + modificadores;
       resultado.innerHTML = `🎲 ${input}<br>Total: <b>${totalFinal}</b>`;
       detalhes.innerHTML = `<p><b>Detalhes:</b></p>${detalhesText}`;
       historicoDados.unshift(`🎲 ${input} → ${totalFinal}`);
     }
-    
-    if (historicoDados.length > 6) historicoDados.pop();
+    if(historicoDados.length>6) historicoDados.pop();
     atualizarHistoricoDados();
-    
   } catch(e) {
-    resultado.innerHTML = 'Formato inválido. Use: "2d6", "1d20+4", "2#d20", "2#d4+5" etc.';
+    resultado.innerHTML = 'Formato inválido. Use "2d6", "1d20+4", "2#d20", "2#d4+5" etc.';
     detalhes.innerHTML = '';
   }
 }
 
-// ============================================================================
-// GERENCIAMENTO DE STATUS
-// ============================================================================
-
+// ==================== STATUS ====================
 function atualizar() {
   document.getElementById('vidaAtual').textContent = vida;
   document.getElementById('sanAtual').textContent = san;
@@ -924,44 +733,26 @@ function atualizar() {
   document.getElementById('pesoAtual').textContent = peso;
   document.getElementById('exposicaoValor').textContent = exposicao;
 }
-
 function alterar(t, v) {
-  if(t === "vida") vida = Math.max(0, Math.min(+document.getElementById('vidaMax').value, vida + v));
-  else if(t === "san") san = Math.max(0, Math.min(+document.getElementById('sanMax').value, san + v));
-  else if(t === "descanso") descanso = Math.max(0, descanso + v);
-  else if(t === "poder") poder = Math.max(0, Math.min(+document.getElementById('poderMax').value, poder + v));
-  else if(t === "peso") peso = Math.max(0, Math.min(+document.getElementById('pesoMax').value, peso + v));
+  if(t==="vida") vida = Math.max(0, Math.min(+document.getElementById('vidaMax').value, vida+v));
+  else if(t==="san") san = Math.max(0, Math.min(+document.getElementById('sanMax').value, san+v));
+  else if(t==="descanso") descanso = Math.max(0, descanso+v);
+  else if(t==="poder") poder = Math.max(0, Math.min(+document.getElementById('poderMax').value, poder+v));
+  else if(t==="peso") peso = Math.max(0, Math.min(+document.getElementById('pesoMax').value, peso+v));
   salvar(); atualizar();
 }
-
-function setVidaMaxima() {
-  const max = Math.max(0, +document.getElementById('vidaMax').value || 0);
-  vida = max;
-  atualizar();
-  salvar();
-}
-
-function setSanidadeMaxima() {
-  const max = Math.max(0, +document.getElementById('sanMax').value || 0);
-  san = max;
-  atualizar();
-  salvar();
-}
-
+function setVidaMaxima() { vida = Math.max(0, +document.getElementById('vidaMax').value||0); atualizar(); salvar(); }
+function setSanidadeMaxima() { san = Math.max(0, +document.getElementById('sanMax').value||0); atualizar(); salvar(); }
 function atualizarExposicao() {
-  let valor = parseInt(document.getElementById('exposicaoInput').value) || 0;
-  if(valor < 0) valor = 0;
-  if(valor > 100) valor = 100;
-  exposicao = valor;
+  let val = parseInt(document.getElementById('exposicaoInput').value)||0;
+  if(val<0) val=0; if(val>100) val=100;
+  exposicao = val;
   document.getElementById('exposicaoValor').textContent = exposicao;
   document.getElementById('exposicaoInput').value = exposicao;
   salvar();
 }
 
-// ============================================================================
-// HISTÓRICOS
-// ============================================================================
-
+// ==================== HISTÓRICOS ====================
 function atualizarHistorico() {
   const lista = document.getElementById('listaHistorico');
   lista.innerHTML = "";
@@ -994,70 +785,129 @@ function atualizarHistoricoDados() {
     lista.appendChild(li);
   });
 }
+// ==================== ATRIBUTOS PERSONALIZADOS (ordenados) ====================
+let atributosPersonalizados = [];
 
-// ============================================================================
-// SISTEMA DE ARMAZENAMENTO (LOCALSTORAGE)
-// ============================================================================
+function ordenarAtributos() {
+  atributosPersonalizados.sort((a,b) => a.nome.localeCompare(b.nome));
+}
 
+function renderizarAtributos() {
+  ordenarAtributos(); // garante ordem alfabética antes de renderizar
+  const container = document.getElementById('listaAtributosPersonalizados');
+  if(!container) return;
+  container.innerHTML = '';
+  atributosPersonalizados.forEach((attr, index) => {
+    const div = document.createElement('div');
+    div.className = 'atributo-item';
+    div.innerHTML = `
+      <span>${attr.nome}: ${attr.valor}</span>
+      <div class="acoes">
+        <button onclick="testeAtributo('${attr.nome}', ${attr.valor})" title="Rolar teste">🎲</button>
+        <button onclick="editarAtributo(${index})">✏️</button>
+        <button onclick="removerAtributo(${index})">🗑️</button>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function adicionarAtributoPersonalizado() {
+  const nomeInput = document.getElementById('novoAtributoNome');
+  const valorInput = document.getElementById('novoAtributoValor');
+  const nome = nomeInput.value.trim();
+  const valor = parseInt(valorInput.value);
+  if (!nome) { alert('Digite um nome.'); return; }
+  if (isNaN(valor) || valor<1 || valor>20) { alert('Valor entre 1 e 20.'); return; }
+  atributosPersonalizados.push({ nome, valor });
+  ordenarAtributos(); // mantém ordem
+  nomeInput.value = ''; valorInput.value = '';
+  renderizarAtributos();
+  salvar();
+}
+
+function editarAtributo(index) {
+  const attr = atributosPersonalizados[index];
+  const novoNome = prompt('Novo nome:', attr.nome);
+  if(novoNome===null) return;
+  const novoValor = prompt('Novo valor (1-20):', attr.valor);
+  if(novoValor===null) return;
+  const valorInt = parseInt(novoValor);
+  if(novoNome.trim()==='' || isNaN(valorInt) || valorInt<1 || valorInt>20) {
+    alert('Nome inválido ou valor fora de 1-20.'); return;
+  }
+  atributosPersonalizados[index] = { nome: novoNome.trim(), valor: valorInt };
+  ordenarAtributos();
+  renderizarAtributos();
+  salvar();
+}
+
+function removerAtributo(index) {
+  if(confirm('Remover este atributo?')) {
+    atributosPersonalizados.splice(index,1);
+    ordenarAtributos(); // desnecessário mas seguro
+    renderizarAtributos();
+    salvar();
+  }
+}
+
+// ==================== SALVAR / CARREGAR (localStorage) ====================
 function salvar() {
-  // Capturar imagem do placeholder (se houver)
   const fotoPlaceholder = document.getElementById('fotoPlaceholder');
   const img = fotoPlaceholder.querySelector('img');
   const imagemBase64 = img ? img.src : null;
 
   const dados = {
-    // Status atuais
+    // status atuais
     vida, san, descanso, poder, peso, defesa, exposicao,
-    
-    // Valores máximos
+    // máximos
     vidaMax: Math.max(0, +document.getElementById('vidaMax').value || 0),
     sanMax: Math.max(0, +document.getElementById('sanMax').value || 0),
     poderMax: Math.max(0, +document.getElementById('poderMax').value || 0),
     pesoMax: Math.max(0, +document.getElementById('pesoMax').value || 0),
-    
-    // Outros valores
+    // outros valores
     dinheiro: document.getElementById('dinheiro').value,
+    traumasPerm: document.getElementById('traumasPerm').value,
+    traumasTemp: document.getElementById('traumasTemp').value,
+    pessoasImportantes: document.getElementById('pessoasImportantes').value,
+    talentos: document.getElementById('talentos').value,
     itens: document.getElementById('itens').value,
-    traumas: document.getElementById('traumas').value,
-    
-    // NOVO CAMPO: anotações
     anotacoes: document.getElementById('anotacoes').value,
-    
-    // Históricos
-    historico,
-    historicoSan,
-    historicoDados,
-    
-    // Configurações
+    // históricos
+    historico, historicoSan, historicoDados,
+    // configurações
     tema: document.body.className,
+    // identidade (novos campos)
     nomePersonagem: document.getElementById('nomePersonagem').value,
-    
-    // Checkboxes
+    apelido: document.getElementById('apelidoPersonagem').value,
+    idade: document.getElementById('idadePersonagem').value,
+    emprego: document.getElementById('empregoPersonagem').value,
+    cidadeNatal: document.getElementById('cidadeNatal').value,
+    cidadeResidente: document.getElementById('cidadeResidente').value,
+    tamanho: document.getElementById('tamanho').value,
+    aparencia: document.getElementById('aparencia').value,
+    deslocamento: document.getElementById('deslocamento').value,
+    caracteristicas: document.getElementById('caracteristicasPersonagem').value,
+    personalidade: document.getElementById('personalidadePersonagem').value,
+    historia: document.getElementById('historiaPersonagem').value,
+    imagem: imagemBase64,
+    // checkboxes
     checkVida1: document.getElementById('checkVida1').checked,
     checkVida2: document.getElementById('checkVida2').checked,
     checkVida3: document.getElementById('checkVida3').checked,
     checkFerido: document.getElementById('checkFerido').checked,
     checkCaido: document.getElementById('checkCaido').checked,
-
-    // Campos da identidade
-    idade: document.getElementById('idadePersonagem').value,
-    emprego: document.getElementById('empregoPersonagem').value,
-    caracteristicas: document.getElementById('caracteristicasPersonagem').value,
-    personalidade: document.getElementById('personalidadePersonagem').value,
-    historia: document.getElementById('historiaPersonagem').value,
-    imagem: imagemBase64,
-    atributosPersonalizados: atributosPersonalizados
+    // atributos personalizados
+    atributosPersonalizados
   };
-  
-  // Salva no localStorage
   localStorage.setItem('noir_rpg', JSON.stringify(dados));
 }
 
 function carregar() {
   const dadosSalvos = JSON.parse(localStorage.getItem('noir_rpg') || "null");
   if(!dadosSalvos) return;
-  
-  // Carregar valores atuais
+
+  // status
   vida = dadosSalvos.vida || 0;
   san = dadosSalvos.san || 0;
   descanso = dadosSalvos.descanso || 0;
@@ -1065,282 +915,226 @@ function carregar() {
   peso = dadosSalvos.peso || 0;
   defesa = dadosSalvos.defesa || 0;
   exposicao = dadosSalvos.exposicao || 0;
-  
-  // Carregar valores máximos
+  // máximos
   document.getElementById('vidaMax').value = Math.max(0, dadosSalvos.vidaMax || 0);
   document.getElementById('sanMax').value = Math.max(0, dadosSalvos.sanMax || 0);
   document.getElementById('poderMax').value = Math.max(0, dadosSalvos.poderMax || 0);
   document.getElementById('pesoMax').value = Math.max(0, dadosSalvos.pesoMax || 0);
-  
-  // Carregar outros valores
   document.getElementById('defesa').value = defesa;
   document.getElementById('exposicaoValor').textContent = exposicao;
   document.getElementById('exposicaoInput').value = exposicao;
+  // textos
   document.getElementById('dinheiro').value = dadosSalvos.dinheiro || "";
+  document.getElementById('traumasPerm').value = dadosSalvos.traumasPerm || "";
+  document.getElementById('traumasTemp').value = dadosSalvos.traumasTemp || "";
+  document.getElementById('pessoasImportantes').value = dadosSalvos.pessoasImportantes || "";
+  document.getElementById('talentos').value = dadosSalvos.talentos || "";
   document.getElementById('itens').value = dadosSalvos.itens || "";
-  document.getElementById('traumas').value = dadosSalvos.traumas || "";
   document.getElementById('anotacoes').value = dadosSalvos.anotacoes || "";
-  
-  // Carregar históricos
+  // históricos
   historico = dadosSalvos.historico || [];
   historicoSan = dadosSalvos.historicoSan || [];
   historicoDados = dadosSalvos.historicoDados || [];
-  
-  // Carregar configurações
+  // tema
   if(dadosSalvos.tema) document.body.className = dadosSalvos.tema;
-  if(dadosSalvos.nomePersonagem) document.getElementById('nomePersonagem').value = dadosSalvos.nomePersonagem;
-  
-  // Carregar checkboxes
-  if(dadosSalvos.checkVida1 !== undefined) document.getElementById('checkVida1').checked = dadosSalvos.checkVida1;
-  if(dadosSalvos.checkVida2 !== undefined) document.getElementById('checkVida2').checked = dadosSalvos.checkVida2;
-  if(dadosSalvos.checkVida3 !== undefined) document.getElementById('checkVida3').checked = dadosSalvos.checkVida3;
-  if(dadosSalvos.checkFerido !== undefined) document.getElementById('checkFerido').checked = dadosSalvos.checkFerido;
-  if(dadosSalvos.checkCaido !== undefined) document.getElementById('checkCaido').checked = dadosSalvos.checkCaido;
-
-  // Campos da identidade
-  if (dadosSalvos.idade) document.getElementById('idadePersonagem').value = dadosSalvos.idade;
-  if (dadosSalvos.emprego) document.getElementById('empregoPersonagem').value = dadosSalvos.emprego;
-  if (dadosSalvos.caracteristicas) document.getElementById('caracteristicasPersonagem').value = dadosSalvos.caracteristicas;
-  if (dadosSalvos.personalidade) document.getElementById('personalidadePersonagem').value = dadosSalvos.personalidade;
-  if (dadosSalvos.historia) document.getElementById('historiaPersonagem').value = dadosSalvos.historia;
-  
-  // Carregar imagem
-  if (dadosSalvos.imagem) {
-    const fotoPlaceholder = document.getElementById('fotoPlaceholder');
-    fotoPlaceholder.innerHTML = `<img src="${dadosSalvos.imagem}" style="width:100%; height:100%; object-fit:cover;">`;
+  // identidade
+  document.getElementById('nomePersonagem').value = dadosSalvos.nomePersonagem || "";
+  document.getElementById('apelidoPersonagem').value = dadosSalvos.apelido || "";
+  document.getElementById('idadePersonagem').value = dadosSalvos.idade || "";
+  document.getElementById('empregoPersonagem').value = dadosSalvos.emprego || "";
+  document.getElementById('cidadeNatal').value = dadosSalvos.cidadeNatal || "";
+  document.getElementById('cidadeResidente').value = dadosSalvos.cidadeResidente || "";
+  document.getElementById('tamanho').value = dadosSalvos.tamanho || "";
+  document.getElementById('aparencia').value = dadosSalvos.aparencia || "";
+  document.getElementById('deslocamento').value = dadosSalvos.deslocamento || "";
+  document.getElementById('caracteristicasPersonagem').value = dadosSalvos.caracteristicas || "";
+  document.getElementById('personalidadePersonagem').value = dadosSalvos.personalidade || "";
+  document.getElementById('historiaPersonagem').value = dadosSalvos.historia || "";
+  // imagem
+  if(dadosSalvos.imagem) {
+    document.getElementById('fotoPlaceholder').innerHTML = `<img src="${dadosSalvos.imagem}" style="width:100%; height:100%; object-fit:cover;">`;
   }
-
-  if (dadosSalvos.atributosPersonalizados && Array.isArray(dadosSalvos.atributosPersonalizados)) {
+  // checkboxes
+  if(dadosSalvos.checkVida1!==undefined) document.getElementById('checkVida1').checked = dadosSalvos.checkVida1;
+  if(dadosSalvos.checkVida2!==undefined) document.getElementById('checkVida2').checked = dadosSalvos.checkVida2;
+  if(dadosSalvos.checkVida3!==undefined) document.getElementById('checkVida3').checked = dadosSalvos.checkVida3;
+  if(dadosSalvos.checkFerido!==undefined) document.getElementById('checkFerido').checked = dadosSalvos.checkFerido;
+  if(dadosSalvos.checkCaido!==undefined) document.getElementById('checkCaido').checked = dadosSalvos.checkCaido;
+  // atributos personalizados
+  if(dadosSalvos.atributosPersonalizados && Array.isArray(dadosSalvos.atributosPersonalizados)) {
     atributosPersonalizados = dadosSalvos.atributosPersonalizados;
-    renderizarAtributos();
+    ordenarAtributos(); // garante ordem alfabética
   }
-  
-  // Atualizar interface
+  // atualizar interface
   atualizar();
   atualizarHistorico();
   atualizarHistoricoSan();
   atualizarHistoricoDados();
+  renderizarAtributos();
 }
 
-// ============================================================================
-// EXPORTAÇÃO E IMPORTAÇÃO (JSON)
-// ============================================================================
-
+// ==================== EXPORTAÇÃO/IMPORTAÇÃO JSON ====================
 function exportarDados() {
   const nome = document.getElementById('nomePersonagem').value || "PersonagemSemNome";
   const data = new Date().toLocaleDateString('pt-BR');
   const hora = new Date().toLocaleTimeString('pt-BR');
-  
-  // Capturar imagem do placeholder
   const fotoPlaceholder = document.getElementById('fotoPlaceholder');
   const img = fotoPlaceholder.querySelector('img');
   const imagemBase64 = img ? img.src : null;
-  
+
   const dadosParaExportar = {
-    meta: {
-      sistema: "Teste RPG",
-      versao: "1.0",
-      dataExportacao: new Date().toISOString(),
-      dataLegivel: `${data} ${hora}`,
-      nomePersonagem: nome
-    },
-    
+    meta: { sistema:"Teste RPG", versao:"1.0", dataExportacao:new Date().toISOString(), dataLegivel:`${data} ${hora}`, nomePersonagem:nome },
     status: {
-      vida: { atual: vida, max: document.getElementById('vidaMax').value || 0 },
-      sanidade: { atual: san, max: document.getElementById('sanMax').value || 0 },
-      descanso: descanso,
-      poder: { atual: poder, max: document.getElementById('poderMax').value || 0 },
-      peso: { atual: peso, max: document.getElementById('pesoMax').value || 0 },
-      defesa: defesa,
-      exposicaoParanormal: exposicao
+      vida:{ atual:vida, max:document.getElementById('vidaMax').value||0 },
+      sanidade:{ atual:san, max:document.getElementById('sanMax').value||0 },
+      descanso, poder:{ atual:poder, max:document.getElementById('poderMax').value||0 },
+      peso:{ atual:peso, max:document.getElementById('pesoMax').value||0 },
+      defesa, exposicaoParanormal:exposicao
     },
-    
     estado: {
-      gravementeFerido: document.getElementById('checkFerido').checked,
-      caido: document.getElementById('checkCaido').checked,
-      marcadoresVida: {
-        marcador1: document.getElementById('checkVida1').checked,
-        marcador2: document.getElementById('checkVida2').checked,
-        marcador3: document.getElementById('checkVida3').checked
-      }
+      gravementeFerido:document.getElementById('checkFerido').checked,
+      caido:document.getElementById('checkCaido').checked,
+      marcadoresVida: { marcador1:document.getElementById('checkVida1').checked,
+                        marcador2:document.getElementById('checkVida2').checked,
+                        marcador3:document.getElementById('checkVida3').checked }
     },
-    
     recursos: {
-      dinheiro: document.getElementById('dinheiro').value || "0",
-      traumas: document.getElementById('traumas').value || "",
-      itens: document.getElementById('itens').value || "",
-      anotacoes: document.getElementById('anotacoes').value || ""
+      dinheiro:document.getElementById('dinheiro').value||"0",
+      traumasPerm:document.getElementById('traumasPerm').value||"",
+      traumasTemp:document.getElementById('traumasTemp').value||"",
+      pessoasImportantes:document.getElementById('pessoasImportantes').value||"",
+      talentos:document.getElementById('talentos').value||"",
+      itens:document.getElementById('itens').value||"",
+      anotacoes:document.getElementById('anotacoes').value||""
     },
-    
     fichaPersonagem: {
-      idade: document.getElementById('idadePersonagem').value,
-      emprego: document.getElementById('empregoPersonagem').value,
-      caracteristicas: document.getElementById('caracteristicasPersonagem').value,
-      personalidade: document.getElementById('personalidadePersonagem').value,
-      historia: document.getElementById('historiaPersonagem').value,
-      imagem: imagemBase64
+      nome:document.getElementById('nomePersonagem').value,
+      apelido:document.getElementById('apelidoPersonagem').value,
+      idade:document.getElementById('idadePersonagem').value,
+      emprego:document.getElementById('empregoPersonagem').value,
+      cidadeNatal:document.getElementById('cidadeNatal').value,
+      cidadeResidente:document.getElementById('cidadeResidente').value,
+      tamanho:document.getElementById('tamanho').value,
+      aparencia:document.getElementById('aparencia').value,
+      deslocamento:document.getElementById('deslocamento').value,
+      caracteristicas:document.getElementById('caracteristicasPersonagem').value,
+      personalidade:document.getElementById('personalidadePersonagem').value,
+      historia:document.getElementById('historiaPersonagem').value,
+      imagem:imagemBase64
     },
-    
-    atributosPersonalizados: atributosPersonalizados,
-    
-    historicos: {
-      testesAtributo: historico,
-      testesSanidade: historicoSan,
-      dadosPersonalizados: historicoDados
-    },
-    
-    configuracao: {
-      tema: document.body.className
-    }
+    atributosPersonalizados,
+    historicos: { testesAtributo:historico, testesSanidade:historicoSan, dadosPersonalizados:historicoDados },
+    configuracao: { tema:document.body.className }
   };
-  
+
   const jsonString = JSON.stringify(dadosParaExportar, null, 2);
-  const blob = new Blob([jsonString], { type: 'application/json' });
+  const blob = new Blob([jsonString], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `ficha_rpg_${nome.replace(/\s+/g, '_')}_${data.replace(/\//g, '-')}.json`;
+  a.download = `ficha_rpg_${nome.replace(/\s+/g,'_')}_${data.replace(/\//g,'-')}.json`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  
-  alert(`Ficha de ${nome} exportada como JSON com sucesso!`);
+  alert(`Ficha de ${nome} exportada como JSON!`);
 }
 
-function importarDados() {
-  document.getElementById('fileInput').click();
-}
-
+function importarDados() { document.getElementById('fileInput').click(); }
 function processarArquivo(files) {
-  if (files.length === 0) return;
-  
+  if(files.length===0) return;
   const file = files[0];
   const reader = new FileReader();
-  
   reader.onload = function(e) {
     try {
-      const conteudo = e.target.result;
-      const dados = JSON.parse(conteudo);
+      const dados = JSON.parse(e.target.result);
       aplicarDadosImportados(dados);
-    } catch (error) {
-      alert('Erro ao ler o arquivo. Certifique-se de que é um arquivo JSON válido exportado deste sistema.');
-      console.error(error);
+    } catch(error) {
+      alert('Erro ao ler o arquivo. Formato inválido.');
     }
   };
-  
-  reader.onerror = function() {
-    alert('Erro ao ler o arquivo.');
-  };
-  
+  reader.onerror = () => alert('Erro ao ler arquivo.');
   reader.readAsText(file);
 }
 
 function aplicarDadosImportados(dados) {
-  if (!dados || !dados.status || !dados.meta) {
-    alert('Arquivo JSON inválido ou formato incorreto.');
-    return;
+  if(!dados || !dados.status || !dados.meta) { alert('Arquivo inválido.'); return; }
+  // Nome
+  if(dados.meta.nomePersonagem) document.getElementById('nomePersonagem').value = dados.meta.nomePersonagem;
+  // Status
+  if(dados.status) {
+    vida = dados.status.vida.atual||0; document.getElementById('vidaMax').value = dados.status.vida.max||0;
+    san = dados.status.sanidade.atual||0; document.getElementById('sanMax').value = dados.status.sanidade.max||0;
+    descanso = dados.status.descanso||0;
+    poder = dados.status.poder.atual||0; document.getElementById('poderMax').value = dados.status.poder.max||0;
+    peso = dados.status.peso.atual||0; document.getElementById('pesoMax').value = dados.status.peso.max||0;
+    defesa = dados.status.defesa||0; document.getElementById('defesa').value = defesa;
+    exposicao = dados.status.exposicaoParanormal||0; document.getElementById('exposicaoInput').value = exposicao;
   }
-  
-  // Carregar nome
-  if (dados.meta.nomePersonagem) {
-    document.getElementById('nomePersonagem').value = dados.meta.nomePersonagem;
-  }
-  
-  // Carregar status
-  if (dados.status) {
-    vida = dados.status.vida.atual || 0;
-    document.getElementById('vidaMax').value = dados.status.vida.max || 0;
-    
-    san = dados.status.sanidade.atual || 0;
-    document.getElementById('sanMax').value = dados.status.sanidade.max || 0;
-    
-    descanso = dados.status.descanso || 0;
-    
-    poder = dados.status.poder.atual || 0;
-    document.getElementById('poderMax').value = dados.status.poder.max || 0;
-    
-    peso = dados.status.peso.atual || 0;
-    document.getElementById('pesoMax').value = dados.status.peso.max || 0;
-    
-    defesa = dados.status.defesa || 0;
-    document.getElementById('defesa').value = defesa;
-    
-    exposicao = dados.status.exposicaoParanormal || 0;
-    document.getElementById('exposicaoInput').value = exposicao;
-  }
-  
-  // Carregar estado
-  if (dados.estado) {
-    document.getElementById('checkFerido').checked = dados.estado.gravementeFerido || false;
-    document.getElementById('checkCaido').checked = dados.estado.caido || false;
-    
-    if (dados.estado.marcadoresVida) {
-      document.getElementById('checkVida1').checked = dados.estado.marcadoresVida.marcador1 || false;
-      document.getElementById('checkVida2').checked = dados.estado.marcadoresVida.marcador2 || false;
-      document.getElementById('checkVida3').checked = dados.estado.marcadoresVida.marcador3 || false;
+  // Estado
+  if(dados.estado) {
+    document.getElementById('checkFerido').checked = dados.estado.gravementeFerido||false;
+    document.getElementById('checkCaido').checked = dados.estado.caido||false;
+    if(dados.estado.marcadoresVida) {
+      document.getElementById('checkVida1').checked = dados.estado.marcadoresVida.marcador1||false;
+      document.getElementById('checkVida2').checked = dados.estado.marcadoresVida.marcador2||false;
+      document.getElementById('checkVida3').checked = dados.estado.marcadoresVida.marcador3||false;
     }
   }
-  
-  // Carregar recursos
-  if (dados.recursos) {
-    document.getElementById('dinheiro').value = dados.recursos.dinheiro || "";
-    document.getElementById('traumas').value = dados.recursos.traumas || "";
-    document.getElementById('itens').value = dados.recursos.itens || "";
-    document.getElementById('anotacoes').value = dados.recursos.anotacoes || "";
+  // Recursos
+  if(dados.recursos) {
+    document.getElementById('dinheiro').value = dados.recursos.dinheiro||"";
+    document.getElementById('traumasPerm').value = dados.recursos.traumasPerm||"";
+    document.getElementById('traumasTemp').value = dados.recursos.traumasTemp||"";
+    document.getElementById('pessoasImportantes').value = dados.recursos.pessoasImportantes||"";
+    document.getElementById('talentos').value = dados.recursos.talentos||"";
+    document.getElementById('itens').value = dados.recursos.itens||"";
+    document.getElementById('anotacoes').value = dados.recursos.anotacoes||"";
   }
-  
-  // Carregar históricos
-  if (dados.historicos) {
-    historico = dados.historicos.testesAtributo || [];
-    historicoSan = dados.historicos.testesSanidade || [];
-    historicoDados = dados.historicos.dadosPersonalizados || [];
-    
-    if (historico.length > 6) historico = historico.slice(0, 6);
-    if (historicoSan.length > 6) historicoSan = historicoSan.slice(0, 6);
-    if (historicoDados.length > 6) historicoDados = historicoDados.slice(0, 6);
+  // Históricos
+  if(dados.historicos) {
+    historico = dados.historicos.testesAtributo||[];
+    historicoSan = dados.historicos.testesSanidade||[];
+    historicoDados = dados.historicos.dadosPersonalizados||[];
+    if(historico.length>6) historico = historico.slice(0,6);
+    if(historicoSan.length>6) historicoSan = historicoSan.slice(0,6);
+    if(historicoDados.length>6) historicoDados = historicoDados.slice(0,6);
   }
-  
-  // Carregar configuração
-  if (dados.configuracao && dados.configuracao.tema) {
-    document.body.className = dados.configuracao.tema;
-  }
-
+  // Tema
+  if(dados.configuracao && dados.configuracao.tema) document.body.className = dados.configuracao.tema;
   // Ficha personagem
-  if (dados.fichaPersonagem) {
-    if (dados.fichaPersonagem.idade) document.getElementById('idadePersonagem').value = dados.fichaPersonagem.idade;
-    if (dados.fichaPersonagem.emprego) document.getElementById('empregoPersonagem').value = dados.fichaPersonagem.emprego;
-    if (dados.fichaPersonagem.caracteristicas) document.getElementById('caracteristicasPersonagem').value = dados.fichaPersonagem.caracteristicas;
-    if (dados.fichaPersonagem.personalidade) document.getElementById('personalidadePersonagem').value = dados.fichaPersonagem.personalidade;
-    if (dados.fichaPersonagem.historia) document.getElementById('historiaPersonagem').value = dados.fichaPersonagem.historia;
-    
-    if (dados.fichaPersonagem.imagem) {
-      const fotoPlaceholder = document.getElementById('fotoPlaceholder');
-      fotoPlaceholder.innerHTML = `<img src="${dados.fichaPersonagem.imagem}" style="width:100%; height:100%; object-fit:cover;">`;
+  if(dados.fichaPersonagem) {
+    document.getElementById('apelidoPersonagem').value = dados.fichaPersonagem.apelido||"";
+    document.getElementById('idadePersonagem').value = dados.fichaPersonagem.idade||"";
+    document.getElementById('empregoPersonagem').value = dados.fichaPersonagem.emprego||"";
+    document.getElementById('cidadeNatal').value = dados.fichaPersonagem.cidadeNatal||"";
+    document.getElementById('cidadeResidente').value = dados.fichaPersonagem.cidadeResidente||"";
+    document.getElementById('tamanho').value = dados.fichaPersonagem.tamanho||"";
+    document.getElementById('aparencia').value = dados.fichaPersonagem.aparencia||"";
+    document.getElementById('deslocamento').value = dados.fichaPersonagem.deslocamento||"";
+    document.getElementById('caracteristicasPersonagem').value = dados.fichaPersonagem.caracteristicas||"";
+    document.getElementById('personalidadePersonagem').value = dados.fichaPersonagem.personalidade||"";
+    document.getElementById('historiaPersonagem').value = dados.fichaPersonagem.historia||"";
+    if(dados.fichaPersonagem.imagem) {
+      document.getElementById('fotoPlaceholder').innerHTML = `<img src="${dados.fichaPersonagem.imagem}" style="width:100%; height:100%; object-fit:cover;">`;
     }
   }
-  
-  if (dados.atributosPersonalizados && Array.isArray(dados.atributosPersonalizados)) {
+  // Atributos personalizados
+  if(dados.atributosPersonalizados && Array.isArray(dados.atributosPersonalizados)) {
     atributosPersonalizados = dados.atributosPersonalizados;
-    renderizarAtributos();
+    ordenarAtributos();
   }
-  
   // Atualizar interface
   atualizar();
   atualizarHistorico();
   atualizarHistoricoSan();
   atualizarHistoricoDados();
-  
-  // Salvar no localStorage
+  renderizarAtributos();
   salvar();
-  
-  alert(`Dados de "${dados.meta.nomePersonagem || 'Personagem'}" importados com sucesso!`);
+  alert(`Dados de "${dados.meta.nomePersonagem||'Personagem'}" importados!`);
 }
 
-// ============================================================================
-// FUNÇÕES UTILITÁRIAS
-// ============================================================================
-
+// ==================== UTILITÁRIOS ====================
 function calcularDinheiro() {
   const input = document.getElementById('dinheiro');
   const valor = input.value.trim();
@@ -1384,167 +1178,72 @@ function calcularDinheiro() {
     salvar();
   }
 }
+function toggleTema() { document.body.classList.toggle("light"); salvar(); }
 
-function toggleTema() {
-  document.body.classList.toggle("light");
-  salvar();
-}
-
-// ============================================================================
-// ATRIBUTOS PERSONALIZADOS
-// ============================================================================
-
-let atributosPersonalizados = [];
-
-function renderizarAtributos() {
-  const container = document.getElementById('listaAtributosPersonalizados');
-  if (!container) return;
-  container.innerHTML = '';
-  atributosPersonalizados.forEach((attr, index) => {
-    const div = document.createElement('div');
-    div.className = 'atributo-item';
-    div.innerHTML = `
-      <span>${attr.nome}: ${attr.valor}</span>
-      <div class="acoes">
-        <button onclick="testeAtributo('${attr.nome}', ${attr.valor})" title="Rolar teste para ${attr.nome}">🎲</button>
-        <button onclick="editarAtributo(${index})">✏️</button>
-        <button onclick="removerAtributo(${index})">🗑️</button>
-      </div>
-    `;
-    container.appendChild(div);
-  });
-}
-
-function adicionarAtributoPersonalizado() {
-  const nomeInput = document.getElementById('novoAtributoNome');
-  const valorInput = document.getElementById('novoAtributoValor');
-  const nome = nomeInput.value.trim();
-  const valor = parseInt(valorInput.value);
-  if (!nome) {
-    alert('Digite um nome para o atributo.');
-    return;
-  }
-  if (isNaN(valor) || valor < 1 || valor > 20) {
-    alert('O valor deve ser um número entre 1 e 20.');
-    return;
-  }
-  atributosPersonalizados.push({ nome, valor });
-  nomeInput.value = '';
-  valorInput.value = '';
-  renderizarAtributos();
-  salvar();
-}
-
-function editarAtributo(index) {
-  const attr = atributosPersonalizados[index];
-  const novoNome = prompt('Novo nome:', attr.nome);
-  if (novoNome === null) return;
-  const novoValor = prompt('Novo valor (1-20):', attr.valor);
-  if (novoValor === null) return;
-  const valorInt = parseInt(novoValor);
-  if (novoNome.trim() === '' || isNaN(valorInt) || valorInt < 1 || valorInt > 20) {
-    alert('Nome inválido ou valor deve estar entre 1 e 20.');
-    return;
-  }
-  atributosPersonalizados[index] = { nome: novoNome.trim(), valor: valorInt };
-  renderizarAtributos();
-  salvar();
-}
-
-function removerAtributo(index) {
-  if (confirm('Remover este atributo?')) {
-    atributosPersonalizados.splice(index, 1);
-    renderizarAtributos();
-    salvar();
-  }
-}
-
-// ============================================================================
-// EVENTOS DA IMAGEM
-// ============================================================================
-
+// ==================== EVENTOS ====================
 document.getElementById('fotoInput').addEventListener('change', function(e) {
   const file = e.target.files[0];
-  if (file) {
+  if(file) {
     const reader = new FileReader();
     reader.onload = function(event) {
-      const imagemBase64 = event.target.result;
-      const fotoPlaceholder = document.getElementById('fotoPlaceholder');
-      fotoPlaceholder.innerHTML = `<img src="${imagemBase64}" style="width:100%; height:100%; object-fit:cover;">`;
+      document.getElementById('fotoPlaceholder').innerHTML = `<img src="${event.target.result}" style="width:100%; height:100%; object-fit:cover;">`;
       salvar();
     };
     reader.readAsDataURL(file);
   }
 });
 
-// ============================================================================
-// CONFIGURAÇÃO DE EVENTOS
-// ============================================================================
+// Eventos para salvar automaticamente
+['vidaMax','sanMax','poderMax','pesoMax','defesa','exposicaoInput',
+ 'dinheiro','traumasPerm','traumasTemp','pessoasImportantes','talentos',
+ 'itens','anotacoes','nomePersonagem','apelidoPersonagem','idadePersonagem',
+ 'empregoPersonagem','cidadeNatal','cidadeResidente','tamanho','aparencia',
+ 'deslocamento','caracteristicasPersonagem','personalidadePersonagem','historiaPersonagem'
+].forEach(id => {
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('input', salvar);
+});
+['checkVida1','checkVida2','checkVida3','checkFerido','checkCaido'].forEach(id => {
+  document.getElementById(id).addEventListener('change', salvar);
+});
 
-document.getElementById('vidaMax').onchange = () => {
-  document.getElementById('vidaMax').value = Math.max(0, +document.getElementById('vidaMax').value || 0);
-  if(vida > document.getElementById('vidaMax').value) vida = document.getElementById('vidaMax').value;
+// Atualizar exposição
+document.getElementById('exposicaoInput').addEventListener('input', atualizarExposicao);
+document.getElementById('exposicaoInput').addEventListener('change', atualizarExposicao);
+
+// Cálculo do dinheiro ao sair do campo
+document.getElementById('dinheiro').addEventListener('blur', calcularDinheiro);
+document.getElementById('dinheiro').addEventListener('keypress', e => { if(e.key==='Enter') calcularDinheiro(); });
+
+// Validação dos campos de número
+document.getElementById('vidaMax').onchange = function() {
+  this.value = Math.max(0, +this.value||0);
+  if(vida > this.value) vida = +this.value;
   salvar(); atualizar();
 };
-
-document.getElementById('sanMax').onchange = () => {
-  document.getElementById('sanMax').value = Math.max(0, +document.getElementById('sanMax').value || 0);
-  if(san > document.getElementById('sanMax').value) san = document.getElementById('sanMax').value;
+document.getElementById('sanMax').onchange = function() {
+  this.value = Math.max(0, +this.value||0);
+  if(san > this.value) san = +this.value;
   salvar(); atualizar();
 };
-
-document.getElementById('poderMax').onchange = () => {
-  document.getElementById('poderMax').value = Math.max(0, +document.getElementById('poderMax').value || 0);
-  if(poder > document.getElementById('poderMax').value) poder = document.getElementById('poderMax').value;
+document.getElementById('poderMax').onchange = function() {
+  this.value = Math.max(0, +this.value||0);
+  if(poder > this.value) poder = +this.value;
   salvar(); atualizar();
 };
-
-document.getElementById('pesoMax').onchange = () => {
-  document.getElementById('pesoMax').value = Math.max(0, +document.getElementById('pesoMax').value || 0);
-  if(peso > document.getElementById('pesoMax').value) peso = document.getElementById('pesoMax').value;
+document.getElementById('pesoMax').onchange = function() {
+  this.value = Math.max(0, +this.value||0);
+  if(peso > this.value) peso = +this.value;
   salvar(); atualizar();
 };
-
-document.getElementById('defesa').onchange = () => {
-  defesa = Math.max(0, +document.getElementById('defesa').value || 0);
+document.getElementById('defesa').onchange = function() {
+  defesa = Math.max(0, +this.value||0);
   salvar();
 };
 
-document.getElementById('exposicaoInput').onchange = atualizarExposicao;
-document.getElementById('exposicaoInput').oninput = atualizarExposicao;
-
-document.getElementById('dinheiro').addEventListener('blur', calcularDinheiro);
-document.getElementById('dinheiro').addEventListener('keypress', function(e) {
-  if(e.key === 'Enter') {
-    calcularDinheiro();
-  }
-});
-
-// Eventos para salvar automaticamente
-document.getElementById('itens').oninput = salvar;
-document.getElementById('traumas').oninput = salvar;
-document.getElementById('anotacoes').oninput = salvar;
-document.getElementById('checkVida1').onchange = salvar;
-document.getElementById('checkVida2').onchange = salvar;
-document.getElementById('checkVida3').onchange = salvar;
-document.getElementById('checkFerido').onchange = salvar;
-document.getElementById('checkCaido').onchange = salvar;
-
-document.getElementById('nomePersonagem').addEventListener('input', salvar);
-document.getElementById('idadePersonagem').addEventListener('input', salvar);
-document.getElementById('empregoPersonagem').addEventListener('input', salvar);
-document.getElementById('caracteristicasPersonagem').addEventListener('input', salvar);
-document.getElementById('personalidadePersonagem').addEventListener('input', salvar);
-document.getElementById('historiaPersonagem').addEventListener('input', salvar);
-
-// ============================================================================
-// INICIALIZAÇÃO
-// ============================================================================
-
+// ==================== INICIALIZAÇÃO ====================
 document.addEventListener('click', function initAudioOnClick() {
-  if (!audioInitialized) {
-    initAudio();
-  }
+  if(!audioInitialized) initAudio();
   document.removeEventListener('click', initAudioOnClick);
 });
 
