@@ -69,6 +69,10 @@ button:active{transform:scale(.97)}
 .fade-3{color:#bbb}
 .fade-4{color:#888}
 .fade-5{color:#555}
+/* Ajuste do fade para o modo claro */
+body.light .fade-3 { color: #aaa; }
+body.light .fade-4 { color: #ccc; }
+body.light .fade-5 { color: #eee; }
 .toggle{
  margin-bottom:15px;
  width:820px;
@@ -825,6 +829,8 @@ function rolarDadoPersonalizado() {
     }
     
     if (historicoDados.length > 6) historicoDados.pop();
+    // Salvar no localStorage após modificar o histórico
+    salvar();
     atualizarHistoricoDados();
     
   } catch (e) {
