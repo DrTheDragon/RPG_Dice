@@ -366,6 +366,55 @@ button:active{transform:scale(.97)}
  .atributo-item { flex-direction:column; align-items:flex-start; gap:5px; }
  .atributo-item .acoes { width:100%; justify-content:space-between; }
 }
+
+/* Estilo para a área de identificação do personagem (agrupada) */
+.identidade-personagem {
+ width:820px;
+ max-width:95%;
+ margin-bottom:20px;
+ background:var(--panel);
+ border:1px solid var(--border);
+ box-shadow:0 0 40px rgba(0,0,0,.7);
+ padding:20px;
+}
+.identidade-personagem h3 {
+ margin-top:0;
+ margin-bottom:15px;
+ text-align:center;
+}
+.identidade-grid {
+ display:grid;
+ grid-template-columns:1fr 2fr;
+ gap:15px;
+}
+.identidade-grid .foto-area {
+ text-align:center;
+}
+.identidade-grid .foto-placeholder {
+ width:120px;
+ height:120px;
+ background:var(--bg1);
+ border:2px solid var(--border);
+ margin:0 auto;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ border-radius:5px;
+ font-size:12px;
+}
+.identidade-grid .dados-basicos {
+ display:flex;
+ flex-direction:column;
+ gap:10px;
+}
+.identidade-grid .dados-basicos input,
+.identidade-grid .dados-basicos textarea {
+ width:100%;
+ box-sizing:border-box;
+}
+@media(max-width:768px){
+ .identidade-grid { grid-template-columns:1fr; }
+}
 </style>
 </head>
 
@@ -379,26 +428,53 @@ button:active{transform:scale(.97)}
 <input type="file" id="fileInput" class="file-input" accept=".json,.txt" onchange="processarArquivo(this.files)">
 </div>
 
-<div class="nome-personagem">
-<input id="nomePersonagem" type="text" placeholder="Nome do Personagem">
+<!-- Área de Identidade do Personagem (agrupada com nome, idade, etc.) -->
+<div class="identidade-personagem">
+  <h3>📋 IDENTIDADE</h3>
+  <div class="identidade-grid">
+    <!-- Foto -->
+    <div class="foto-area">
+      <div class="foto-placeholder">🖼️ Foto</div>
+      <input type="file" id="fotoInput" accept="image/*" style="margin-top:10px; font-size:12px; padding:5px; width:100%;">
+      <small>(opcional)</small>
+    </div>
+    <!-- Dados -->
+    <div class="dados-basicos">
+      <input type="text" id="nomePersonagem" placeholder="Nome do Personagem">
+      <div style="display:flex; gap:10px;">
+        <input type="text" id="idadePersonagem" placeholder="Idade" style="flex:1;">
+        <input type="text" id="empregoPersonagem" placeholder="Emprego / Ex‑emprego" style="flex:2;">
+      </div>
+      <textarea id="caracteristicasPersonagem" placeholder="Características físicas (altura, cabelo, olhos, marcas...)" rows="2"></textarea>
+      <textarea id="personalidadePersonagem" placeholder="Personalidade (traços, medos, virtudes...)" rows="2"></textarea>
+      <textarea id="historiaPersonagem" placeholder="História / Antecedentes" rows="3"></textarea>
+    </div>
+  </div>
 </div>
 
 <div class="app">
 
-<!-- COLUNA 1: TESTES -->
+<!-- COLUNA 1: TESTES (com atributos personalizados) -->
 <div class="panel">
 <h2>🎲 TESTES</h2>
 
 <div class="section">
 <h3>Teste de Atributo</h3>
-<input id="atributo" type="number" min="1" max="20" placeholder="Atributo (1–20)">
-<div class="dado">🎲</div>
-<button onclick="testeAtributo()">ROLAR D20</button>
+<!-- Lista de atributos personalizados (substitui o input antigo) -->
+<div id="listaAtributosPersonalizados" style="margin-bottom:15px;">
+  <!-- Itens serão inseridos aqui dinamicamente -->
+</div>
+<!-- Botão para adicionar novo atributo (inline) -->
+<div style="display:flex; gap:10px; margin-top:10px;">
+  <input type="text" id="novoAtributoNome" placeholder="Nome (ex: Força)" style="flex:2;">
+  <input type="number" id="novoAtributoValor" min="1" max="20" placeholder="1–20" style="flex:1;">
+  <button onclick="adicionarAtributoPersonalizado()" style="flex:1;">➕</button>
+</div>
+<!-- Resultado do teste e histórico -->
 <div class="resultado" id="resAtributo"></div>
-
 <div class="historico">
-<h3>📜 Histórico</h3>
-<ul id="listaHistorico"></ul>
+  <h3>📜 Histórico de Atributos</h3>
+  <ul id="listaHistorico"></ul>
 </div>
 </div>
 
@@ -407,10 +483,9 @@ button:active{transform:scale(.97)}
 <div class="dado">🎲</div>
 <button onclick="testeSanidade()">ROLAR D100</button>
 <div class="resultado" id="resSan"></div>
-
 <div class="historico">
-<h3>🧠 Histórico de Sanidade</h3>
-<ul id="listaHistoricoSan"></ul>
+  <h3>🧠 Histórico de Sanidade</h3>
+  <ul id="listaHistoricoSan"></ul>
 </div>
 </div>
 
@@ -421,15 +496,14 @@ button:active{transform:scale(.97)}
 <button onclick="rolarDadoPersonalizado()">ROLAR DADOS</button>
 <div class="resultado" id="resDadoPersonalizado"></div>
 <div id="detalhesRolagem" class="roll-details"></div>
-
 <div class="historico">
-<h3>🎲 Histórico de Dados Personalizados</h3>
-<ul id="listaHistoricoDados"></ul>
+  <h3>🎲 Histórico de Dados Personalizados</h3>
+  <ul id="listaHistoricoDados"></ul>
 </div>
 </div>
 </div>
 
-<!-- COLUNA 2: STATUS -->
+<!-- COLUNA 2: STATUS (inalterado) -->
 <div class="panel">
 <h2>📊 STATUS</h2>
 
@@ -487,7 +561,7 @@ button:active{transform:scale(.97)}
 </div>
 </div>
 
-<!-- ATRIBUTOS EXTRAS -->
+<!-- ATRIBUTOS EXTRAS (inalterado) -->
 <div class="atributos-extras">
 <div class="atributo-extra">
 <h3>👁️ EXPOSIÇÃO PARANORMAL</h3>
@@ -515,7 +589,7 @@ button:active{transform:scale(.97)}
 </div>
 </div>
 
-<!-- PESO -->
+<!-- PESO (inalterado) -->
 <div class="peso-container">
 <h3>⚖️ PESO</h3>
 <div class="peso-inputs">
@@ -536,7 +610,7 @@ button:active{transform:scale(.97)}
 </div>
 </div>
 
-<!-- RECURSOS -->
+<!-- RECURSOS (inalterado) -->
 <div class="recursos">
 <div class="recurso-item">
 <h3>💰 DINHEIRO</h3>
@@ -549,52 +623,10 @@ button:active{transform:scale(.97)}
 </div>
 </div>
 
-<!-- ITENS -->
+<!-- ITENS (inalterado) -->
 <div class="panel itens">
 <h2>🎒 ITENS / ACESSÓRIOS</h2>
 <textarea id="itens" placeholder="Anota aqui armas, pistas, acessórios, contatos, segredos..."></textarea>
-</div>
-
-<!-- ===================================================== -->
-<!-- NOVAS SEÇÕES ADICIONADAS -->
-<!-- ===================================================== -->
-
-<!-- FICHA DO PERSONAGEM (FOTO, IDADE, EMPREGO, CARACTERÍSTICAS, PERSONALIDADE, HISTÓRIA) -->
-<div class="painel-ficha">
-  <h2>📋 FICHA DO PERSONAGEM</h2>
-  <div style="display:grid; grid-template-columns:150px 1fr; gap:20px;">
-    <!-- Área da foto -->
-    <div style="text-align:center;">
-      <div style="width:150px; height:150px; background:var(--bg1); border:2px solid var(--border); margin:0 auto; display:flex; align-items:center; justify-content:center; color:var(--text); font-size:12px; border-radius:5px;">
-        🖼️ Foto
-      </div>
-      <input type="file" id="fotoInput" accept="image/*" style="margin-top:10px; font-size:12px; padding:5px;">
-      <small style="display:block; margin-top:5px;">(opcional)</small>
-    </div>
-    <!-- Dados básicos -->
-    <div style="display:flex; flex-direction:column; gap:10px;">
-      <div style="display:flex; gap:10px;">
-        <input type="text" id="idadePersonagem" placeholder="Idade" style="flex:1;">
-        <input type="text" id="empregoPersonagem" placeholder="Emprego / Ex‑emprego" style="flex:2;">
-      </div>
-      <textarea id="caracteristicasPersonagem" placeholder="Características físicas (altura, cabelo, olhos, marcas...)" style="min-height:60px;"></textarea>
-      <textarea id="personalidadePersonagem" placeholder="Personalidade (traços, medos, virtudes...)" style="min-height:60px;"></textarea>
-      <textarea id="historiaPersonagem" placeholder="História / Antecedentes" style="min-height:100px;"></textarea>
-    </div>
-  </div>
-</div>
-
-<!-- ATRIBUTOS PERSONALIZADOS (NOME + VALOR 1–20) -->
-<div class="painel-atributos">
-  <h2>⚙️ ATRIBUTOS PERSONALIZADOS</h2>
-  <div id="listaAtributosPersonalizados" style="margin-bottom:15px;">
-    <!-- Itens serão inseridos aqui dinamicamente -->
-  </div>
-  <div style="display:flex; gap:10px;">
-    <input type="text" id="novoAtributoNome" placeholder="Nome do atributo (ex: Força)" style="flex:2;">
-    <input type="number" id="novoAtributoValor" min="1" max="20" placeholder="1–20" style="flex:1;">
-    <button onclick="adicionarAtributoPersonalizado()" style="flex:1;">➕ Adicionar</button>
-  </div>
 </div>
 
 </div>
@@ -681,21 +713,17 @@ function somDado() {
 // TESTES E ROLAGENS DE DADOS
 // ============================================================================
 
-// Função modificada para aceitar um valor opcional de atributo
+// Função de teste de atributo (agora recebe o valor por parâmetro)
 function testeAtributo(valorAtributo) {
   somDado();
-  let att;
-  if (valorAtributo !== undefined) {
-    att = Math.min(20, Math.max(1, valorAtributo));
-  } else {
-    att = parseInt(document.getElementById('atributo').value) || 1;
-    att = Math.min(20, Math.max(1, att));
-    document.getElementById('atributo').value = att;
-  }
+  let att = Math.min(20, Math.max(1, valorAtributo));
 
+  // Animar o primeiro dado da página (ícone geral)
   const dadoEl = document.querySelectorAll(".dado")[0];
-  dadoEl.classList.add("rolando");
-  setTimeout(() => dadoEl.classList.remove("rolando"), 350);
+  if (dadoEl) {
+    dadoEl.classList.add("rolando");
+    setTimeout(() => dadoEl.classList.remove("rolando"), 350);
+  }
 
   const d = Math.floor(Math.random() * 20) + 1;
   let t, c;
@@ -1402,14 +1430,14 @@ document.getElementById('dinheiro').addEventListener('keypress', function(e) {
 // Eventos para salvar automaticamente
 document.getElementById('itens').oninput = salvar;
 document.getElementById('traumas').oninput = salvar;
-document.getElementById('nomePersonagem').oninput = salvar;
 document.getElementById('checkVida1').onchange = salvar;
 document.getElementById('checkVida2').onchange = salvar;
 document.getElementById('checkVida3').onchange = salvar;
 document.getElementById('checkFerido').onchange = salvar;
 document.getElementById('checkCaido').onchange = salvar;
 
-// NOVOS EVENTOS
+// NOVOS EVENTOS (identidade)
+document.getElementById('nomePersonagem').addEventListener('input', salvar);
 document.getElementById('idadePersonagem').addEventListener('input', salvar);
 document.getElementById('empregoPersonagem').addEventListener('input', salvar);
 document.getElementById('caracteristicasPersonagem').addEventListener('input', salvar);
