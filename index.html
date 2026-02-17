@@ -583,6 +583,8 @@ body.light .fade-5 { color: #eee; }
       <button onclick="alterar('poder',-5)">-5</button>
       <button onclick="alterar('poder',5)">+5</button>
     </div>
+    <!-- NOVO BOTÃO: PODER MÁXIMO -->
+    <button class="max-button" onclick="setPoderMaximo()">PODER MÁXIMO</button>
   </div>
 </div>
 
@@ -726,6 +728,7 @@ function testeSanidade() {
 }
 
 // NOVA FUNÇÃO PARA DADOS PERSONALIZADOS (COM SUPORTE A +, - E COMBINAÇÃO DE #)
+// AGORA GUARDA OS VALORES INDIVIDUAIS DE CADA DADO NO HISTÓRICO
 function rolarDadoPersonalizado() {
   somDado();
   let input = document.getElementById('dadoPersonalizado').value.trim();
@@ -756,10 +759,11 @@ function rolarDadoPersonalizado() {
     if (operadores.length !== operandos.length - 1) throw new Error('Número de operandos e operadores incompatível');
 
     // Avalia cada operando (pode ser número ou expressão de dados)
-    const resultados = operandos.map(op => avaliarOperando(op));
+    const resultados = operandos.map(op => avaliarOperandoDetalhado(op));
     
-    // Verifica se há listas (resultados do tipo 'lista')
+    // Verifica se há listas (resultados do tipo 'lista') ou dados individuais
     const temLista = resultados.some(r => r.tipo === 'lista');
+    const temDados = resultados.some(r => r.tipo === 'dados');
     
     // Se houver listas, todos os operandos devem ser convertidos para listas de mesmo tamanho
     let tamanhoLista = null;
@@ -771,11 +775,14 @@ function rolarDadoPersonalizado() {
           else if (r.valores.length !== tamanhoLista) throw new Error('Listas de tamanhos diferentes');
         }
       }
-      // Converte operandos escalares para lista repetindo o valor
+      // Converte operandos escalares e dados para lista repetindo o valor
       const resultadosConvertidos = resultados.map(r => {
         if (r.tipo === 'escalar') {
           return Array(tamanhoLista).fill(r.valor);
-        } else {
+        } else if (r.tipo === 'dados') {
+          // Para dados, usamos a soma como valor para cálculos (mas guardamos os valores)
+          return Array(tamanhoLista).fill(r.soma);
+        } else { // lista
           return r.valores;
         }
       });
@@ -802,34 +809,70 @@ function rolarDadoPersonalizado() {
         const r = resultados[idx];
         if (r.tipo === 'lista') {
           detalhesHtml += `${op}: [${r.valores.join(', ')}]<br>`;
+        } else if (r.tipo === 'dados') {
+          detalhesHtml += `${op}: ${r.valores.join(' + ')} = ${r.soma}<br>`;
         } else {
           detalhesHtml += `${op}: ${r.valor}<br>`;
         }
       });
       detalhesDiv.innerHTML = detalhesHtml;
       
-      // Adiciona ao histórico
-      historicoDados.unshift(`🎲 ${input} → [${listaFinal.join(', ')}]`);
+      // Constrói entrada para o histórico com valores individuais
+      let historicoStr = `${input} → `;
+      operandos.forEach((op, idx) => {
+        const r = resultados[idx];
+        if (r.tipo === 'lista') {
+          historicoStr += `[${r.valores.join(', ')}]`;
+        } else if (r.tipo === 'dados') {
+          historicoStr += `${r.valores.join('+')}`;
+        } else {
+          historicoStr += r.valor;
+        }
+        if (idx < operadores.length) historicoStr += ` ${operadores[idx]} `;
+      });
+      historicoStr += ` = [${listaFinal.join(', ')}]`;
+      historicoDados.unshift(`🎲 ${historicoStr}`);
+      
     } else {
-      // Todos são escalares: faz a conta normalmente
-      let total = resultados[0].valor;
+      // Todos são escalares ou dados individuais (sem #)
+      // Primeiro, calcula o total usando as somas
+      let total = (resultados[0].tipo === 'dados' ? resultados[0].soma : resultados[0].valor);
       for (let j = 0; j < operadores.length; j++) {
         const op = operadores[j];
-        const prox = resultados[j+1].valor;
-        if (op === '+') total += prox;
-        else if (op === '-') total -= prox;
+        const prox = resultados[j+1];
+        const val = (prox.tipo === 'dados' ? prox.soma : prox.valor);
+        if (op === '+') total += val;
+        else if (op === '-') total -= val;
       }
       resultadoDiv.innerHTML = `🎲 ${input}<br>Total: <b>${total}</b>`;
       
       let detalhesHtml = '<p><b>Detalhes:</b></p>';
-      operandos.forEach((op, idx) => detalhesHtml += `${op}: ${resultados[idx].valor}<br>`);
+      operandos.forEach((op, idx) => {
+        const r = resultados[idx];
+        if (r.tipo === 'dados') {
+          detalhesHtml += `${op}: ${r.valores.join(' + ')} = ${r.soma}<br>`;
+        } else {
+          detalhesHtml += `${op}: ${r.valor}<br>`;
+        }
+      });
       detalhesDiv.innerHTML = detalhesHtml;
       
-      historicoDados.unshift(`🎲 ${input} → ${total}`);
+      // Constrói entrada para o histórico com valores individuais
+      let historicoStr = `${input} → `;
+      operandos.forEach((op, idx) => {
+        const r = resultados[idx];
+        if (r.tipo === 'dados') {
+          historicoStr += `${r.valores.join('+')}`;
+        } else {
+          historicoStr += r.valor;
+        }
+        if (idx < operadores.length) historicoStr += ` ${operadores[idx]} `;
+      });
+      historicoStr += ` = ${total}`;
+      historicoDados.unshift(`🎲 ${historicoStr}`);
     }
     
     if (historicoDados.length > 6) historicoDados.pop();
-    // Salvar no localStorage após modificar o histórico
     salvar();
     atualizarHistoricoDados();
     
@@ -840,7 +883,8 @@ function rolarDadoPersonalizado() {
 }
 
 // Avalia um token que pode ser um número ou uma expressão de dados (ex: "2d6", "2#d20")
-function avaliarOperando(token) {
+// Agora retorna um objeto com tipo e, se for dados, guarda os valores individuais
+function avaliarOperandoDetalhado(token) {
   // Se for apenas número
   if (/^\d+$/.test(token)) {
     return { tipo: 'escalar', valor: parseInt(token) };
@@ -873,11 +917,12 @@ function avaliarOperando(token) {
       const faces = parseInt(facesStr);
       if (isNaN(qtd) || qtd <= 0 || isNaN(faces) || faces <= 0) throw new Error('Valores inválidos');
       
-      let soma = 0;
+      const valores = [];
       for (let i = 0; i < qtd; i++) {
-        soma += Math.floor(Math.random() * faces) + 1;
+        valores.push(Math.floor(Math.random() * faces) + 1);
       }
-      return { tipo: 'escalar', valor: soma };
+      const soma = valores.reduce((a,b) => a+b, 0);
+      return { tipo: 'dados', valores, soma };
     }
   }
   
@@ -903,6 +948,8 @@ function alterar(t, v) {
 }
 function setVidaMaxima() { vida = Math.max(0, +document.getElementById('vidaMax').value||0); atualizar(); salvar(); }
 function setSanidadeMaxima() { san = Math.max(0, +document.getElementById('sanMax').value||0); atualizar(); salvar(); }
+// NOVA FUNÇÃO: setPoderMaximo
+function setPoderMaximo() { poder = Math.max(0, +document.getElementById('poderMax').value||0); atualizar(); salvar(); }
 function atualizarExposicao() {
   let val = parseInt(document.getElementById('exposicaoInput').value)||0;
   if(val<0) val=0; if(val>100) val=100;
