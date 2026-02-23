@@ -1061,7 +1061,7 @@ function aplicarOperador(op, a, b) {
   else if (op === '*') res = valA * valB;
   else if (op === '/') res = Math.floor(valA / valB); // divisão inteira
 
-  // Concatena detalhes
+  // Concatena detalhes com operadores
   let detalhes = [];
   detalhes.push(...detalhesA);
   detalhes.push(op);
@@ -1122,11 +1122,12 @@ function rolarDadoPersonalizado() {
         let d = resultado.detalhes[i];
         if (d === '+' || d === '-' || d === '*' || d === '/') {
           detalhesStr += ' ' + d + ' ';
-        } else if (typeof d === 'string' && d.match(/^\d+$/)) {
-          // Se for número, adiciona direto
-          detalhesStr += d;
         } else {
           detalhesStr += d;
+          // Se o próximo elemento for um número (não operador), adicionamos '+'
+          if (i < resultado.detalhes.length - 1 && !['+', '-', '*', '/'].includes(resultado.detalhes[i+1])) {
+            detalhesStr += ' + ';
+          }
         }
       }
       detalhesHtml += detalhesStr;
@@ -1144,10 +1145,11 @@ function rolarDadoPersonalizado() {
         let d = resultado.detalhes[i];
         if (d === '+' || d === '-' || d === '*' || d === '/') {
           detalhesStr += ' ' + d + ' ';
-        } else if (typeof d === 'string' && d.match(/^\d+$/)) {
-          detalhesStr += d;
         } else {
           detalhesStr += d;
+          if (i < resultado.detalhes.length - 1 && !['+', '-', '*', '/'].includes(resultado.detalhes[i+1])) {
+            detalhesStr += ' + ';
+          }
         }
       }
       historicoStr += detalhesStr + ' = ';
@@ -1935,7 +1937,7 @@ function switchParaFicha(idx) {
   salvar();
   currentSheetIndex = idx;
   carregarFicha(idx);
-  // Não fecha o gerenciador
+  fecharGerenciadorFichas();
 }
 
 function excluirFicha(idx) {
@@ -1950,7 +1952,10 @@ function excluirFicha(idx) {
     }
     salvarTodasFichas();
     carregarFicha(currentSheetIndex);
-    atualizarListaFichasModal();
+    // Atualiza a lista do modal (se estiver aberto)
+    if (document.getElementById('modalFichas').style.display === 'flex') {
+      atualizarListaFichasModal();
+    }
   }
 }
 
@@ -1958,7 +1963,10 @@ function criarNovaFicha() {
   const nova = criarFichaPadrao();
   sheets.push(nova);
   salvarTodasFichas();
-  atualizarListaFichasModal();
+  // Atualiza a lista do modal (se estiver aberto)
+  if (document.getElementById('modalFichas').style.display === 'flex') {
+    atualizarListaFichasModal();
+  }
 }
 
 // ==================== FUNÇÃO PARA REMOVER FOTO ====================
@@ -2044,8 +2052,13 @@ function processarArquivo(files) {
       sheets.push(novaFicha);
       salvarTodasFichas();
       alert(`Ficha importada com sucesso!`);
-      // Atualiza a lista do modal sem fechá-lo
-      atualizarListaFichasModal();
+      // Atualiza a lista do modal (mantém aberto)
+      if (document.getElementById('modalFichas').style.display === 'flex') {
+        atualizarListaFichasModal();
+      } else {
+        // Se o modal não estiver aberto, podemos abri-lo ou apenas salvar
+        abrirGerenciadorFichas();
+      }
     } catch(error) {
       alert('Erro ao ler o arquivo. Formato inválido.');
     }
