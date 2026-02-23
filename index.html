@@ -512,27 +512,14 @@ body.light .fade-5 { color: #eee; }
   max-height: 80vh;
   overflow-y: auto;
   box-shadow: 0 0 40px black;
-  position: relative;
 }
 .modal-content h2 {
   margin-top: 0;
   text-align: center;
 }
-.modal-close {
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  font-size: 28px;
-  font-weight: bold;
-  cursor: pointer;
-}
-.modal-close:hover {
-  color: #f00;
-}
 .modal-content ul {
   list-style: none;
   padding: 0;
-  margin-top: 30px;
 }
 .modal-content li {
   display: flex;
@@ -547,6 +534,15 @@ body.light .fade-5 { color: #eee; }
   width: auto;
   margin: 0 2px;
   padding: 5px 10px;
+}
+.modal-close {
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.modal-close:hover {
+  color: #f00;
 }
 </style>
 </head>
@@ -1065,20 +1061,11 @@ function aplicarOperador(op, a, b) {
   else if (op === '*') res = valA * valB;
   else if (op === '/') res = Math.floor(valA / valB); // divisão inteira
 
-  // Concatena detalhes com operadores
+  // Concatena detalhes
   let detalhes = [];
-  // Se a for dados, seus detalhes já são array de números; precisamos juntar com '+'
-  let detalhesAStr = a.detalhes;
-  if (a.tipo === 'dados' && a.detalhes.length > 1) {
-    detalhesAStr = [a.detalhes.join('+')];
-  }
-  let detalhesBStr = b.detalhes;
-  if (b.tipo === 'dados' && b.detalhes.length > 1) {
-    detalhesBStr = [b.detalhes.join('+')];
-  }
-  detalhes.push(...(detalhesAStr || [a.str || valA.toString()]));
+  detalhes.push(...detalhesA);
   detalhes.push(op);
-  detalhes.push(...(detalhesBStr || [b.str || valB.toString()]));
+  detalhes.push(...detalhesB);
   
   let strA = a.str || valA.toString();
   let strB = b.str || valB.toString();
@@ -1135,6 +1122,9 @@ function rolarDadoPersonalizado() {
         let d = resultado.detalhes[i];
         if (d === '+' || d === '-' || d === '*' || d === '/') {
           detalhesStr += ' ' + d + ' ';
+        } else if (typeof d === 'string' && d.match(/^\d+$/)) {
+          // Se for número, adiciona direto
+          detalhesStr += d;
         } else {
           detalhesStr += d;
         }
@@ -1154,6 +1144,8 @@ function rolarDadoPersonalizado() {
         let d = resultado.detalhes[i];
         if (d === '+' || d === '-' || d === '*' || d === '/') {
           detalhesStr += ' ' + d + ' ';
+        } else if (typeof d === 'string' && d.match(/^\d+$/)) {
+          detalhesStr += d;
         } else {
           detalhesStr += d;
         }
@@ -1943,7 +1935,7 @@ function switchParaFicha(idx) {
   salvar();
   currentSheetIndex = idx;
   carregarFicha(idx);
-  // Não fecha o modal
+  // Não fecha o gerenciador
 }
 
 function excluirFicha(idx) {
@@ -2052,9 +2044,8 @@ function processarArquivo(files) {
       sheets.push(novaFicha);
       salvarTodasFichas();
       alert(`Ficha importada com sucesso!`);
-      // Abre a ficha importada automaticamente, mantendo o modal aberto
-      switchParaFicha(sheets.length - 1);
-      atualizarListaFichasModal(); // atualiza a lista para mostrar a nova ficha
+      // Atualiza a lista do modal sem fechá-lo
+      atualizarListaFichasModal();
     } catch(error) {
       alert('Erro ao ler o arquivo. Formato inválido.');
     }
