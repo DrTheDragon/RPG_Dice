@@ -383,6 +383,78 @@ body.light .fade-5 { color: #eee; }
 .linha-flex .campo-group {
   flex: 1;
 }
+
+/* ===== ESTILOS PARA ARMAS ===== */
+.arma-item {
+  background: var(--bg1);
+  border: 1px solid var(--border);
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+}
+.arma-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.arma-nome {
+  font-weight: bold;
+  font-size: 1.2em;
+}
+.arma-tipo {
+  font-size: 0.8em;
+  opacity: 0.8;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--panel);
+}
+.arma-detalhes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.arma-campo {
+  display: flex;
+  flex-direction: column;
+}
+.arma-campo label {
+  font-size: 0.7em;
+  opacity: 0.7;
+}
+.arma-acoes {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.arma-acoes button {
+  flex: 1;
+  margin: 0;
+  padding: 6px;
+  font-size: 13px;
+}
+.arma-municao {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.arma-municao span {
+  font-size: 1.1em;
+  font-weight: bold;
+}
+.arma-resultado {
+  margin-top: 10px;
+  padding: 8px;
+  background: var(--panel);
+  border-radius: 4px;
+  font-size: 14px;
+}
+.arma-resultado .detalhes {
+  font-size: 12px;
+  opacity: 0.8;
+}
 </style>
 </head>
 <body>
@@ -404,7 +476,6 @@ body.light .fade-5 { color: #eee; }
       <input type="file" id="fotoInput" accept="image/*" style="margin-top:10px; font-size:12px; padding:5px; width:100%;">
       <!-- BOTÃO PARA REMOVER FOTO -->
       <button onclick="removerFoto()" style="margin-top:5px; padding:5px; font-size:12px;">Remover foto</button>
-      <small>(opcional)</small>
     </div>
     <div class="dados-basicos">
       <!-- Nome e Apelido com labels -->
@@ -438,7 +509,7 @@ body.light .fade-5 { color: #eee; }
           <input type="text" id="cidadeResidente" placeholder="Cidade Residente">
         </div>
       </div>
-      <!-- Tamanho, Aparência, Deslocamento -->
+      <!-- Tamanho, Aparência, Deslocamento (agora com id "deslocamento" e "deslocamentoBase" será armazenado) -->
       <div class="linha-flex">
         <div class="campo-group">
           <label class="campo-label">Tamanho (m)</label>
@@ -511,10 +582,12 @@ body.light .fade-5 { color: #eee; }
       <h3>😴 Horas de Descanso</h3>
       <p>Atual: <b><span id="descansoAtual">0</span></b></p>
       <div class="controls">
-        <button onclick="alterar('descanso',-1)">-1</button>
-        <button onclick="alterar('descanso',1)">+1</button>
-        <button onclick="alterar('descanso',-3)">-3</button>
-        <button onclick="alterar('descanso',3)">+3</button>
+        <button onclick="alterar('descanso',-1)">-1h</button>
+        <button onclick="alterar('descanso',1)">+1h</button>
+        <button onclick="alterar('descanso',-0.5)">-30min</button>
+        <button onclick="alterar('descanso',0.5)">+30min</button>
+        <button onclick="alterar('descanso',-3)">-3h</button>
+        <button onclick="alterar('descanso',3)">+3h</button>
       </div>
     </div>
   </div>
@@ -589,7 +662,7 @@ body.light .fade-5 { color: #eee; }
   </div>
 </div>
 
-<!-- PESO -->
+<!-- PESO (agora com avisos e penalidades) -->
 <div class="peso-container">
   <h3>⚖️ PESO</h3>
   <div class="peso-inputs">
@@ -604,6 +677,7 @@ body.light .fade-5 { color: #eee; }
       </div>
     </div>
   </div>
+  <div id="pesoAviso" style="color: #ffaa00; margin-top:10px; text-align:center;"></div>
 </div>
 
 <!-- RECURSOS: DINHEIRO + TRAUMAS -->
@@ -636,13 +710,41 @@ body.light .fade-5 { color: #eee; }
   </div>
 </div>
 
-<!-- ITENS -->
+<!-- ===== NOVA SEÇÃO: ARMAS (com campo peso) ===== -->
+<div class="panel armas" style="margin-top:25px; width:820px; max-width:95%;">
+  <h2>🔫 ARMAS</h2>
+  <div style="margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap;">
+    <input type="text" id="novaArmaNome" placeholder="Nome da arma" style="flex:2;">
+    <select id="novaArmaTipo" style="flex:1;">
+      <option value="branca">Branca</option>
+      <option value="fogo">De fogo</option>
+    </select>
+    <input type="text" id="novaArmaDano" placeholder="Dano (ex: 2d6, 1d20+2)" style="flex:2;">
+    <input type="number" id="novaArmaCapacidade" placeholder="Capacidade (só fogo)" min="0" style="flex:1;">
+    <input type="number" id="novaArmaPeso" placeholder="Peso" min="0" step="0.1" style="flex:1;">
+    <button onclick="adicionarArma()" style="flex:1;">➕ Adicionar</button>
+  </div>
+  <div id="listaArmas"></div>
+  <div class="resultado" id="resArma" style="min-height:60px;"></div>
+  <div class="historico" style="margin-top:15px;">
+    <h3>📜 Histórico de Dano de Armas</h3>
+    <ul id="listaHistoricoArmas"></ul>
+  </div>
+</div>
+
+<!-- ITENS (existente) -->
 <div class="panel itens">
   <h2>🎒 ITENS / ACESSÓRIOS</h2>
   <textarea id="itens" placeholder="Armas, acessórios,..."></textarea>
 </div>
 
-<!-- ANOTAÇÕES -->
+<!-- ===== NOVA SEÇÃO: RITUAIS ===== -->
+<div class="panel itens" style="margin-top:25px;">
+  <h2>🔮 RITUAIS</h2>
+  <textarea id="rituais" placeholder="Rituais conhecidos, descrições..."></textarea>
+</div>
+
+<!-- ANOTAÇÕES (existente) -->
 <div class="panel itens" style="margin-top:25px;">
   <h2>📝 ANOTAÇÕES</h2>
   <textarea id="anotacoes" placeholder="Suas anotações gerais..."></textarea>
@@ -659,7 +761,11 @@ let historico = [];
 let historicoSan = [];
 let historicoDados = [];
 
+let armas = [];
+let historicoArmas = [];
+
 let vida = 0, san = 0, descanso = 0, poder = 0, peso = 0, defesa = 0, exposicao = 0;
+let deslocamentoBase = 0; // armazena o valor original do deslocamento (sem penalidade)
 
 const tabela = {
   1:{N:20,B:null,E:null},2:{N:19,B:20,E:null},3:{N:18,B:20,E:null},
@@ -929,26 +1035,49 @@ function avaliarOperandoDetalhado(token) {
   throw new Error('Token não reconhecido');
 }
 
-// ==================== STATUS ====================
+// ==================== STATUS (com novas regras de descanso e peso) ====================
 function atualizar() {
   document.getElementById('vidaAtual').textContent = vida;
   document.getElementById('sanAtual').textContent = san;
-  document.getElementById('descansoAtual').textContent = descanso;
+  document.getElementById('descansoAtual').textContent = descanso.toFixed(1);
   document.getElementById('poderAtual').textContent = poder;
   document.getElementById('pesoAtual').textContent = peso;
   document.getElementById('exposicaoValor').textContent = exposicao;
+
+  // Verifica limites de descanso e exibe avisos
+  verificarDescanso();
+
+  // Aplica penalidade de deslocamento por peso
+  aplicarPenalidadeDeslocamento();
 }
+
 function alterar(t, v) {
   if(t==="vida") vida = Math.max(0, Math.min(+document.getElementById('vidaMax').value, vida+v));
   else if(t==="san") san = Math.max(0, Math.min(+document.getElementById('sanMax').value, san+v));
-  else if(t==="descanso") descanso = Math.max(0, descanso+v);
+  else if(t==="descanso") {
+    let novo = descanso + v;
+    // Limite máximo 12
+    if (novo > 12) novo = 12;
+    descanso = novo;
+  }
   else if(t==="poder") poder = Math.max(0, Math.min(+document.getElementById('poderMax').value, poder+v));
-  else if(t==="peso") peso = Math.max(0, Math.min(+document.getElementById('pesoMax').value, peso+v));
+  else if(t==="peso") {
+    let novo = peso + v;
+    let max = parseFloat(document.getElementById('pesoMax').value) || 0;
+    if (max > 0 && novo > max * 1.5) {
+      novo = max * 1.5;
+      alert("Você atingiu o peso máximo (150% da capacidade). Precisa tirar algum item da mochila.");
+    }
+    if (novo < 0) novo = 0;
+    peso = novo;
+  }
   salvar(); atualizar();
 }
+
 function setVidaMaxima() { vida = Math.max(0, +document.getElementById('vidaMax').value||0); atualizar(); salvar(); }
 function setSanidadeMaxima() { san = Math.max(0, +document.getElementById('sanMax').value||0); atualizar(); salvar(); }
 function setPoderMaximo() { poder = Math.max(0, +document.getElementById('poderMax').value||0); atualizar(); salvar(); }
+
 function atualizarExposicao() {
   let val = parseInt(document.getElementById('exposicaoInput').value)||0;
   if(val<0) val=0; if(val>100) val=100;
@@ -958,14 +1087,84 @@ function atualizarExposicao() {
   salvar();
 }
 
-// ==================== HISTÓRICOS (com fade progressivo) ====================
+// ==================== REGRAS DE DESCANSO ====================
+function verificarDescanso() {
+  const avisoDiv = document.getElementById('pesoAviso'); // reutilizamos a div de aviso de peso para descanso? melhor criar uma específica, mas usaremos a mesma por simplicidade.
+  if (descanso <= -12) {
+    alert("Você está desmaiado de exaustão!");
+    // O aviso só some quando voltar para -6 ou mais
+  } else if (descanso <= -9 && descanso > -12) {
+    alert("Você está exausto (rode com desvantagem testes de pensamentos ou ações rápidas).");
+  }
+}
+
+// ==================== REGRAS DE PESO E DESLOCAMENTO ====================
+function aplicarPenalidadeDeslocamento() {
+  const deslocInput = document.getElementById('deslocamento');
+  let maxPeso = parseFloat(document.getElementById('pesoMax').value) || 0;
+  let atualPeso = peso;
+  let base = deslocamentoBase; // valor original armazenado
+
+  // Se o campo foi editado manualmente, atualiza a base
+  let currentDisplay = parseFloat(deslocInput.value);
+  if (!isNaN(currentDisplay) && currentDisplay !== base && currentDisplay > 0) {
+    // Se o usuário digitou, isso se torna a nova base (desde que não esteja sob efeito de penalidade)
+    // Mas como podemos saber se é uma edição voluntária? Vamos atualizar a base apenas quando o campo perder o foco e não houver penalidade ativa? 
+    // Para simplificar, sempre que o valor for alterado pelo usuário, atualizamos a base.
+    // Vamos adicionar um listener no campo para capturar isso.
+  }
+
+  if (maxPeso <= 0) {
+    // Sem peso máximo definido, não há penalidade
+    deslocInput.value = base.toFixed(1);
+    document.getElementById('pesoAviso').innerHTML = '';
+    return;
+  }
+
+  let percentual = (atualPeso / maxPeso) * 100;
+  let reducaoFracao = 0; // fração de 1/6 a reduzir
+
+  if (percentual > 100) {
+    if (percentual <= 110) reducaoFracao = 1;
+    else if (percentual <= 120) reducaoFracao = 2;
+    else if (percentual <= 130) reducaoFracao = 3;
+    else if (percentual <= 140) reducaoFracao = 4;
+    else if (percentual <= 150) reducaoFracao = 5;
+    else reducaoFracao = 5; // acima de 150 já foi limitado, mas por segurança
+  }
+
+  let novoDesloc = base * (1 - reducaoFracao / 6);
+  if (novoDesloc < 0) novoDesloc = 0;
+
+  // Se houve mudança de faixa, exibe aviso
+  let aviso = '';
+  if (reducaoFracao > 0) {
+    aviso = `⚠️ Carga excessiva: deslocamento reduzido em ${reducaoFracao}/6 (${(reducaoFracao/6*100).toFixed(0)}%).`;
+  }
+  document.getElementById('pesoAviso').innerHTML = aviso;
+
+  // Atualiza o campo de deslocamento (se diferente)
+  if (Math.abs(deslocInput.value - novoDesloc) > 0.01) {
+    deslocInput.value = novoDesloc.toFixed(1);
+  }
+}
+
+// Função para atualizar a base do deslocamento quando o usuário editar manualmente
+function atualizarBaseDeslocamento() {
+  let val = parseFloat(document.getElementById('deslocamento').value);
+  if (!isNaN(val) && val > 0) {
+    deslocamentoBase = val;
+    // Reaplica penalidade para mostrar o valor correto (mas a base já é a nova)
+    aplicarPenalidadeDeslocamento();
+  }
+}
+
+// ==================== HISTÓRICOS ====================
 function atualizarHistorico() {
   const lista = document.getElementById('listaHistorico');
   lista.innerHTML = "";
   historico.forEach((h, i) => {
     const li = document.createElement("li");
-    // i=0,1,2 sem fade (fade-0, fade-1, fade-2 são a cor normal)
-    // i=3 fade-3, i=4 fade-4, i=5 fade-5
     li.className = i < 3 ? `fade-${i}` : i === 3 ? "fade-3" : i === 4 ? "fade-4" : "fade-5";
     li.textContent = h;
     lista.appendChild(li);
@@ -1060,6 +1259,270 @@ function removerAtributo(index) {
   }
 }
 
+// ==================== FUNÇÕES PARA ARMAS (COM PESO) ====================
+function renderizarArmas() {
+  const container = document.getElementById('listaArmas');
+  if (!container) return;
+  container.innerHTML = '';
+  armas.forEach((arma, index) => {
+    const div = document.createElement('div');
+    div.className = 'arma-item';
+    div.innerHTML = `
+      <div class="arma-header">
+        <span class="arma-nome">${arma.nome}</span>
+        <span class="arma-tipo">${arma.tipo === 'fogo' ? '🔫 Fogo' : '⚔️ Branca'}</span>
+      </div>
+      <div class="arma-detalhes">
+        <div class="arma-campo">
+          <label>Dano</label>
+          <span>${arma.danoFormula}</span>
+        </div>
+        <div class="arma-campo">
+          <label>Peso</label>
+          <span>${arma.peso}</span>
+        </div>
+        ${arma.tipo === 'fogo' ? `
+        <div class="arma-campo">
+          <label>Munição</label>
+          <div class="arma-municao">
+            <button onclick="alterarMunicao(${index}, -1)">-1</button>
+            <span>${arma.municaoAtual}/${arma.capacidade}</span>
+            <button onclick="alterarMunicao(${index}, 1)">+1</button>
+            <button onclick="recarregarArma(${index})">Recarregar</button>
+          </div>
+        </div>
+        ` : ''}
+      </div>
+      <div class="arma-acoes">
+        <button onclick="rolarDanoArma(${index})">🎲 Rolar dano</button>
+        <button onclick="editarArma(${index})">✏️ Editar</button>
+        <button onclick="excluirArma(${index})">🗑️ Excluir</button>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function adicionarArma() {
+  const nome = document.getElementById('novaArmaNome').value.trim();
+  const tipo = document.getElementById('novaArmaTipo').value;
+  const danoFormula = document.getElementById('novaArmaDano').value.trim();
+  const capacidade = parseInt(document.getElementById('novaArmaCapacidade').value) || 0;
+  const pesoArma = parseFloat(document.getElementById('novaArmaPeso').value) || 0;
+
+  if (!nome) { alert('Nome da arma é obrigatório.'); return; }
+  if (!danoFormula) { alert('Fórmula de dano é obrigatória.'); return; }
+  if (tipo === 'fogo' && capacidade <= 0) { alert('Capacidade deve ser maior que zero para arma de fogo.'); return; }
+  if (pesoArma < 0) { alert('Peso não pode ser negativo.'); return; }
+
+  // Verificar se o peso total não ultrapassa 150%
+  let pesoMax = parseFloat(document.getElementById('pesoMax').value) || 0;
+  if (pesoMax > 0 && peso + pesoArma > pesoMax * 1.5) {
+    alert("Essa arma é pesada demais para você carregar agora (ultrapassaria 150% da capacidade).");
+    return;
+  }
+
+  const novaArma = {
+    id: Date.now() + Math.random(),
+    nome,
+    tipo,
+    danoFormula,
+    capacidade: tipo === 'fogo' ? capacidade : 0,
+    municaoAtual: tipo === 'fogo' ? capacidade : 0,
+    peso: pesoArma
+  };
+  armas.push(novaArma);
+  peso += pesoArma; // incrementa peso atual
+  renderizarArmas();
+  salvar();
+  atualizar(); // atualiza exibição do peso e possíveis penalidades
+
+  // Limpar campos
+  document.getElementById('novaArmaNome').value = '';
+  document.getElementById('novaArmaDano').value = '';
+  document.getElementById('novaArmaCapacidade').value = '';
+  document.getElementById('novaArmaPeso').value = '';
+}
+
+function editarArma(index) {
+  const arma = armas[index];
+  const novoNome = prompt('Nome da arma:', arma.nome);
+  if (novoNome === null) return;
+  const novoTipo = prompt('Tipo (branca/fogo):', arma.tipo);
+  if (novoTipo === null || (novoTipo !== 'branca' && novoTipo !== 'fogo')) {
+    alert('Tipo deve ser "branca" ou "fogo".');
+    return;
+  }
+  const novoDano = prompt('Fórmula de dano (ex: 2d6, 1d20+2):', arma.danoFormula);
+  if (novoDano === null) return;
+  const novoPeso = parseFloat(prompt('Peso da arma:', arma.peso));
+  if (isNaN(novoPeso) || novoPeso < 0) {
+    alert('Peso inválido.');
+    return;
+  }
+
+  // Calcular diferença de peso para ajustar peso total
+  let diferencaPeso = novoPeso - arma.peso;
+  let pesoMax = parseFloat(document.getElementById('pesoMax').value) || 0;
+  if (pesoMax > 0 && peso + diferencaPeso > pesoMax * 1.5) {
+    alert("Essa alteração faria você exceder 150% da capacidade de carga.");
+    return;
+  }
+
+  if (novoTipo === 'fogo') {
+    const novaCapacidade = parseInt(prompt('Capacidade de munição:', arma.capacidade));
+    if (isNaN(novaCapacidade) || novaCapacidade <= 0) {
+      alert('Capacidade inválida.');
+      return;
+    }
+    armas[index] = {
+      ...arma,
+      nome: novoNome.trim(),
+      tipo: novoTipo,
+      danoFormula: novoDano.trim(),
+      capacidade: novaCapacidade,
+      municaoAtual: Math.min(arma.municaoAtual, novaCapacidade),
+      peso: novoPeso
+    };
+  } else {
+    armas[index] = {
+      ...arma,
+      nome: novoNome.trim(),
+      tipo: novoTipo,
+      danoFormula: novoDano.trim(),
+      capacidade: 0,
+      municaoAtual: 0,
+      peso: novoPeso
+    };
+  }
+  peso += diferencaPeso;
+  renderizarArmas();
+  salvar();
+  atualizar();
+}
+
+function excluirArma(index) {
+  if (confirm('Remover esta arma?')) {
+    const arma = armas[index];
+    peso -= arma.peso; // subtrai o peso
+    armas.splice(index, 1);
+    renderizarArmas();
+    salvar();
+    atualizar();
+  }
+}
+
+function alterarMunicao(index, delta) {
+  const arma = armas[index];
+  if (arma.tipo !== 'fogo') return;
+  let nova = arma.municaoAtual + delta;
+  if (nova < 0) nova = 0;
+  if (nova > arma.capacidade) nova = arma.capacidade;
+  arma.municaoAtual = nova;
+  renderizarArmas();
+  salvar();
+}
+
+function recarregarArma(index) {
+  const arma = armas[index];
+  if (arma.tipo !== 'fogo') return;
+  arma.municaoAtual = arma.capacidade;
+  renderizarArmas();
+  salvar();
+}
+
+function rolarDanoArma(index) {
+  somDado();
+  const arma = armas[index];
+  const formula = arma.danoFormula;
+  const resultadoDiv = document.getElementById('resArma');
+  
+  try {
+    const resultado = processarFormulaDano(formula);
+    
+    let html = `<b>${arma.nome}</b> — Dano: ${formula}<br>`;
+    html += `Resultado: <b>${resultado.total}</b>`;
+    if (resultado.detalhes) {
+      html += `<br><span class="detalhes">${resultado.detalhes}</span>`;
+    }
+    resultadoDiv.innerHTML = html;
+
+    let historicoEntry = `🔫 ${arma.nome}: ${formula} → ${resultado.total}`;
+    if (resultado.detalhes) historicoEntry += ` (${resultado.detalhes})`;
+    historicoArmas.unshift(historicoEntry);
+    if (historicoArmas.length > 6) historicoArmas.pop();
+
+    if (arma.tipo === 'fogo' && arma.municaoAtual > 0) {
+      arma.municaoAtual--;
+      renderizarArmas();
+    }
+
+    salvar();
+    atualizarHistoricoArmas();
+  } catch (e) {
+    resultadoDiv.innerHTML = `Erro na fórmula: ${formula}`;
+  }
+}
+
+function processarFormulaDano(formula) {
+  formula = formula.replace(/\s+/g, '').toLowerCase();
+  const tokenRegex = /(\d+d\d+|\d+|[+-])/g;
+  const tokens = formula.match(tokenRegex);
+  if (!tokens) throw new Error('Fórmula inválida');
+
+  const operadores = [];
+  const operandos = [];
+  for (let token of tokens) {
+    if (token === '+' || token === '-') {
+      operadores.push(token);
+    } else {
+      operandos.push(token);
+    }
+  }
+  if (operandos.length === 0) throw new Error('Nenhum operando');
+  
+  const resultados = operandos.map(op => {
+    if (/^\d+$/.test(op)) {
+      return { tipo: 'escalar', valor: parseInt(op), str: op };
+    } else if (/^\d+d\d+$/.test(op)) {
+      const [qtd, faces] = op.split('d').map(Number);
+      const valores = [];
+      for (let i = 0; i < qtd; i++) {
+        valores.push(Math.floor(Math.random() * faces) + 1);
+      }
+      const soma = valores.reduce((a,b) => a+b, 0);
+      return { tipo: 'dados', valores, soma, str: `${valores.join('+')}` };
+    } else {
+      throw new Error('Operando inválido');
+    }
+  });
+
+  let total = resultados[0].soma !== undefined ? resultados[0].soma : resultados[0].valor;
+  let detalhesStr = resultados[0].str || resultados[0].valor.toString();
+  for (let i = 0; i < operadores.length; i++) {
+    const op = operadores[i];
+    const prox = resultados[i+1];
+    const val = prox.soma !== undefined ? prox.soma : prox.valor;
+    if (op === '+') total += val;
+    else total -= val;
+    detalhesStr += ` ${op} ${prox.str || prox.valor}`;
+  }
+
+  return { total, detalhes: detalhesStr };
+}
+
+function atualizarHistoricoArmas() {
+  const lista = document.getElementById('listaHistoricoArmas');
+  if (!lista) return;
+  lista.innerHTML = "";
+  historicoArmas.forEach((h, i) => {
+    const li = document.createElement("li");
+    li.className = i < 3 ? `fade-${i}` : i === 3 ? "fade-3" : i === 4 ? "fade-4" : "fade-5";
+    li.textContent = h;
+    lista.appendChild(li);
+  });
+}
+
 // ==================== SALVAR / CARREGAR (localStorage) ====================
 function salvar() {
   const fotoPlaceholder = document.getElementById('fotoPlaceholder');
@@ -1068,6 +1531,7 @@ function salvar() {
 
   const dados = {
     vida, san, descanso, poder, peso, defesa, exposicao,
+    deslocamentoBase, // novo
     vidaMax: Math.max(0, +document.getElementById('vidaMax').value || 0),
     sanMax: Math.max(0, +document.getElementById('sanMax').value || 0),
     poderMax: Math.max(0, +document.getElementById('poderMax').value || 0),
@@ -1078,8 +1542,10 @@ function salvar() {
     pessoasImportantes: document.getElementById('pessoasImportantes').value,
     talentos: document.getElementById('talentos').value,
     itens: document.getElementById('itens').value,
+    rituais: document.getElementById('rituais').value,
     anotacoes: document.getElementById('anotacoes').value,
     historico, historicoSan, historicoDados,
+    historicoArmas,
     tema: document.body.className,
     nomePersonagem: document.getElementById('nomePersonagem').value,
     apelido: document.getElementById('apelidoPersonagem').value,
@@ -1089,7 +1555,7 @@ function salvar() {
     cidadeResidente: document.getElementById('cidadeResidente').value,
     tamanho: document.getElementById('tamanho').value,
     aparencia: document.getElementById('aparencia').value,
-    deslocamento: document.getElementById('deslocamento').value,
+    deslocamento: document.getElementById('deslocamento').value, // salva o valor atual (com penalidade)
     caracteristicas: document.getElementById('caracteristicasPersonagem').value,
     personalidade: document.getElementById('personalidadePersonagem').value,
     historia: document.getElementById('historiaPersonagem').value,
@@ -1099,7 +1565,8 @@ function salvar() {
     checkVida3: document.getElementById('checkVida3').checked,
     checkFerido: document.getElementById('checkFerido').checked,
     checkCaido: document.getElementById('checkCaido').checked,
-    atributosPersonalizados
+    atributosPersonalizados,
+    armas
   };
   localStorage.setItem('noir_rpg', JSON.stringify(dados));
 }
@@ -1115,6 +1582,7 @@ function carregar() {
   peso = dadosSalvos.peso || 0;
   defesa = dadosSalvos.defesa || 0;
   exposicao = dadosSalvos.exposicao || 0;
+  deslocamentoBase = dadosSalvos.deslocamentoBase || 0;
   document.getElementById('vidaMax').value = Math.max(0, dadosSalvos.vidaMax || 0);
   document.getElementById('sanMax').value = Math.max(0, dadosSalvos.sanMax || 0);
   document.getElementById('poderMax').value = Math.max(0, dadosSalvos.poderMax || 0);
@@ -1128,10 +1596,12 @@ function carregar() {
   document.getElementById('pessoasImportantes').value = dadosSalvos.pessoasImportantes || "";
   document.getElementById('talentos').value = dadosSalvos.talentos || "";
   document.getElementById('itens').value = dadosSalvos.itens || "";
+  document.getElementById('rituais').value = dadosSalvos.rituais || "";
   document.getElementById('anotacoes').value = dadosSalvos.anotacoes || "";
   historico = dadosSalvos.historico || [];
   historicoSan = dadosSalvos.historicoSan || [];
   historicoDados = dadosSalvos.historicoDados || [];
+  historicoArmas = dadosSalvos.historicoArmas || [];
   if(dadosSalvos.tema) document.body.className = dadosSalvos.tema;
   document.getElementById('nomePersonagem').value = dadosSalvos.nomePersonagem || "";
   document.getElementById('apelidoPersonagem').value = dadosSalvos.apelido || "";
@@ -1157,20 +1627,32 @@ function carregar() {
     atributosPersonalizados = dadosSalvos.atributosPersonalizados;
     ordenarAtributos();
   }
+  if(dadosSalvos.armas && Array.isArray(dadosSalvos.armas)) {
+    armas = dadosSalvos.armas;
+  }
+
+  // Se não havia base de deslocamento salva, usa o valor atual como base
+  if (deslocamentoBase === 0 && document.getElementById('deslocamento').value) {
+    deslocamentoBase = parseFloat(document.getElementById('deslocamento').value) || 0;
+  }
+
   atualizar();
   atualizarHistorico();
   atualizarHistoricoSan();
   atualizarHistoricoDados();
+  atualizarHistoricoArmas();
   renderizarAtributos();
+  renderizarArmas();
+  aplicarPenalidadeDeslocamento(); // recalcula com base nos dados carregados
 }
 
 // ==================== FUNÇÃO PARA REMOVER FOTO ====================
 function removerFoto() {
   const placeholder = document.getElementById('fotoPlaceholder');
-  placeholder.innerHTML = '🖼️ Foto'; // volta ao texto original
+  placeholder.innerHTML = '🖼️ Foto';
   const inputFile = document.getElementById('fotoInput');
-  inputFile.value = ''; // limpa o input file
-  salvar(); // salva a remoção
+  inputFile.value = '';
+  salvar();
 }
 
 // ==================== EXPORTAÇÃO/IMPORTAÇÃO JSON ====================
@@ -1205,8 +1687,10 @@ function exportarDados() {
       pessoasImportantes:document.getElementById('pessoasImportantes').value||"",
       talentos:document.getElementById('talentos').value||"",
       itens:document.getElementById('itens').value||"",
+      rituais:document.getElementById('rituais').value||"",
       anotacoes:document.getElementById('anotacoes').value||""
     },
+    armas: armas,
     fichaPersonagem: {
       nome:document.getElementById('nomePersonagem').value,
       apelido:document.getElementById('apelidoPersonagem').value,
@@ -1216,14 +1700,20 @@ function exportarDados() {
       cidadeResidente:document.getElementById('cidadeResidente').value,
       tamanho:document.getElementById('tamanho').value,
       aparencia:document.getElementById('aparencia').value,
-      deslocamento:document.getElementById('deslocamento').value,
+      deslocamento: document.getElementById('deslocamento').value, // valor atual com penalidade
+      deslocamentoBase: deslocamentoBase, // novo
       caracteristicas:document.getElementById('caracteristicasPersonagem').value,
       personalidade:document.getElementById('personalidadePersonagem').value,
       historia:document.getElementById('historiaPersonagem').value,
       imagem:imagemBase64
     },
     atributosPersonalizados,
-    historicos: { testesAtributo:historico, testesSanidade:historicoSan, dadosPersonalizados:historicoDados },
+    historicos: { 
+      testesAtributo:historico, 
+      testesSanidade:historicoSan, 
+      dadosPersonalizados:historicoDados,
+      danoArmas:historicoArmas
+    },
     configuracao: { tema:document.body.className }
   };
 
@@ -1285,15 +1775,18 @@ function aplicarDadosImportados(dados) {
     document.getElementById('pessoasImportantes').value = dados.recursos.pessoasImportantes||"";
     document.getElementById('talentos').value = dados.recursos.talentos||"";
     document.getElementById('itens').value = dados.recursos.itens||"";
+    document.getElementById('rituais').value = dados.recursos.rituais||"";
     document.getElementById('anotacoes').value = dados.recursos.anotacoes||"";
   }
   if(dados.historicos) {
     historico = dados.historicos.testesAtributo||[];
     historicoSan = dados.historicos.testesSanidade||[];
     historicoDados = dados.historicos.dadosPersonalizados||[];
+    historicoArmas = dados.historicos.danoArmas||[];
     if(historico.length>6) historico = historico.slice(0,6);
     if(historicoSan.length>6) historicoSan = historicoSan.slice(0,6);
     if(historicoDados.length>6) historicoDados = historicoDados.slice(0,6);
+    if(historicoArmas.length>6) historicoArmas = historicoArmas.slice(0,6);
   }
   if(dados.configuracao && dados.configuracao.tema) document.body.className = dados.configuracao.tema;
   if(dados.fichaPersonagem) {
@@ -1305,6 +1798,12 @@ function aplicarDadosImportados(dados) {
     document.getElementById('tamanho').value = dados.fichaPersonagem.tamanho||"";
     document.getElementById('aparencia').value = dados.fichaPersonagem.aparencia||"";
     document.getElementById('deslocamento').value = dados.fichaPersonagem.deslocamento||"";
+    // Carregar base de deslocamento, se existir
+    if (dados.fichaPersonagem.deslocamentoBase !== undefined) {
+      deslocamentoBase = dados.fichaPersonagem.deslocamentoBase;
+    } else {
+      deslocamentoBase = parseFloat(dados.fichaPersonagem.deslocamento) || 0;
+    }
     document.getElementById('caracteristicasPersonagem').value = dados.fichaPersonagem.caracteristicas||"";
     document.getElementById('personalidadePersonagem').value = dados.fichaPersonagem.personalidade||"";
     document.getElementById('historiaPersonagem').value = dados.fichaPersonagem.historia||"";
@@ -1316,11 +1815,16 @@ function aplicarDadosImportados(dados) {
     atributosPersonalizados = dados.atributosPersonalizados;
     ordenarAtributos();
   }
+  if(dados.armas && Array.isArray(dados.armas)) {
+    armas = dados.armas;
+  }
   atualizar();
   atualizarHistorico();
   atualizarHistoricoSan();
   atualizarHistoricoDados();
+  atualizarHistoricoArmas();
   renderizarAtributos();
+  renderizarArmas();
   salvar();
   alert(`Dados de "${dados.meta.nomePersonagem||'Personagem'}" importados!`);
 }
@@ -1386,15 +1890,26 @@ document.getElementById('fotoInput').addEventListener('change', function(e) {
 
 ['vidaMax','sanMax','poderMax','pesoMax','defesa','exposicaoInput',
  'dinheiro','traumasPerm','traumasTemp','pessoasImportantes','talentos',
- 'itens','anotacoes','nomePersonagem','apelidoPersonagem','idadePersonagem',
+ 'itens','rituais','anotacoes',
+ 'nomePersonagem','apelidoPersonagem','idadePersonagem',
  'empregoPersonagem','cidadeNatal','cidadeResidente','tamanho','aparencia',
- 'deslocamento','caracteristicasPersonagem','personalidadePersonagem','historiaPersonagem'
+ 'caracteristicasPersonagem','personalidadePersonagem','historiaPersonagem'
 ].forEach(id => {
   const el = document.getElementById(id);
   if(el) el.addEventListener('input', salvar);
 });
 ['checkVida1','checkVida2','checkVida3','checkFerido','checkCaido'].forEach(id => {
   document.getElementById(id).addEventListener('change', salvar);
+});
+
+// Quando o deslocamento for alterado manualmente, atualiza a base
+document.getElementById('deslocamento').addEventListener('blur', function() {
+  let val = parseFloat(this.value);
+  if (!isNaN(val) && val > 0) {
+    deslocamentoBase = val;
+    aplicarPenalidadeDeslocamento(); // reaplica para mostrar o valor correto (pode ser o mesmo)
+  }
+  salvar();
 });
 
 document.getElementById('exposicaoInput').addEventListener('input', atualizarExposicao);
@@ -1420,7 +1935,10 @@ document.getElementById('poderMax').onchange = function() {
 };
 document.getElementById('pesoMax').onchange = function() {
   this.value = Math.max(0, +this.value||0);
-  if(peso > this.value) peso = +this.value;
+  if(peso > this.value * 1.5) {
+    peso = this.value * 1.5;
+    alert("Peso atual ajustado para 150% do máximo devido à alteração do máximo.");
+  }
   salvar(); atualizar();
 };
 document.getElementById('defesa').onchange = function() {
@@ -1443,10 +1961,6 @@ document.getElementById('aparencia').onchange = function() {
   this.value = val;
   salvar();
 };
-document.getElementById('deslocamento').onchange = function() {
-  this.value = Math.max(0, +this.value||0);
-  salvar();
-};
 
 document.getElementById('checkCaido').addEventListener('change', function() {
   if (this.checked) {
@@ -1461,8 +1975,17 @@ document.addEventListener('click', function initAudioOnClick() {
   document.removeEventListener('click', initAudioOnClick);
 });
 
+// Inicializa a base de deslocamento
+window.addEventListener('load', function() {
+  let deslocInput = document.getElementById('deslocamento');
+  if (deslocInput.value) {
+    deslocamentoBase = parseFloat(deslocInput.value);
+  }
+});
+
 carregar();
 renderizarAtributos();
+renderizarArmas();
 </script>
 </body>
 </html>
