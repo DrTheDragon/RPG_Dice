@@ -979,28 +979,40 @@ function shuntingYard(tokens) {
 }
 
 function avaliarOperando(token) {
-  if (/^\d+$/.test(token)) {
-    return { tipo: 'escalar', valor: parseInt(token), str: token, detalhes: [token] };
-  } else if (token.includes('d')) {
-    if (token.includes('#')) {
-      const [qtd, dadosPart] = token.split('#');
+  const lowerToken = token.toLowerCase();
+  if (/^\d+$/.test(lowerToken)) {
+    return { tipo: 'escalar', valor: parseInt(lowerToken), str: token, detalhes: [token] };
+  } else if (lowerToken.includes('d')) {
+    if (lowerToken.includes('#')) {
+      const [qtd, dadosPart] = lowerToken.split('#');
       const faces = parseInt(dadosPart.substring(1));
       const q = parseInt(qtd);
       const rolagens = [];
       for (let i = 0; i < q; i++) {
         rolagens.push(Math.floor(Math.random() * faces) + 1);
       }
-      return { tipo: 'lista', valores: rolagens, str: `[${rolagens.join(', ')}]`, detalhes: [`[${rolagens.join(', ')}]`] };
+      return { 
+        tipo: 'lista', 
+        valores: rolagens, 
+        str: `[${rolagens.join(', ')}]`, 
+        detalhes: [`[${rolagens.join(', ')}]`] 
+      };
     } else {
-      const dIndex = token.indexOf('d');
-      const qtd = parseInt(token.substring(0, dIndex) || '1');
-      const faces = parseInt(token.substring(dIndex + 1));
+      const dIndex = lowerToken.indexOf('d');
+      const qtd = parseInt(lowerToken.substring(0, dIndex) || '1');
+      const faces = parseInt(lowerToken.substring(dIndex + 1));
       const valores = [];
       for (let i = 0; i < qtd; i++) {
         valores.push(Math.floor(Math.random() * faces) + 1);
       }
       const soma = valores.reduce((a,b) => a+b, 0);
-      return { tipo: 'dados', valores, soma, str: valores.join('+'), detalhes: valores.map(v => v.toString()) };
+      return { 
+        tipo: 'dados', 
+        valores, 
+        soma, 
+        str: valores.join('+'), 
+        detalhes: valores.map(v => v.toString()) 
+      };
     }
   } else {
     throw new Error('Token inválido: ' + token);
@@ -1027,17 +1039,23 @@ function aplicarOperador(op, a, b) {
   }
 
   if (a.tipo === 'lista' || b.tipo === 'lista') {
-    let listaA, listaB;
+    let listaA, listaB, strA, strB;
     if (a.tipo === 'lista') {
       listaA = a.valores;
-      listaB = (b.tipo === 'lista') ? b.valores : Array(a.valores.length).fill(b.valor);
+      strA = a.str;
     } else {
-      listaB = b.valores;
       listaA = Array(b.valores.length).fill(a.valor);
+      strA = a.valor.toString();
+    }
+    if (b.tipo === 'lista') {
+      listaB = b.valores;
+      strB = b.str;
+    } else {
+      listaB = Array(a.valores.length).fill(b.valor);
+      strB = b.valor.toString();
     }
     if (listaA.length !== listaB.length) throw new Error('Listas de tamanhos diferentes');
     const resultados = [];
-    const detalhesResult = [];
     for (let i = 0; i < listaA.length; i++) {
       let valA = listaA[i], valB = listaB[i];
       if (op === '+') resultados.push(valA + valB);
@@ -1045,11 +1063,13 @@ function aplicarOperador(op, a, b) {
       else if (op === '*') resultados.push(valA * valB);
       else if (op === '/') resultados.push(Math.floor(valA / valB));
     }
+    // Gerar detalhes
+    let detalhesStr = `${strA} ${op} ${strB} = [${resultados.join(', ')}]`;
     return { 
       tipo: 'lista', 
       valores: resultados, 
       str: `[${resultados.join(', ')}]`,
-      detalhes: [`[${resultados.join(', ')}]`]
+      detalhes: [detalhesStr]
     };
   }
 
@@ -1114,46 +1134,33 @@ function rolarDadoPersonalizado() {
       resultadoDiv.innerHTML = `🎲 ${input}<br>Total: <b>${valor}</b>`;
     }
 
-    // Gerar detalhes passo a passo com '+'
+    // Gerar detalhes passo a passo
     let detalhesHtml = '<p><b>Detalhes:</b> ';
     if (resultado.detalhes) {
-      let detalhesStr = '';
-      for (let i = 0; i < resultado.detalhes.length; i++) {
-        let d = resultado.detalhes[i];
-        if (d === '+' || d === '-' || d === '*' || d === '/') {
-          detalhesStr += ' ' + d + ' ';
-        } else {
-          detalhesStr += d;
-          // Se o próximo elemento for um número (não operador), adicionamos '+'
-          if (i < resultado.detalhes.length - 1 && !['+', '-', '*', '/'].includes(resultado.detalhes[i+1])) {
-            detalhesStr += ' + ';
+      // Se for lista, já temos uma string pronta
+      if (resultado.tipo === 'lista') {
+        detalhesHtml += resultado.detalhes[0];
+      } else {
+        // Para não-lista, construir com espaços
+        let detalhesStr = '';
+        for (let i = 0; i < resultado.detalhes.length; i++) {
+          let d = resultado.detalhes[i];
+          if (d === '+' || d === '-' || d === '*' || d === '/') {
+            detalhesStr += ' ' + d + ' ';
+          } else {
+            detalhesStr += d;
           }
         }
+        detalhesHtml += detalhesStr;
       }
-      detalhesHtml += detalhesStr;
     } else {
       detalhesHtml += resultado.str || '';
     }
     detalhesHtml += '</p>';
     detalhesDiv.innerHTML = detalhesHtml;
 
-    // Histórico com passo a passo
+    // Histórico: apenas expressão e resultado final
     let historicoStr = `${input} → `;
-    if (resultado.detalhes) {
-      let detalhesStr = '';
-      for (let i = 0; i < resultado.detalhes.length; i++) {
-        let d = resultado.detalhes[i];
-        if (d === '+' || d === '-' || d === '*' || d === '/') {
-          detalhesStr += ' ' + d + ' ';
-        } else {
-          detalhesStr += d;
-          if (i < resultado.detalhes.length - 1 && !['+', '-', '*', '/'].includes(resultado.detalhes[i+1])) {
-            detalhesStr += ' + ';
-          }
-        }
-      }
-      historicoStr += detalhesStr + ' = ';
-    }
     if (resultado.tipo === 'lista') {
       historicoStr += `[${resultado.valores.join(', ')}]`;
     } else {
@@ -2056,14 +2063,20 @@ function processarArquivo(files) {
       if (document.getElementById('modalFichas').style.display === 'flex') {
         atualizarListaFichasModal();
       } else {
-        // Se o modal não estiver aberto, podemos abri-lo ou apenas salvar
+        // Se o modal não estiver aberto, podemos abri-lo
         abrirGerenciadorFichas();
       }
     } catch(error) {
       alert('Erro ao ler o arquivo. Formato inválido.');
+    } finally {
+      // Limpa o input file para permitir nova importação do mesmo arquivo
+      document.getElementById('fileInput').value = '';
     }
   };
-  reader.onerror = () => alert('Erro ao ler arquivo.');
+  reader.onerror = () => {
+    alert('Erro ao ler arquivo.');
+    document.getElementById('fileInput').value = '';
+  };
   reader.readAsText(file);
 }
 
