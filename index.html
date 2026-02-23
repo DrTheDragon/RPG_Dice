@@ -253,7 +253,7 @@ body.light .fade-5 { color: #eee; }
 
  /* Melhorias para armas no mobile */
  .arma-detalhes {
-   grid-template-columns: 1fr !important;
+   grid-template-columns: 1fr 1fr !important;
    gap: 5px !important;
  }
  .arma-acoes {
@@ -279,6 +279,24 @@ body.light .fade-5 { color: #eee; }
    width: 100% !important;
    margin: 4px 0 !important;
    flex: none !important;
+ }
+
+ /* --- MELHORIAS PARA O MODAL DE GERENCIAR FICHAS NO MOBILE --- */
+ .modal-content li {
+   flex-direction: column;
+   align-items: stretch;
+   gap: 8px;
+ }
+ .modal-content li > div {
+   display: flex;
+   justify-content: space-around;
+   gap: 5px;
+ }
+ .modal-content li button {
+   flex: 1;
+   margin: 0;
+   padding: 8px 5px;
+   font-size: 14px;
  }
 }
 @media(max-width:480px){
@@ -1184,21 +1202,35 @@ function rolarDadoPersonalizado() {
   }
 }
 
-// ==================== FUNÇÃO PARA RECALCULAR PESO TOTAL E VERIFICAR LIMITE ====================
-function recalcularPesoTotal() {
-  // Peso dos itens
-  const textoItens = document.getElementById('itens').value;
-  const regex = /\([pP]:\s*([0-9]*\.?[0-9]+)\)/g;
+// ==================== FUNÇÃO PARA AVALIAR EXPRESSÕES MATEMÁTICAS SIMPLES (para pesos) ====================
+function avaliarExpressao(expr) {
+  expr = expr.replace(/\s+/g, '');
+  // Permite apenas números, operadores e parênteses
+  if (!/^[0-9+\-*/()]+$/.test(expr)) return NaN;
+  try {
+    // Usar Function para evitar eval global
+    return new Function('return ' + expr)();
+  } catch (e) {
+    return NaN;
+  }
+}
+
+// ==================== FUNÇÃO PARA EXTRAIR PESO DOS ITENS COM SUPORTE A EXPRESSÕES ====================
+function extrairPesoDosItens() {
+  const texto = document.getElementById('itens').value;
+  // Regex para encontrar (P: expressão) ou (p: expressão)
+  const regex = /\([pP]:\s*([^)]+)\)/g;
   let match;
   let somaItens = 0;
-  while ((match = regex.exec(textoItens)) !== null) {
-    let valor = parseFloat(match[1]);
-    if (valor > 0) somaItens += valor; // ignora negativos
+  while ((match = regex.exec(texto)) !== null) {
+    let expr = match[1].trim();
+    let valor = avaliarExpressao(expr);
+    if (!isNaN(valor) && valor > 0) {
+      somaItens += valor;
+    }
   }
-
   // Peso das armas
   let somaArmas = armas.reduce((acc, arma) => acc + (arma.peso || 0), 0);
-
   let novoPeso = somaItens + somaArmas;
   let pesoMax = parseFloat(document.getElementById('pesoMax').value) || 0;
   if (pesoMax > 0 && novoPeso > pesoMax * 1.5) {
@@ -1206,9 +1238,13 @@ function recalcularPesoTotal() {
     alert("Você excedeu o limite de 150% do peso máximo. O peso foi ajustado para o limite.");
   }
   peso = novoPeso;
-
   salvar();
   atualizar();
+}
+
+// Substitui a antiga recalcularPesoTotal
+function recalcularPesoTotal() {
+  extrairPesoDosItens();
 }
 
 // ==================== STATUS ====================
@@ -2148,7 +2184,7 @@ document.getElementById('exposicaoInput').addEventListener('change', atualizarEx
 document.getElementById('dinheiro').addEventListener('blur', calcularDinheiro);
 document.getElementById('dinheiro').addEventListener('keypress', e => { if(e.key==='Enter') calcularDinheiro(); });
 
-document.getElementById('itens').addEventListener('input', recalcularPesoTotal);
+document.getElementById('itens').addEventListener('input', extrairPesoDosItens);
 
 document.getElementById('vidaMax').onchange = function() {
   this.value = Math.max(0, +this.value||0);
@@ -2167,7 +2203,7 @@ document.getElementById('poderMax').onchange = function() {
 };
 document.getElementById('pesoMax').onchange = function() {
   this.value = Math.max(0, +this.value||0);
-  recalcularPesoTotal();
+  extrairPesoDosItens(); // recalcula peso
   salvar(); 
 };
 document.getElementById('defesa').onchange = function() {
