@@ -265,13 +265,13 @@ body.light .fade-5 { color: #eee; }
  }
 
  /* --- CORREÇÃO: formulário de adicionar armas em coluna no mobile --- */
- .armas > div:first-child {
+ .armas > div:first-of-type {
    flex-direction: column !important;
    align-items: stretch !important;
  }
- .armas > div:first-child input,
- .armas > div:first-child select,
- .armas > div:first-child button {
+ .armas > div:first-of-type input,
+ .armas > div:first-of-type select,
+ .armas > div:first-of-type button {
    width: 100% !important;
    margin: 4px 0 !important;
    flex: none !important;
