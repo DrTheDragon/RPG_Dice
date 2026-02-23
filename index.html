@@ -727,7 +727,7 @@ body.light .fade-5 { color: #eee; }
     </div>
     <div class="section">
       <h3>🎯 Dados Personalizados</h3>
-      <p style="font-size:12px; margin-bottom:10px;">Ex: "2d6", "1d20+4", "2#d20", "2#d20+2#d3", "2d6-1d4", " (2d6+4)*3", "10/2d4"</p>
+      <p style="font-size:12px; margin-bottom:10px;">Ex: "2d6", "1d20+4", "2#d20", "2#d20+2#d3", "2d6-1d4", " (2d6+4)*3", "10/2d4", "d20"</p>
       <input id="dadoPersonalizado" type="text" placeholder="Digite a fórmula">
       <button onclick="rolarDadoPersonalizado()">ROLAR DADOS</button>
       <div class="resultado" id="resDadoPersonalizado"></div>
@@ -815,7 +815,7 @@ body.light .fade-5 { color: #eee; }
       <option value="branca">Branca</option>
       <option value="fogo">De fogo</option>
     </select>
-    <input type="text" id="novaArmaDano" placeholder="Dano (ex: 2d6, 1d20+2)" style="flex:2;">
+    <input type="text" id="novaArmaDano" placeholder="Dano (ex: 2d6, 1d20+2, d20)" style="flex:2;">
     <input type="number" id="novaArmaCapacidade" placeholder="Capacidade (só fogo)" min="0" style="flex:1;">
     <input type="number" id="novaArmaPeso" placeholder="Peso" min="0" step="0.1" style="flex:1;">
     <button onclick="adicionarArma()" style="flex:1;">➕ Adicionar</button>
@@ -934,10 +934,11 @@ function testeSanidade() {
   salvar(); atualizarHistoricoSan();
 }
 
-// ==================== NOVO PARSER COM * E / ====================
-// Função para tokenizar a expressão
+// ==================== PARSER COM * E / (CORRIGIDO PARA ACEITAR dN) ====================
+// Função para tokenizar a expressão (agora aceita "d20")
 function tokenizar(expr) {
-  const regex = /(\d+#?d\d+|\d+|[+\-*/()])/g;
+  // Regex atualizado: captura números com d (2d6, 2#d6), ou "d20", ou números puros, ou operadores
+  const regex = /(\d+#?d\d+|d\d+|\d+|[+\-*/()])/gi;
   return expr.match(regex) || [];
 }
 
@@ -976,7 +977,7 @@ function shuntingYard(tokens) {
   return output;
 }
 
-// Avalia um operando (número ou dado) - reutiliza a função existente adaptada
+// Avalia um operando (número ou dado) - já funciona para "d20"
 function avaliarOperando(token) {
   if (/^\d+$/.test(token)) {
     return { tipo: 'escalar', valor: parseInt(token), str: token };
@@ -1075,7 +1076,7 @@ function avaliarRPN(rpn) {
   return pilha[0];
 }
 
-// Função principal de rolagem personalizada (substitui a anterior)
+// Função principal de rolagem personalizada
 function rolarDadoPersonalizado() {
   somDado();
   let input = document.getElementById('dadoPersonalizado').value.trim();
@@ -1099,8 +1100,6 @@ function rolarDadoPersonalizado() {
 
     // Gerar detalhes
     let detalhesHtml = '<p><b>Detalhes:</b></p>';
-    // Reavaliar cada token para mostrar os valores individuais (podemos refazer a avaliação com impressão)
-    // Para simplificar, usaremos a mesma lógica mas guardando os strings
     const tokensDetalhes = tokens.map(t => {
       if (['+','-','*','/','(',')'].includes(t)) return t;
       else {
@@ -1125,7 +1124,7 @@ function rolarDadoPersonalizado() {
     atualizarHistoricoDados();
 
   } catch (e) {
-    resultadoDiv.innerHTML = 'Formato inválido. Use expressões como "2d6", "1d20+4", "2#d20", "(2d6+4)*3", "10/2d4".';
+    resultadoDiv.innerHTML = 'Formato inválido. Use expressões como "2d6", "1d20+4", "2#d20", "(2d6+4)*3", "10/2d4", "d20".';
     detalhesDiv.innerHTML = '';
     console.error(e);
   }
@@ -1466,7 +1465,7 @@ function editarArma(index) {
   // Não permite alterar o tipo
   const novoNome = prompt('Novo nome da arma:', arma.nome);
   if (novoNome === null) return;
-  const novoDano = prompt('Nova fórmula de dano (ex: 2d6, 1d20+2):', arma.danoFormula);
+  const novoDano = prompt('Nova fórmula de dano (ex: 2d6, 1d20+2, d20):', arma.danoFormula);
   if (novoDano === null) return;
   const novoPeso = parseFloat(prompt('Novo peso da arma:', arma.peso));
   if (isNaN(novoPeso) || novoPeso < 0) {
@@ -1584,9 +1583,11 @@ function rolarDanoArma(index) {
   }
 }
 
+// Função para processar fórmula de dano das armas (agora aceita "d20")
 function processarFormulaDano(formula) {
   formula = formula.replace(/\s+/g, '').toLowerCase();
-  const tokenRegex = /(\d+d\d+|\d+|[+-])/g;
+  // Regex atualizado para aceitar "d20"
+  const tokenRegex = /(\d+d\d+|d\d+|\d+|[+-])/g;
   const tokens = formula.match(tokenRegex);
   if (!tokens) throw new Error('Fórmula inválida');
 
@@ -1612,6 +1613,10 @@ function processarFormulaDano(formula) {
       }
       const soma = valores.reduce((a,b) => a+b, 0);
       return { tipo: 'dados', valores, soma, str: `${valores.join('+')}` };
+    } else if (/^d\d+$/.test(op)) {
+      const faces = parseInt(op.substring(1));
+      const valor = Math.floor(Math.random() * faces) + 1;
+      return { tipo: 'dados', valores: [valor], soma: valor, str: valor.toString() };
     } else {
       throw new Error('Operando inválido');
     }
