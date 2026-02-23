@@ -1984,6 +1984,8 @@ function importarDados() { document.getElementById('fileInput').click(); }
 function processarArquivo(files) {
   if(files.length===0) return;
   const file = files[0];
+  // Limpa o input para permitir nova seleção do mesmo arquivo
+  document.getElementById('fileInput').value = '';
   const reader = new FileReader();
   reader.onload = function(e) {
     try {
@@ -2055,13 +2057,10 @@ function processarArquivo(files) {
       }
     } catch(error) {
       alert('Erro ao ler o arquivo. Formato inválido.');
-    } finally {
-      document.getElementById('fileInput').value = '';
     }
   };
   reader.onerror = () => {
     alert('Erro ao ler arquivo.');
-    document.getElementById('fileInput').value = '';
   };
   reader.readAsText(file);
 }
