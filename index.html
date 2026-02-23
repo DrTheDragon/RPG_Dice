@@ -1155,7 +1155,7 @@ function verificarDescanso() {
   }
 }
 
-// ==================== EXTRAIR PESO DOS ITENS (CORRIGIDO: valores negativos ignorados) ====================
+// ==================== EXTRAIR PESO DOS ITENS (valores negativos ignorados) ====================
 function extrairPesoDosItens() {
   const texto = document.getElementById('itens').value;
   const regex = /\([pP]:\s*([0-9]*\.?[0-9]+)\)/g;
@@ -1163,12 +1163,12 @@ function extrairPesoDosItens() {
   let soma = 0;
   while ((match = regex.exec(texto)) !== null) {
     let valor = parseFloat(match[1]);
-    if (valor > 0) soma += valor; // ignora valores negativos
+    if (valor > 0) soma += valor;
   }
   let max = parseFloat(document.getElementById('pesoMax').value) || 0;
   if (max > 0 && soma > max * 1.5) {
-    soma = max * 1.5;
-    alert("Peso dos itens ultrapassaria 150% da capacidade. Ajustado para o limite.");
+    // Apenas avisa, não trunca
+    alert("Atenção: o peso dos itens ultrapassa 150% da capacidade. Considere remover alguns itens.");
   }
   peso = soma;
   salvar();
@@ -2074,11 +2074,10 @@ document.getElementById('poderMax').onchange = function() {
 };
 document.getElementById('pesoMax').onchange = function() {
   this.value = Math.max(0, +this.value||0);
-  // Ao alterar o peso máximo, verifica se o atual ultrapassa o novo limite
+  // Apenas avisa se ultrapassar, mas não altera o peso
   let limite = this.value * 1.5;
   if (peso > limite) {
-    peso = limite;
-    alert("Peso atual ajustado para 150% do novo máximo.");
+    alert("Atenção: o peso atual ultrapassa 150% do novo máximo. Será necessário remover itens/armas.");
   }
   salvar(); atualizar();
 };
