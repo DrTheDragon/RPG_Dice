@@ -668,14 +668,6 @@ body.light .fade-5 { color: #eee; }
   <div class="peso-inputs">
     <div class="peso-item"><input id="pesoMax" type="number" placeholder="Peso Máximo" min="0"></div>
     <div class="peso-item"><p>Atual: <b><span id="pesoAtual">0</span></b></p></div>
-    <div class="peso-item peso-buttons">
-      <div class="controls">
-        <button onclick="alterar('peso',-1)">-1</button>
-        <button onclick="alterar('peso',1)">+1</button>
-        <button onclick="alterar('peso',-5)">-5</button>
-        <button onclick="alterar('peso',5)">+5</button>
-      </div>
-    </div>
   </div>
   <div id="pesoAviso" style="color: #ffaa00; margin-top:10px; text-align:center;"></div>
 </div>
@@ -732,10 +724,10 @@ body.light .fade-5 { color: #eee; }
   </div>
 </div>
 
-<!-- ITENS (existente) -->
+<!-- ITENS (agora com extração automática de peso) -->
 <div class="panel itens">
   <h2>🎒 ITENS / ACESSÓRIOS</h2>
-  <textarea id="itens" placeholder="Armas, acessórios,..."></textarea>
+  <textarea id="itens" placeholder="Itens, Acessorios... (para colocar seus pesos use '(p:)' e coloque o valor depois dos dois pontos)" )"></textarea>
 </div>
 
 <!-- ===== NOVA SEÇÃO: RITUAIS ===== -->
@@ -1044,7 +1036,7 @@ function atualizar() {
   document.getElementById('pesoAtual').textContent = peso;
   document.getElementById('exposicaoValor').textContent = exposicao;
 
-  // Verifica limites de descanso e exibe avisos
+  // Verifica limites de descanso (apenas alertas)
   verificarDescanso();
 
   // Aplica penalidade de deslocamento por peso
@@ -1056,21 +1048,12 @@ function alterar(t, v) {
   else if(t==="san") san = Math.max(0, Math.min(+document.getElementById('sanMax').value, san+v));
   else if(t==="descanso") {
     let novo = descanso + v;
-    // Limite máximo 12
+    // Limite máximo 12, mínimo -12
     if (novo > 12) novo = 12;
+    if (novo < -12) novo = -12;
     descanso = novo;
   }
   else if(t==="poder") poder = Math.max(0, Math.min(+document.getElementById('poderMax').value, poder+v));
-  else if(t==="peso") {
-    let novo = peso + v;
-    let max = parseFloat(document.getElementById('pesoMax').value) || 0;
-    if (max > 0 && novo > max * 1.5) {
-      novo = max * 1.5;
-      alert("Você atingiu o peso máximo (150% da capacidade). Precisa tirar algum item da mochila.");
-    }
-    if (novo < 0) novo = 0;
-    peso = novo;
-  }
   salvar(); atualizar();
 }
 
@@ -1089,13 +1072,35 @@ function atualizarExposicao() {
 
 // ==================== REGRAS DE DESCANSO ====================
 function verificarDescanso() {
-  const avisoDiv = document.getElementById('pesoAviso'); // reutilizamos a div de aviso de peso para descanso? melhor criar uma específica, mas usaremos a mesma por simplicidade.
   if (descanso <= -12) {
     alert("Você está desmaiado de exaustão!");
-    // O aviso só some quando voltar para -6 ou mais
+    // O aviso só some quando voltar para -6 ou mais, mas o alerta já foi mostrado
   } else if (descanso <= -9 && descanso > -12) {
-    alert("Você está exausto (rode com desvantagem testes de pensamentos ou ações rápidas).");
+    // Não exibe mais alerta a cada mudança, só quando atinge a faixa? Vamos manter só o de -12.
+    // Se quiser manter o de -9 também, descomente abaixo:
+    // alert("Você está exausto (rode com desvantagem testes de pensamentos ou ações rápidas).");
   }
+}
+
+// ==================== FUNÇÃO PARA EXTRAIR PESO DOS ITENS ====================
+function extrairPesoDosItens() {
+  const texto = document.getElementById('itens').value;
+  // Regex para encontrar (P: 2.5) ou (p: 2.5) - captura o número
+  const regex = /\([pP]:\s*([0-9]*\.?[0-9]+)\)/g;
+  let match;
+  let soma = 0;
+  while ((match = regex.exec(texto)) !== null) {
+    soma += parseFloat(match[1]);
+  }
+  // Atualiza o peso, respeitando limite de 150% se houver máximo
+  let max = parseFloat(document.getElementById('pesoMax').value) || 0;
+  if (max > 0 && soma > max * 1.5) {
+    soma = max * 1.5;
+    alert("Peso dos itens ultrapassaria 150% da capacidade. Ajustado para o limite.");
+  }
+  peso = soma;
+  salvar();
+  atualizar();
 }
 
 // ==================== REGRAS DE PESO E DESLOCAMENTO ====================
@@ -1104,15 +1109,6 @@ function aplicarPenalidadeDeslocamento() {
   let maxPeso = parseFloat(document.getElementById('pesoMax').value) || 0;
   let atualPeso = peso;
   let base = deslocamentoBase; // valor original armazenado
-
-  // Se o campo foi editado manualmente, atualiza a base
-  let currentDisplay = parseFloat(deslocInput.value);
-  if (!isNaN(currentDisplay) && currentDisplay !== base && currentDisplay > 0) {
-    // Se o usuário digitou, isso se torna a nova base (desde que não esteja sob efeito de penalidade)
-    // Mas como podemos saber se é uma edição voluntária? Vamos atualizar a base apenas quando o campo perder o foco e não houver penalidade ativa? 
-    // Para simplificar, sempre que o valor for alterado pelo usuário, atualizamos a base.
-    // Vamos adicionar um listener no campo para capturar isso.
-  }
 
   if (maxPeso <= 0) {
     // Sem peso máximo definido, não há penalidade
@@ -1531,7 +1527,7 @@ function salvar() {
 
   const dados = {
     vida, san, descanso, poder, peso, defesa, exposicao,
-    deslocamentoBase, // novo
+    deslocamentoBase,
     vidaMax: Math.max(0, +document.getElementById('vidaMax').value || 0),
     sanMax: Math.max(0, +document.getElementById('sanMax').value || 0),
     poderMax: Math.max(0, +document.getElementById('poderMax').value || 0),
@@ -1555,7 +1551,7 @@ function salvar() {
     cidadeResidente: document.getElementById('cidadeResidente').value,
     tamanho: document.getElementById('tamanho').value,
     aparencia: document.getElementById('aparencia').value,
-    deslocamento: document.getElementById('deslocamento').value, // salva o valor atual (com penalidade)
+    deslocamento: document.getElementById('deslocamento').value,
     caracteristicas: document.getElementById('caracteristicasPersonagem').value,
     personalidade: document.getElementById('personalidadePersonagem').value,
     historia: document.getElementById('historiaPersonagem').value,
@@ -1700,8 +1696,8 @@ function exportarDados() {
       cidadeResidente:document.getElementById('cidadeResidente').value,
       tamanho:document.getElementById('tamanho').value,
       aparencia:document.getElementById('aparencia').value,
-      deslocamento: document.getElementById('deslocamento').value, // valor atual com penalidade
-      deslocamentoBase: deslocamentoBase, // novo
+      deslocamento: document.getElementById('deslocamento').value,
+      deslocamentoBase: deslocamentoBase,
       caracteristicas:document.getElementById('caracteristicasPersonagem').value,
       personalidade:document.getElementById('personalidadePersonagem').value,
       historia:document.getElementById('historiaPersonagem').value,
@@ -1917,6 +1913,9 @@ document.getElementById('exposicaoInput').addEventListener('change', atualizarEx
 
 document.getElementById('dinheiro').addEventListener('blur', calcularDinheiro);
 document.getElementById('dinheiro').addEventListener('keypress', e => { if(e.key==='Enter') calcularDinheiro(); });
+
+// Sempre que o campo itens mudar, recalcula o peso
+document.getElementById('itens').addEventListener('input', extrairPesoDosItens);
 
 document.getElementById('vidaMax').onchange = function() {
   this.value = Math.max(0, +this.value||0);
