@@ -509,7 +509,7 @@ body.light .fade-5 { color: #eee; }
           <input type="text" id="cidadeResidente" placeholder="Cidade Residente">
         </div>
       </div>
-      <!-- Tamanho, Aparência, Deslocamento (agora com id "deslocamento" e "deslocamentoBase" será armazenado) -->
+      <!-- Tamanho, Aparência, Deslocamento -->
       <div class="linha-flex">
         <div class="campo-group">
           <label class="campo-label">Tamanho (m)</label>
@@ -589,6 +589,8 @@ body.light .fade-5 { color: #eee; }
         <button onclick="alterar('descanso',-3)">-3h</button>
         <button onclick="alterar('descanso',3)">+3h</button>
       </div>
+      <!-- AVISO DE DESCANSO (exausto) -->
+      <div id="descansoAviso" style="color: #ffaa00; margin-top:10px; text-align:center;"></div>
     </div>
   </div>
 
@@ -662,7 +664,7 @@ body.light .fade-5 { color: #eee; }
   </div>
 </div>
 
-<!-- PESO (agora com avisos e penalidades) -->
+<!-- PESO -->
 <div class="peso-container">
   <h3>⚖️ PESO</h3>
   <div class="peso-inputs">
@@ -702,7 +704,7 @@ body.light .fade-5 { color: #eee; }
   </div>
 </div>
 
-<!-- ===== NOVA SEÇÃO: ARMAS (com campo peso) ===== -->
+<!-- ARMAS -->
 <div class="panel armas" style="margin-top:25px; width:820px; max-width:95%;">
   <h2>🔫 ARMAS</h2>
   <div style="margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap;">
@@ -724,19 +726,19 @@ body.light .fade-5 { color: #eee; }
   </div>
 </div>
 
-<!-- ITENS (agora com extração automática de peso) -->
+<!-- ITENS -->
 <div class="panel itens">
   <h2>🎒 ITENS / ACESSÓRIOS</h2>
   <textarea id="itens" placeholder="Itens, Acessorios... (para colocar seus pesos use '(p:)' e coloque o valor depois dos dois pontos)" )"></textarea>
 </div>
 
-<!-- ===== NOVA SEÇÃO: RITUAIS ===== -->
+<!-- RITUAIS -->
 <div class="panel itens" style="margin-top:25px;">
   <h2>🔮 RITUAIS</h2>
   <textarea id="rituais" placeholder="Rituais conhecidos, descrições..."></textarea>
 </div>
 
-<!-- ANOTAÇÕES (existente) -->
+<!-- ANOTAÇÕES -->
 <div class="panel itens" style="margin-top:25px;">
   <h2>📝 ANOTAÇÕES</h2>
   <textarea id="anotacoes" placeholder="Suas anotações gerais..."></textarea>
@@ -1036,7 +1038,7 @@ function atualizar() {
   document.getElementById('pesoAtual').textContent = peso;
   document.getElementById('exposicaoValor').textContent = exposicao;
 
-  // Verifica limites de descanso (apenas alertas)
+  // Verifica limites de descanso e exibe avisos na página
   verificarDescanso();
 
   // Aplica penalidade de deslocamento por peso
@@ -1072,13 +1074,14 @@ function atualizarExposicao() {
 
 // ==================== REGRAS DE DESCANSO ====================
 function verificarDescanso() {
+  const avisoDiv = document.getElementById('descansoAviso');
   if (descanso <= -12) {
     alert("Você está desmaiado de exaustão!");
-    // O aviso só some quando voltar para -6 ou mais, mas o alerta já foi mostrado
+    avisoDiv.innerHTML = ''; // limpa aviso de exausto, pois já alertou
   } else if (descanso <= -9 && descanso > -12) {
-    // Não exibe mais alerta a cada mudança, só quando atinge a faixa? Vamos manter só o de -12.
-    // Se quiser manter o de -9 também, descomente abaixo:
-    // alert("Você está exausto (rode com desvantagem testes de pensamentos ou ações rápidas).");
+    avisoDiv.innerHTML = '⚠️ Exausto: desvantagem em testes de pensamento/ações rápidas.';
+  } else {
+    avisoDiv.innerHTML = '';
   }
 }
 
@@ -1284,7 +1287,7 @@ function renderizarArmas() {
             <button onclick="alterarMunicao(${index}, -1)">-1</button>
             <span>${arma.municaoAtual}/${arma.capacidade}</span>
             <button onclick="alterarMunicao(${index}, 1)">+1</button>
-            <button onclick="recarregarArma(${index})">Recarregar</button>
+            <button onclick="recarregarArma(${index})">Recarregar totalmente</button>
           </div>
         </div>
         ` : ''}
@@ -1342,16 +1345,12 @@ function adicionarArma() {
 
 function editarArma(index) {
   const arma = armas[index];
-  const novoNome = prompt('Nome da arma:', arma.nome);
+  // Não permite alterar o tipo
+  const novoNome = prompt('Novo nome da arma:', arma.nome);
   if (novoNome === null) return;
-  const novoTipo = prompt('Tipo (branca/fogo):', arma.tipo);
-  if (novoTipo === null || (novoTipo !== 'branca' && novoTipo !== 'fogo')) {
-    alert('Tipo deve ser "branca" ou "fogo".');
-    return;
-  }
-  const novoDano = prompt('Fórmula de dano (ex: 2d6, 1d20+2):', arma.danoFormula);
+  const novoDano = prompt('Nova fórmula de dano (ex: 2d6, 1d20+2):', arma.danoFormula);
   if (novoDano === null) return;
-  const novoPeso = parseFloat(prompt('Peso da arma:', arma.peso));
+  const novoPeso = parseFloat(prompt('Novo peso da arma:', arma.peso));
   if (isNaN(novoPeso) || novoPeso < 0) {
     alert('Peso inválido.');
     return;
@@ -1365,8 +1364,8 @@ function editarArma(index) {
     return;
   }
 
-  if (novoTipo === 'fogo') {
-    const novaCapacidade = parseInt(prompt('Capacidade de munição:', arma.capacidade));
+  if (arma.tipo === 'fogo') {
+    const novaCapacidade = parseInt(prompt('Nova capacidade de munição:', arma.capacidade));
     if (isNaN(novaCapacidade) || novaCapacidade <= 0) {
       alert('Capacidade inválida.');
       return;
@@ -1374,7 +1373,6 @@ function editarArma(index) {
     armas[index] = {
       ...arma,
       nome: novoNome.trim(),
-      tipo: novoTipo,
       danoFormula: novoDano.trim(),
       capacidade: novaCapacidade,
       municaoAtual: Math.min(arma.municaoAtual, novaCapacidade),
@@ -1384,10 +1382,7 @@ function editarArma(index) {
     armas[index] = {
       ...arma,
       nome: novoNome.trim(),
-      tipo: novoTipo,
       danoFormula: novoDano.trim(),
-      capacidade: 0,
-      municaoAtual: 0,
       peso: novoPeso
     };
   }
@@ -1428,10 +1423,17 @@ function recarregarArma(index) {
 }
 
 function rolarDanoArma(index) {
-  somDado();
   const arma = armas[index];
-  const formula = arma.danoFormula;
   const resultadoDiv = document.getElementById('resArma');
+  
+  // Verifica se tem munição (se for de fogo)
+  if (arma.tipo === 'fogo' && arma.municaoAtual <= 0) {
+    resultadoDiv.innerHTML = `❌ ${arma.nome} sem munição. Necessita recarregar.`;
+    return;
+  }
+
+  somDado();
+  const formula = arma.danoFormula;
   
   try {
     const resultado = processarFormulaDano(formula);
@@ -1445,6 +1447,10 @@ function rolarDanoArma(index) {
 
     let historicoEntry = `🔫 ${arma.nome}: ${formula} → ${resultado.total}`;
     if (resultado.detalhes) historicoEntry += ` (${resultado.detalhes})`;
+    // Adiciona info de munição se for de fogo
+    if (arma.tipo === 'fogo') {
+      historicoEntry += ` | Munição: ${arma.municaoAtual-1}/${arma.capacidade}`;
+    }
     historicoArmas.unshift(historicoEntry);
     if (historicoArmas.length > 6) historicoArmas.pop();
 
