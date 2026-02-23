@@ -891,6 +891,9 @@ let currentSheetIndex = 0; // índice da ficha atual
 // Tema global (não salvo por ficha)
 let temaAtual = document.body.className;
 
+// Flag para evitar loop na atualização dos itens
+let processandoItens = false;
+
 const tabela = {
   1:{N:20,B:null,E:null},2:{N:19,B:20,E:null},3:{N:18,B:20,E:null},
   4:{N:17,B:19,E:null},5:{N:16,B:19,E:20},6:{N:15,B:18,E:20},
@@ -1215,20 +1218,49 @@ function avaliarExpressao(expr) {
   }
 }
 
-// ==================== FUNÇÃO PARA EXTRAIR PESO DOS ITENS COM SUPORTE A EXPRESSÕES ====================
+// ==================== FUNÇÃO PARA EXTRAIR PESO DOS ITENS COM SUPORTE A EXPRESSÕES E SUBSTITUIÇÃO ====================
 function extrairPesoDosItens() {
-  const texto = document.getElementById('itens').value;
-  // Regex para encontrar (P: expressão) ou (p: expressão)
+  if (processandoItens) return; // evita loop
+  processandoItens = true;
+
+  const textarea = document.getElementById('itens');
+  let texto = textarea.value;
+
+  // Regex para encontrar (p: expressão) com case-insensitive
   const regex = /\([pP]:\s*([^)]+)\)/g;
   let match;
   let somaItens = 0;
+  let novoTexto = texto;
+
+  // Primeiro, calcular e substituir cada expressão
   while ((match = regex.exec(texto)) !== null) {
     let expr = match[1].trim();
     let valor = avaliarExpressao(expr);
     if (!isNaN(valor) && valor > 0) {
+      // Substitui a expressão pelo valor numérico
+      novaExpressao = `(p:${valor})`;
+      novoTexto = novoTexto.replace(match[0], novaExpressao);
+    }
+  }
+
+  // Se houve substituição, atualiza o textarea
+  if (novoTexto !== texto) {
+    textarea.value = novoTexto;
+    // Atualiza a variável texto para o novo conteúdo
+    texto = novoTexto;
+  }
+
+  // Agora, recalcula o peso total com os valores numéricos
+  // Resetando o índice do regex
+  regex.lastIndex = 0;
+  somaItens = 0;
+  while ((match = regex.exec(texto)) !== null) {
+    let valor = parseFloat(match[1]);
+    if (!isNaN(valor) && valor > 0) {
       somaItens += valor;
     }
   }
+
   // Peso das armas
   let somaArmas = armas.reduce((acc, arma) => acc + (arma.peso || 0), 0);
   let novoPeso = somaItens + somaArmas;
@@ -1238,8 +1270,11 @@ function extrairPesoDosItens() {
     alert("Você excedeu o limite de 150% do peso máximo. O peso foi ajustado para o limite.");
   }
   peso = novoPeso;
+
   salvar();
   atualizar();
+
+  processandoItens = false;
 }
 
 // Substitui a antiga recalcularPesoTotal
