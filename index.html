@@ -263,6 +263,19 @@ body.light .fade-5 { color: #eee; }
    flex-wrap: wrap;
    justify-content: center;
  }
+
+ /* --- NOVO: formulário de adicionar armas em coluna no mobile --- */
+ .armas > div:first-child {
+   flex-direction: column !important;
+   align-items: stretch !important;
+ }
+ .armas > div:first-child input,
+ .armas > div:first-child select,
+ .armas > div:first-child button {
+   width: 100% !important;
+   margin: 4px 0 !important;
+   flex: none !important;
+ }
 }
 @media(max-width:480px){
  .controls{flex-direction:row; gap:4px;}
@@ -534,9 +547,9 @@ body.light .fade-5 { color: #eee; }
 
 <div class="toggle">
 <button onclick="toggleTema()">🌗 Alternar Tema</button>
+<button onclick="abrirGerenciadorFichas()">📂 Gerenciar Fichas</button>
 <button onclick="exportarDados()">📤 Exportar Ficha</button>
 <button onclick="importarDados()">📥 Importar Ficha</button>
-<button onclick="abrirGerenciadorFichas()">📂 Gerenciar Fichas</button>
 <input type="file" id="fileInput" class="file-input" accept=".json,.txt" onchange="processarArquivo(this.files)">
 </div>
 
