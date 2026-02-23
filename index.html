@@ -1064,7 +1064,7 @@ function aplicarOperador(op, a, b) {
       else if (op === '*') resultados.push(valA * valB);
       else if (op === '/') resultados.push(Math.floor(valA / valB));
     }
-    // String de detalhes da operação
+    // String de detalhes da operação (sem o resultado)
     let detalhesOp = `${strA} ${op} ${strB}`;
     return { 
       tipo: 'lista', 
@@ -1135,11 +1135,11 @@ function rolarDadoPersonalizado() {
       resultadoDiv.innerHTML = `🎲 ${input}<br>Total: <b>${valor}</b>`;
     }
 
-    // Gerar detalhes
+    // Gerar detalhes: apenas a operação com os valores rolados
     let detalhesHtml = '<p><b>Detalhes:</b> ';
     if (resultado.detalhes) {
       if (resultado.tipo === 'lista') {
-        // Para lista, detalhes[0] já é a string da operação
+        // Para lista, detalhes[0] já é a string da operação (ex: "[14, 20] + 4")
         detalhesHtml += resultado.detalhes[0];
       } else {
         // Para não-lista, construir com espaços
@@ -1160,7 +1160,7 @@ function rolarDadoPersonalizado() {
     detalhesHtml += '</p>';
     detalhesDiv.innerHTML = detalhesHtml;
 
-    // Histórico: expressão → operação detalhada = resultado
+    // Histórico: expressão original → operação detalhada = resultado
     let historicoStr = `${input} → `;
     if (resultado.detalhes) {
       if (resultado.tipo === 'lista') {
@@ -1576,7 +1576,8 @@ function rolarDanoArma(index) {
   const formula = arma.danoFormula;
   
   try {
-    const resultado = processarFormulaDano(formula);
+    // Reutiliza o mesmo parser, mas precisamos de uma versão que retorne detalhes
+    const resultado = avaliarFormulaDanoDetalhado(formula);
     
     let html = `<b>${arma.nome}</b> — Dano: ${formula}<br>`;
     html += `Resultado: <b>${resultado.total}</b>`;
@@ -1585,6 +1586,7 @@ function rolarDanoArma(index) {
     }
     resultadoDiv.innerHTML = html;
 
+    // Histórico com passo a passo
     let historicoEntry = `🔫 ${arma.nome}: ${formula} → `;
     if (resultado.detalhes) {
       historicoEntry += resultado.detalhes + ' = ';
@@ -1608,16 +1610,61 @@ function rolarDanoArma(index) {
   }
 }
 
-function processarFormulaDano(formula) {
-  // Usa o mesmo parser, mas simplificado
-  try {
-    const tokens = tokenizar(formula);
-    const rpn = shuntingYard(tokens);
-    const resultado = avaliarRPN(rpn);
-    return { total: resultado.valor !== undefined ? resultado.valor : resultado.soma, detalhes: resultado.str };
-  } catch (e) {
-    throw e;
+function avaliarFormulaDanoDetalhado(formula) {
+  formula = formula.replace(/\s+/g, '').toLowerCase();
+  const tokenRegex = /(\d+d\d+|d\d+|\d+|[+-])/g;
+  const tokens = formula.match(tokenRegex);
+  if (!tokens) throw new Error('Fórmula inválida');
+
+  const operadores = [];
+  const operandos = [];
+  for (let token of tokens) {
+    if (token === '+' || token === '-') {
+      operadores.push(token);
+    } else {
+      operandos.push(token);
+    }
   }
+  if (operandos.length === 0) throw new Error('Nenhum operando');
+  
+  const resultados = operandos.map(op => {
+    if (/^\d+$/.test(op)) {
+      return { tipo: 'escalar', valor: parseInt(op), str: op, detalhes: op };
+    } else if (/^\d+d\d+$/.test(op)) {
+      const [qtd, faces] = op.split('d').map(Number);
+      const valores = [];
+      for (let i = 0; i < qtd; i++) {
+        valores.push(Math.floor(Math.random() * faces) + 1);
+      }
+      const soma = valores.reduce((a,b) => a+b, 0);
+      return { tipo: 'dados', valores, soma, str: valores.join('+'), detalhes: valores.join('+') };
+    } else if (/^d\d+$/.test(op)) {
+      const faces = parseInt(op.substring(1));
+      const valor = Math.floor(Math.random() * faces) + 1;
+      return { tipo: 'dados', valores: [valor], soma: valor, str: valor.toString(), detalhes: valor.toString() };
+    } else {
+      throw new Error('Operando inválido');
+    }
+  });
+
+  // Construir detalhes passo a passo
+  let detalhesStr = resultados[0].detalhes;
+  let total = resultados[0].soma !== undefined ? resultados[0].soma : resultados[0].valor;
+  for (let i = 0; i < operadores.length; i++) {
+    const op = operadores[i];
+    const prox = resultados[i+1];
+    const val = prox.soma !== undefined ? prox.soma : prox.valor;
+    detalhesStr += ` ${op} ${prox.detalhes}`;
+    if (op === '+') total += val;
+    else total -= val;
+  }
+
+  return { total, detalhes: detalhesStr };
+}
+
+function processarFormulaDano(formula) {
+  const resultado = avaliarFormulaDanoDetalhado(formula);
+  return { total: resultado.total, detalhes: resultado.detalhes };
 }
 
 function atualizarHistoricoArmas() {
