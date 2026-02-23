@@ -1118,16 +1118,13 @@ function recalcularPesoTotal() {
   // Peso das armas
   let somaArmas = armas.reduce((acc, arma) => acc + (arma.peso || 0), 0);
 
-  peso = somaItens + somaArmas;
-
-  // Verifica limite de 150%
+  let novoPeso = somaItens + somaArmas;
   let pesoMax = parseFloat(document.getElementById('pesoMax').value) || 0;
-  if (pesoMax > 0 && peso > pesoMax * 1.5) {
-    peso = pesoMax * 1.5;
-    // Exibe aviso na interface
-    document.getElementById('pesoAviso').innerHTML = '<span style="color: #ff4c4c;">⚠️ Você excedeu o limite de 150% do peso máximo. O peso foi ajustado para o limite.</span>';
+  if (pesoMax > 0 && novoPeso > pesoMax * 1.5) {
+    novoPeso = pesoMax * 1.5;
     alert("Você excedeu o limite de 150% do peso máximo. O peso foi ajustado para o limite.");
   }
+  peso = novoPeso;
 
   salvar();
   atualizar();
@@ -1194,7 +1191,7 @@ function aplicarPenalidadeDeslocamento() {
 
   if (maxPeso <= 0) {
     deslocInput.value = base.toFixed(1);
-    // O aviso já pode ter sido definido em recalcularPesoTotal, então não sobrescrever
+    document.getElementById('pesoAviso').innerHTML = '';
     return;
   }
 
@@ -1209,10 +1206,7 @@ function aplicarPenalidadeDeslocamento() {
     else if (percentual <= 140) reducaoFracao = 4;
     else if (percentual <= 150) {
       reducaoFracao = 5;
-      // Se não houver aviso específico de limite excedido (que já foi tratado), coloca o aviso de 150%
-      if (!document.getElementById('pesoAviso').innerHTML.includes('excedeu')) {
-        aviso = '<span style="color: #ff4c4c;">⚠️ Você atingiu o limite possível, precisa retirar algo</span>';
-      }
+      aviso = '<span style="color: #ff4c4c;">⚠️ Você atingiu o limite possível, precisa retirar algo</span>';
     } else {
       reducaoFracao = 5;
     }
@@ -1221,14 +1215,11 @@ function aplicarPenalidadeDeslocamento() {
   let novoDesloc = base * (1 - reducaoFracao / 6);
   if (novoDesloc < 0) novoDesloc = 0;
 
-  if (reducaoFracao > 0 && percentual <= 150 && !aviso && !document.getElementById('pesoAviso').innerHTML.includes('excedeu')) {
+  if (reducaoFracao > 0 && percentual <= 150 && !aviso) {
     aviso = `⚠️ Carga excessiva: deslocamento reduzido em ${reducaoFracao}/6 (${(reducaoFracao/6*100).toFixed(0)}%).`;
   }
 
-  // Se já houver aviso de excedido, não substituir
-  if (!document.getElementById('pesoAviso').innerHTML.includes('excedeu')) {
-    document.getElementById('pesoAviso').innerHTML = aviso;
-  }
+  document.getElementById('pesoAviso').innerHTML = aviso;
 
   if (Math.abs(deslocInput.value - novoDesloc) > 0.01) {
     deslocInput.value = novoDesloc.toFixed(1);
@@ -1410,7 +1401,7 @@ function adicionarArma() {
   };
   armas.push(novaArma);
   renderizarArmas();
-  recalcularPesoTotal(); // recalcula e aplica limite se necessário
+  recalcularPesoTotal();
 
   // Limpar campos
   document.getElementById('novaArmaNome').value = '';
