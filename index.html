@@ -1512,9 +1512,9 @@ function renderizarArmas() {
         <div class="arma-campo">
           <label>Munição</label>
           <div class="arma-municao">
-           <button onclick="alterarMunicao(${originalIndex}, 1)">+1</button>
-            <span>${arma.municaoAtual}/${arma.capacidade}</span>
            <button onclick="alterarMunicao(${originalIndex}, -1)">-1</button>
+            <span>${arma.municaoAtual}/${arma.capacidade}</span>
+           <button onclick="alterarMunicao(${originalIndex}, 1)">+1</button>
             <button onclick="recarregarArma(${originalIndex})">Recarregar totalmente</button>
           </div>
         </div>
