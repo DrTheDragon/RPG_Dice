@@ -934,10 +934,10 @@ function testeSanidade() {
   salvar(); atualizarHistoricoSan();
 }
 
-// ==================== PARSER COM * E / (CORRIGIDO PARA ACEITAR dN) ====================
+// ==================== PARSER COM * E / (CORRIGIDO) ====================
 // Função para tokenizar a expressão (agora aceita "d20")
 function tokenizar(expr) {
-  // Regex atualizado: captura números com d (2d6, 2#d6), ou "d20", ou números puros, ou operadores
+  // Regex: captura números com d (2d6, 2#d6), ou "d20", ou números puros, ou operadores
   const regex = /(\d+#?d\d+|d\d+|\d+|[+\-*/()])/gi;
   return expr.match(regex) || [];
 }
@@ -977,7 +977,7 @@ function shuntingYard(tokens) {
   return output;
 }
 
-// Avalia um operando (número ou dado) - já funciona para "d20"
+// Avalia um operando (número ou dado) - retorna objeto com tipo, valor(s) e string representação
 function avaliarOperando(token) {
   if (/^\d+$/.test(token)) {
     return { tipo: 'escalar', valor: parseInt(token), str: token };
@@ -1051,13 +1051,13 @@ function aplicarOperador(op, a, b) {
   else if (op === '*') res = valA * valB;
   else if (op === '/') res = valA / valB;
 
-  // Para manter o histórico, podemos tentar preservar os detalhes
+  // Constrói string representativa
   let strA = a.str || valA.toString();
   let strB = b.str || valB.toString();
   return { tipo: 'escalar', valor: res, str: `(${strA} ${op} ${strB})` };
 }
 
-// Avalia uma expressão RPN
+// Avalia uma expressão RPN, retornando o resultado final (e armazenando os valores para detalhes)
 function avaliarRPN(rpn) {
   const pilha = [];
   for (let token of rpn) {
@@ -1091,31 +1091,25 @@ function rolarDadoPersonalizado() {
     const rpn = shuntingYard(tokens);
     const resultado = avaliarRPN(rpn);
 
-    // Exibir resultado
+    // Exibir resultado (considerando tipo)
     if (resultado.tipo === 'lista') {
       resultadoDiv.innerHTML = `🎲 ${input}<br>Resultados: <b>${resultado.valores.join(', ')}</b>`;
     } else {
-      resultadoDiv.innerHTML = `🎲 ${input}<br>Total: <b>${resultado.valor}</b>`;
+      // Pode ser 'escalar' ou 'dados' - usamos 'valor' ou 'soma'
+      const valor = resultado.valor !== undefined ? resultado.valor : resultado.soma;
+      resultadoDiv.innerHTML = `🎲 ${input}<br>Total: <b>${valor}</b>`;
     }
 
-    // Gerar detalhes
-    let detalhesHtml = '<p><b>Detalhes:</b></p>';
-    const tokensDetalhes = tokens.map(t => {
-      if (['+','-','*','/','(',')'].includes(t)) return t;
-      else {
-        const val = avaliarOperando(t);
-        return val.str || (val.valor !== undefined ? val.valor.toString() : '?');
-      }
-    });
-    detalhesHtml += tokensDetalhes.join(' ');
-    detalhesDiv.innerHTML = detalhesHtml;
+    // Gerar detalhes (agora usando a string já calculada)
+    detalhesDiv.innerHTML = `<p><b>Detalhes:</b> ${resultado.str || ''}</p>`;
 
     // Histórico
     let historicoStr = `${input} → `;
     if (resultado.tipo === 'lista') {
       historicoStr += `[${resultado.valores.join(', ')}]`;
     } else {
-      historicoStr += resultado.valor;
+      const valor = resultado.valor !== undefined ? resultado.valor : resultado.soma;
+      historicoStr += valor;
     }
     historicoDados.unshift(`🎲 ${historicoStr}`);
     if (historicoDados.length > 6) historicoDados.pop();
