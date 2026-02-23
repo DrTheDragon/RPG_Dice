@@ -512,14 +512,27 @@ body.light .fade-5 { color: #eee; }
   max-height: 80vh;
   overflow-y: auto;
   box-shadow: 0 0 40px black;
+  position: relative;
 }
 .modal-content h2 {
   margin-top: 0;
   text-align: center;
 }
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.modal-close:hover {
+  color: #f00;
+}
 .modal-content ul {
   list-style: none;
   padding: 0;
+  margin-top: 30px;
 }
 .modal-content li {
   display: flex;
@@ -534,15 +547,6 @@ body.light .fade-5 { color: #eee; }
   width: auto;
   margin: 0 2px;
   padding: 5px 10px;
-}
-.modal-close {
-  float: right;
-  font-size: 28px;
-  font-weight: bold;
-  cursor: pointer;
-}
-.modal-close:hover {
-  color: #f00;
 }
 </style>
 </head>
@@ -1061,11 +1065,20 @@ function aplicarOperador(op, a, b) {
   else if (op === '*') res = valA * valB;
   else if (op === '/') res = Math.floor(valA / valB); // divisão inteira
 
-  // Concatena detalhes
+  // Concatena detalhes com operadores
   let detalhes = [];
-  detalhes.push(...detalhesA);
+  // Se a for dados, seus detalhes já são array de números; precisamos juntar com '+'
+  let detalhesAStr = a.detalhes;
+  if (a.tipo === 'dados' && a.detalhes.length > 1) {
+    detalhesAStr = [a.detalhes.join('+')];
+  }
+  let detalhesBStr = b.detalhes;
+  if (b.tipo === 'dados' && b.detalhes.length > 1) {
+    detalhesBStr = [b.detalhes.join('+')];
+  }
+  detalhes.push(...(detalhesAStr || [a.str || valA.toString()]));
   detalhes.push(op);
-  detalhes.push(...detalhesB);
+  detalhes.push(...(detalhesBStr || [b.str || valB.toString()]));
   
   let strA = a.str || valA.toString();
   let strB = b.str || valB.toString();
@@ -1114,11 +1127,9 @@ function rolarDadoPersonalizado() {
       resultadoDiv.innerHTML = `🎲 ${input}<br>Total: <b>${valor}</b>`;
     }
 
-    // Gerar detalhes passo a passo
+    // Gerar detalhes passo a passo com '+'
     let detalhesHtml = '<p><b>Detalhes:</b> ';
     if (resultado.detalhes) {
-      // Junta os detalhes com espaços, mas para dados queremos mostrar com '+'
-      // Vamos construir uma string mais legível
       let detalhesStr = '';
       for (let i = 0; i < resultado.detalhes.length; i++) {
         let d = resultado.detalhes[i];
@@ -1932,7 +1943,7 @@ function switchParaFicha(idx) {
   salvar();
   currentSheetIndex = idx;
   carregarFicha(idx);
-  fecharGerenciadorFichas();
+  // Não fecha o modal
 }
 
 function excluirFicha(idx) {
@@ -2041,8 +2052,9 @@ function processarArquivo(files) {
       sheets.push(novaFicha);
       salvarTodasFichas();
       alert(`Ficha importada com sucesso!`);
-      // Abre a ficha importada automaticamente
+      // Abre a ficha importada automaticamente, mantendo o modal aberto
       switchParaFicha(sheets.length - 1);
+      atualizarListaFichasModal(); // atualiza a lista para mostrar a nova ficha
     } catch(error) {
       alert('Erro ao ler o arquivo. Formato inválido.');
     }
