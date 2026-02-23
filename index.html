@@ -16,6 +16,9 @@ body.light{
  --bg1:#e6e6e6;--bg2:#cfcfcf;--panel:#f5f5f5;--text:#111;
  --border:#bbb;
 }
+body.loading {
+  opacity: 0;
+}
 @keyframes roll{
  0%{transform:rotate(0) scale(1)}
  30%{transform:rotate(25deg) scale(1.05)}
@@ -29,6 +32,7 @@ body{
  font-family:'Special Elite',monospace;
  margin:0;min-height:100vh;
  display:flex;justify-content:center;align-items:center;
+ transition: opacity 0.2s;
 }
 .wrapper{width:100%;display:flex;flex-direction:column;align-items:center}
 .app{display:grid;grid-template-columns:1fr 1fr;gap:20px;width:820px;max-width:95%}
@@ -542,7 +546,7 @@ body.light .fade-5 { color: #eee; }
 }
 </style>
 </head>
-<body>
+<body class="loading">
 <div class="wrapper">
 
 <div class="toggle">
@@ -866,6 +870,9 @@ let deslocamentoBase = 0; // armazena o valor original do deslocamento (sem pena
 let sheets = [];           // array de objetos de ficha
 let currentSheetIndex = 0; // índice da ficha atual
 
+// Tema global (não salvo por ficha)
+let temaAtual = document.body.className;
+
 const tabela = {
   1:{N:20,B:null,E:null},2:{N:19,B:20,E:null},3:{N:18,B:20,E:null},
   4:{N:17,B:19,E:null},5:{N:16,B:19,E:20},6:{N:15,B:18,E:20},
@@ -933,7 +940,7 @@ function testeSanidade() {
   salvar(); atualizarHistoricoSan();
 }
 
-// ==================== PARSER COM * E / (CORRIGIDO PARA EXIBIR DETALHES) ====================
+// ==================== PARSER COM * E / (DIVISÃO INTEIRA) ====================
 function tokenizar(expr) {
   const regex = /(\d+#?d\d+|d\d+|\d+|[+\-*/()])/gi;
   return expr.match(regex) || [];
@@ -971,10 +978,9 @@ function shuntingYard(tokens) {
   return output;
 }
 
-// Avalia um operando (número ou dado) - retorna objeto com valores e string detalhada
 function avaliarOperando(token) {
   if (/^\d+$/.test(token)) {
-    return { tipo: 'escalar', valor: parseInt(token), str: token, detalhes: token };
+    return { tipo: 'escalar', valor: parseInt(token), str: token, detalhes: [token] };
   } else if (token.includes('d')) {
     if (token.includes('#')) {
       const [qtd, dadosPart] = token.split('#');
@@ -984,12 +990,7 @@ function avaliarOperando(token) {
       for (let i = 0; i < q; i++) {
         rolagens.push(Math.floor(Math.random() * faces) + 1);
       }
-      return {
-        tipo: 'lista',
-        valores: rolagens,
-        str: `[${rolagens.join(', ')}]`,
-        detalhes: rolagens.join('+')
-      };
+      return { tipo: 'lista', valores: rolagens, str: `[${rolagens.join(', ')}]`, detalhes: [`[${rolagens.join(', ')}]`] };
     } else {
       const dIndex = token.indexOf('d');
       const qtd = parseInt(token.substring(0, dIndex) || '1');
@@ -999,37 +1000,32 @@ function avaliarOperando(token) {
         valores.push(Math.floor(Math.random() * faces) + 1);
       }
       const soma = valores.reduce((a,b) => a+b, 0);
-      return {
-        tipo: 'dados',
-        valores,
-        soma,
-        str: valores.join('+'),
-        detalhes: valores.join('+')
-      };
+      return { tipo: 'dados', valores, soma, str: valores.join('+'), detalhes: valores.map(v => v.toString()) };
     }
   } else {
     throw new Error('Token inválido: ' + token);
   }
 }
 
-// Aplica operador entre dois operandos (preserva detalhes)
 function aplicarOperador(op, a, b) {
-  // Se ambos forem escalares, retorna escalar
+  // Para construção do histórico, precisamos dos detalhes
+  let detalhesA = a.detalhes || [a.str || a.valor.toString()];
+  let detalhesB = b.detalhes || [b.str || b.valor.toString()];
+  
   if (a.tipo === 'escalar' && b.tipo === 'escalar') {
     let res;
     if (op === '+') res = a.valor + b.valor;
     else if (op === '-') res = a.valor - b.valor;
     else if (op === '*') res = a.valor * b.valor;
     else if (op === '/') res = Math.floor(a.valor / b.valor); // divisão inteira
-    return {
-      tipo: 'escalar',
-      valor: res,
-      str: res.toString(),
-      detalhes: `(${a.detalhes} ${op} ${b.detalhes})`
+    return { 
+      tipo: 'escalar', 
+      valor: res, 
+      str: `(${a.str} ${op} ${b.str})`,
+      detalhes: [`(${detalhesA.join('')} ${op} ${detalhesB.join('')})`]
     };
   }
 
-  // Se um for lista, converte o outro para lista do mesmo tamanho
   if (a.tipo === 'lista' || b.tipo === 'lista') {
     let listaA, listaB;
     if (a.tipo === 'lista') {
@@ -1041,41 +1037,43 @@ function aplicarOperador(op, a, b) {
     }
     if (listaA.length !== listaB.length) throw new Error('Listas de tamanhos diferentes');
     const resultados = [];
-    const detalhesLista = [];
+    const detalhesResult = [];
     for (let i = 0; i < listaA.length; i++) {
       let valA = listaA[i], valB = listaB[i];
-      let res;
-      if (op === '+') res = valA + valB;
-      else if (op === '-') res = valA - valB;
-      else if (op === '*') res = valA * valB;
-      else if (op === '/') res = Math.floor(valA / valB);
-      resultados.push(res);
-      detalhesLista.push(`${valA} ${op} ${valB}`);
+      if (op === '+') resultados.push(valA + valB);
+      else if (op === '-') resultados.push(valA - valB);
+      else if (op === '*') resultados.push(valA * valB);
+      else if (op === '/') resultados.push(Math.floor(valA / valB));
     }
-    return {
-      tipo: 'lista',
-      valores: resultados,
+    return { 
+      tipo: 'lista', 
+      valores: resultados, 
       str: `[${resultados.join(', ')}]`,
-      detalhes: `[${detalhesLista.join(', ')}]`
+      detalhes: [`[${resultados.join(', ')}]`]
     };
   }
 
-  // Um for dados (soma) e outro escalar
   let valA = (a.tipo === 'dados') ? a.soma : a.valor;
   let valB = (b.tipo === 'dados') ? b.soma : b.valor;
   let res;
   if (op === '+') res = valA + valB;
   else if (op === '-') res = valA - valB;
   else if (op === '*') res = valA * valB;
-  else if (op === '/') res = Math.floor(valA / valB);
+  else if (op === '/') res = Math.floor(valA / valB); // divisão inteira
 
-  let detalhesA = a.detalhes || valA.toString();
-  let detalhesB = b.detalhes || valB.toString();
-  return {
-    tipo: 'escalar',
-    valor: res,
-    str: res.toString(),
-    detalhes: `(${detalhesA} ${op} ${detalhesB})`
+  // Concatena detalhes
+  let detalhes = [];
+  detalhes.push(...detalhesA);
+  detalhes.push(op);
+  detalhes.push(...detalhesB);
+  
+  let strA = a.str || valA.toString();
+  let strB = b.str || valB.toString();
+  return { 
+    tipo: 'escalar', 
+    valor: res, 
+    str: `(${strA} ${op} ${strB})`,
+    detalhes: detalhes
   };
 }
 
@@ -1109,22 +1107,53 @@ function rolarDadoPersonalizado() {
     const rpn = shuntingYard(tokens);
     const resultado = avaliarRPN(rpn);
 
-    // Exibir resultado
     if (resultado.tipo === 'lista') {
       resultadoDiv.innerHTML = `🎲 ${input}<br>Resultados: <b>${resultado.valores.join(', ')}</b>`;
     } else {
-      resultadoDiv.innerHTML = `🎲 ${input}<br>Total: <b>${resultado.valor}</b>`;
+      const valor = resultado.valor !== undefined ? resultado.valor : resultado.soma;
+      resultadoDiv.innerHTML = `🎲 ${input}<br>Total: <b>${valor}</b>`;
     }
 
-    // Detalhes da expressão (passo a passo)
-    detalhesDiv.innerHTML = `<p><b>Detalhes:</b> ${resultado.detalhes || resultado.str}</p>`;
-
-    // Histórico com detalhes
-    let historicoStr = `${input} → `;
-    if (resultado.tipo === 'lista') {
-      historicoStr += `${resultado.detalhes} = [${resultado.valores.join(', ')}]`;
+    // Gerar detalhes passo a passo
+    let detalhesHtml = '<p><b>Detalhes:</b> ';
+    if (resultado.detalhes) {
+      // Junta os detalhes com espaços, mas para dados queremos mostrar com '+'
+      // Vamos construir uma string mais legível
+      let detalhesStr = '';
+      for (let i = 0; i < resultado.detalhes.length; i++) {
+        let d = resultado.detalhes[i];
+        if (d === '+' || d === '-' || d === '*' || d === '/') {
+          detalhesStr += ' ' + d + ' ';
+        } else {
+          detalhesStr += d;
+        }
+      }
+      detalhesHtml += detalhesStr;
     } else {
-      historicoStr += `${resultado.detalhes} = ${resultado.valor}`;
+      detalhesHtml += resultado.str || '';
+    }
+    detalhesHtml += '</p>';
+    detalhesDiv.innerHTML = detalhesHtml;
+
+    // Histórico com passo a passo
+    let historicoStr = `${input} → `;
+    if (resultado.detalhes) {
+      let detalhesStr = '';
+      for (let i = 0; i < resultado.detalhes.length; i++) {
+        let d = resultado.detalhes[i];
+        if (d === '+' || d === '-' || d === '*' || d === '/') {
+          detalhesStr += ' ' + d + ' ';
+        } else {
+          detalhesStr += d;
+        }
+      }
+      historicoStr += detalhesStr + ' = ';
+    }
+    if (resultado.tipo === 'lista') {
+      historicoStr += `[${resultado.valores.join(', ')}]`;
+    } else {
+      const valor = resultado.valor !== undefined ? resultado.valor : resultado.soma;
+      historicoStr += valor;
     }
     historicoDados.unshift(`🎲 ${historicoStr}`);
     if (historicoDados.length > 6) historicoDados.pop();
@@ -1138,7 +1167,7 @@ function rolarDadoPersonalizado() {
   }
 }
 
-// ==================== FUNÇÃO PARA RECALCULAR PESO TOTAL ====================
+// ==================== FUNÇÃO PARA RECALCULAR PESO TOTAL E VERIFICAR LIMITE ====================
 function recalcularPesoTotal() {
   // Peso dos itens
   const textoItens = document.getElementById('itens').value;
@@ -1147,7 +1176,7 @@ function recalcularPesoTotal() {
   let somaItens = 0;
   while ((match = regex.exec(textoItens)) !== null) {
     let valor = parseFloat(match[1]);
-    if (valor > 0) somaItens += valor;
+    if (valor > 0) somaItens += valor; // ignora negativos
   }
 
   // Peso das armas
@@ -1523,7 +1552,8 @@ function rolarDanoArma(index) {
   const formula = arma.danoFormula;
   
   try {
-    const resultado = processarFormulaDano(formula);
+    // Reutiliza o mesmo parser, mas precisamos de uma versão que retorne detalhes
+    const resultado = avaliarFormulaDanoDetalhado(formula);
     
     let html = `<b>${arma.nome}</b> — Dano: ${formula}<br>`;
     html += `Resultado: <b>${resultado.total}</b>`;
@@ -1532,7 +1562,12 @@ function rolarDanoArma(index) {
     }
     resultadoDiv.innerHTML = html;
 
-    let historicoEntry = `🔫 ${arma.nome}: ${formula} → ${resultado.detalhes} = ${resultado.total}`;
+    // Histórico com passo a passo
+    let historicoEntry = `🔫 ${arma.nome}: ${formula} → `;
+    if (resultado.detalhes) {
+      historicoEntry += resultado.detalhes + ' = ';
+    }
+    historicoEntry += resultado.total;
     if (arma.tipo === 'fogo') {
       historicoEntry += ` | Munição: ${arma.municaoAtual-1}/${arma.capacidade}`;
     }
@@ -1551,7 +1586,7 @@ function rolarDanoArma(index) {
   }
 }
 
-function processarFormulaDano(formula) {
+function avaliarFormulaDanoDetalhado(formula) {
   formula = formula.replace(/\s+/g, '').toLowerCase();
   const tokenRegex = /(\d+d\d+|d\d+|\d+|[+-])/g;
   const tokens = formula.match(tokenRegex);
@@ -1578,40 +1613,34 @@ function processarFormulaDano(formula) {
         valores.push(Math.floor(Math.random() * faces) + 1);
       }
       const soma = valores.reduce((a,b) => a+b, 0);
-      return {
-        tipo: 'dados',
-        valores,
-        soma,
-        str: valores.join('+'),
-        detalhes: valores.join('+')
-      };
+      return { tipo: 'dados', valores, soma, str: valores.join('+'), detalhes: valores.join('+') };
     } else if (/^d\d+$/.test(op)) {
       const faces = parseInt(op.substring(1));
       const valor = Math.floor(Math.random() * faces) + 1;
-      return {
-        tipo: 'dados',
-        valores: [valor],
-        soma: valor,
-        str: valor.toString(),
-        detalhes: valor.toString()
-      };
+      return { tipo: 'dados', valores: [valor], soma: valor, str: valor.toString(), detalhes: valor.toString() };
     } else {
       throw new Error('Operando inválido');
     }
   });
 
-  let total = resultados[0].soma !== undefined ? resultados[0].soma : resultados[0].valor;
+  // Construir detalhes passo a passo
   let detalhesStr = resultados[0].detalhes;
+  let total = resultados[0].soma !== undefined ? resultados[0].soma : resultados[0].valor;
   for (let i = 0; i < operadores.length; i++) {
     const op = operadores[i];
     const prox = resultados[i+1];
     const val = prox.soma !== undefined ? prox.soma : prox.valor;
+    detalhesStr += ` ${op} ${prox.detalhes}`;
     if (op === '+') total += val;
     else total -= val;
-    detalhesStr += ` ${op} ${prox.detalhes}`;
   }
 
   return { total, detalhes: detalhesStr };
+}
+
+function processarFormulaDano(formula) {
+  const resultado = avaliarFormulaDanoDetalhado(formula);
+  return { total: resultado.total, detalhes: resultado.detalhes };
 }
 
 function atualizarHistoricoArmas() {
@@ -1628,16 +1657,17 @@ function atualizarHistoricoArmas() {
 
 // ==================== FUNÇÕES PARA MÚLTIPLAS FICHAS ====================
 function salvarTodasFichas() {
-  // Remove o tema de cada ficha antes de salvar
-  const sheetsSemTema = sheets.map(f => {
-    const nova = { ...f };
-    delete nova.tema;
-    return nova;
-  });
-  localStorage.setItem('noir_rpg_sheets', JSON.stringify({ sheets: sheetsSemTema, current: currentSheetIndex }));
+  // Salva o tema global separadamente
+  localStorage.setItem('noir_rpg_theme', document.body.className);
+  localStorage.setItem('noir_rpg_sheets', JSON.stringify({ sheets, current: currentSheetIndex }));
 }
 
 function carregarTodasFichas() {
+  // Carrega o tema global
+  const temaSalvo = localStorage.getItem('noir_rpg_theme');
+  if (temaSalvo) {
+    document.body.className = temaSalvo;
+  }
   const data = JSON.parse(localStorage.getItem('noir_rpg_sheets') || '{"sheets":[],"current":0}');
   sheets = data.sheets;
   currentSheetIndex = data.current;
@@ -1646,6 +1676,8 @@ function carregarTodasFichas() {
     currentSheetIndex = 0;
   }
   carregarFicha(currentSheetIndex);
+  // Remove a classe loading para mostrar a página
+  document.body.classList.remove('loading');
 }
 
 function criarFichaPadrao() {
@@ -1656,6 +1688,7 @@ function criarFichaPadrao() {
     dinheiro:"", traumasPerm:"", traumasTemp:"", pessoasImportantes:"", talentos:"",
     itens:"", rituais:"", anotacoes:"",
     historico:[], historicoSan:[], historicoDados:[], historicoArmas:[],
+    // tema removido
     nomePersonagem:"", apelido:"", idade:"", emprego:"", cidadeNatal:"", cidadeResidente:"",
     tamanho:"", aparencia:"", deslocamento:"",
     caracteristicas:"", personalidade:"", historia:"",
@@ -1673,6 +1706,7 @@ function carregarFicha(index) {
   san = ficha.san || 0;
   descanso = ficha.descanso || 0;
   poder = ficha.poder || 0;
+  // Não carregar peso salvo, será recalculado
   defesa = ficha.defesa || 0;
   exposicao = ficha.exposicao || 0;
   deslocamentoBase = ficha.deslocamentoBase || 0;
@@ -1694,6 +1728,7 @@ function carregarFicha(index) {
   historicoSan = ficha.historicoSan || [];
   historicoDados = ficha.historicoDados || [];
   historicoArmas = ficha.historicoArmas || [];
+  // Não carregar tema da ficha
   document.getElementById('nomePersonagem').value = ficha.nomePersonagem || "";
   document.getElementById('apelidoPersonagem').value = ficha.apelido || "";
   document.getElementById('idadePersonagem').value = ficha.idade || "";
@@ -1722,7 +1757,7 @@ function carregarFicha(index) {
   ordenarAtributos();
   renderizarAtributos();
   renderizarArmas();
-  recalcularPesoTotal();
+  recalcularPesoTotal(); // recalcula peso a partir dos itens e armas, aplica limite
   aplicarPenalidadeDeslocamento();
   atualizarHistorico();
   atualizarHistoricoSan();
@@ -1740,6 +1775,7 @@ function salvar() {
   ficha.san = san;
   ficha.descanso = descanso;
   ficha.poder = poder;
+  // Não salvamos peso, será recalculado no carregamento
   ficha.defesa = defesa;
   ficha.exposicao = exposicao;
   ficha.deslocamentoBase = deslocamentoBase;
@@ -1759,6 +1795,7 @@ function salvar() {
   ficha.historicoSan = historicoSan;
   ficha.historicoDados = historicoDados;
   ficha.historicoArmas = historicoArmas;
+  // Não salvamos tema
   ficha.nomePersonagem = document.getElementById('nomePersonagem').value;
   ficha.apelido = document.getElementById('apelidoPersonagem').value;
   ficha.idade = document.getElementById('idadePersonagem').value;
@@ -1827,7 +1864,7 @@ function exportarFichaEspecifica(idx) {
       sanidade:{ atual:ficha.san || 0, max:ficha.sanMax || 0 },
       descanso: ficha.descanso || 0,
       poder:{ atual:ficha.poder || 0, max:ficha.poderMax || 0 },
-      peso:{ atual:0, max:ficha.pesoMax || 0 },
+      peso:{ atual:0, max:ficha.pesoMax || 0 }, // peso não é salvo
       defesa: ficha.defesa || 0,
       exposicaoParanormal: ficha.exposicao || 0
     },
@@ -1874,6 +1911,7 @@ function exportarFichaEspecifica(idx) {
       dadosPersonalizados: ficha.historicoDados || [],
       danoArmas: ficha.historicoArmas || []
     }
+    // tema removido
   };
 
   const jsonString = JSON.stringify(dadosParaExportar, null, 2);
@@ -1929,7 +1967,91 @@ function removerFoto() {
   salvar();
 }
 
-// ==================== CÁLCULO DE DINHEIRO COM * E / ====================
+// ==================== EXPORTAÇÃO/IMPORTAÇÃO JSON ====================
+function exportarDados() {
+  // Mantida para compatibilidade, mas não é mais usada
+}
+
+function importarDados() { document.getElementById('fileInput').click(); }
+function processarArquivo(files) {
+  if(files.length===0) return;
+  const file = files[0];
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const dados = JSON.parse(e.target.result);
+      const novaFicha = criarFichaPadrao();
+      if (dados.meta && dados.meta.nomePersonagem) novaFicha.nomePersonagem = dados.meta.nomePersonagem;
+      if (dados.status) {
+        novaFicha.vida = dados.status.vida.atual || 0;
+        novaFicha.vidaMax = dados.status.vida.max || 0;
+        novaFicha.san = dados.status.sanidade.atual || 0;
+        novaFicha.sanMax = dados.status.sanidade.max || 0;
+        novaFicha.descanso = dados.status.descanso || 0;
+        novaFicha.poder = dados.status.poder.atual || 0;
+        novaFicha.poderMax = dados.status.poder.max || 0;
+        novaFicha.pesoMax = dados.status.peso.max || 0;
+        novaFicha.defesa = dados.status.defesa || 0;
+        novaFicha.exposicao = dados.status.exposicaoParanormal || 0;
+      }
+      if (dados.estado) {
+        novaFicha.checkFerido = dados.estado.gravementeFerido || false;
+        novaFicha.checkCaido = dados.estado.caido || false;
+        if (dados.estado.marcadoresVida) {
+          novaFicha.checkVida1 = dados.estado.marcadoresVida.marcador1 || false;
+          novaFicha.checkVida2 = dados.estado.marcadoresVida.marcador2 || false;
+          novaFicha.checkVida3 = dados.estado.marcadoresVida.marcador3 || false;
+        }
+      }
+      if (dados.recursos) {
+        novaFicha.dinheiro = dados.recursos.dinheiro || "";
+        novaFicha.traumasPerm = dados.recursos.traumasPerm || "";
+        novaFicha.traumasTemp = dados.recursos.traumasTemp || "";
+        novaFicha.pessoasImportantes = dados.recursos.pessoasImportantes || "";
+        novaFicha.talentos = dados.recursos.talentos || "";
+        novaFicha.itens = dados.recursos.itens || "";
+        novaFicha.rituais = dados.recursos.rituais || "";
+        novaFicha.anotacoes = dados.recursos.anotacoes || "";
+      }
+      if (dados.armas) novaFicha.armas = dados.armas;
+      if (dados.fichaPersonagem) {
+        novaFicha.apelido = dados.fichaPersonagem.apelido || "";
+        novaFicha.idade = dados.fichaPersonagem.idade || "";
+        novaFicha.emprego = dados.fichaPersonagem.emprego || "";
+        novaFicha.cidadeNatal = dados.fichaPersonagem.cidadeNatal || "";
+        novaFicha.cidadeResidente = dados.fichaPersonagem.cidadeResidente || "";
+        novaFicha.tamanho = dados.fichaPersonagem.tamanho || "";
+        novaFicha.aparencia = dados.fichaPersonagem.aparencia || "";
+        novaFicha.deslocamento = dados.fichaPersonagem.deslocamento || "";
+        novaFicha.deslocamentoBase = dados.fichaPersonagem.deslocamentoBase || parseFloat(dados.fichaPersonagem.deslocamento) || 0;
+        novaFicha.caracteristicas = dados.fichaPersonagem.caracteristicas || "";
+        novaFicha.personalidade = dados.fichaPersonagem.personalidade || "";
+        novaFicha.historia = dados.fichaPersonagem.historia || "";
+        novaFicha.imagem = dados.fichaPersonagem.imagem || null;
+      }
+      if (dados.atributosPersonalizados) novaFicha.atributosPersonalizados = dados.atributosPersonalizados;
+      if (dados.historicos) {
+        novaFicha.historico = dados.historicos.testesAtributo || [];
+        novaFicha.historicoSan = dados.historicos.testesSanidade || [];
+        novaFicha.historicoDados = dados.historicos.dadosPersonalizados || [];
+        novaFicha.historicoArmas = dados.historicos.danoArmas || [];
+      }
+      // tema ignorado
+
+      sheets.push(novaFicha);
+      salvarTodasFichas();
+      alert(`Ficha importada com sucesso!`);
+      // Abre a ficha importada automaticamente
+      switchParaFicha(sheets.length - 1);
+    } catch(error) {
+      alert('Erro ao ler o arquivo. Formato inválido.');
+    }
+  };
+  reader.onerror = () => alert('Erro ao ler arquivo.');
+  reader.readAsText(file);
+}
+
+// ==================== UTILITÁRIOS ====================
 function calcularDinheiro() {
   const input = document.getElementById('dinheiro');
   const valor = input.value.trim();
@@ -1937,24 +2059,47 @@ function calcularDinheiro() {
   if(!valor) return;
   
   try {
-    // Remove espaços e avalia a expressão com * e /
-    const expressao = valor.replace(/\s+/g, '');
-    // Usar Function para avaliar com operadores matemáticos
-    // Precisamos garantir que a divisão seja inteira
-    const resultado = new Function('return ' + expressao)();
-    if (isNaN(resultado)) throw new Error('Expressão inválida');
-    // Arredonda para inteiro (divisão inteira já foi tratada na expressão)
-    input.value = Math.floor(resultado);
+    // Permite números decimais, operadores + - * /
+    const validInput = valor.replace(/\s+/g, '');
+    if(!/^[0-9+\-*/.\s]+$/.test(validInput)) {
+      // Se não for uma expressão válida, tenta converter para número
+      const num = parseFloat(valor);
+      if (!isNaN(num)) {
+        input.value = num;
+        salvar();
+      }
+      return;
+    }
+    
+    // Usa eval de forma segura? Melhor implementar um parser simples
+    // Vamos usar uma função segura para avaliar a expressão
+    try {
+      // Função eval segura? Podemos usar Function para criar um escopo
+      const result = new Function('return ' + validInput)();
+      if (!isNaN(result) && isFinite(result)) {
+        input.value = result;
+      } else {
+        // Se não for número, mantém o original
+      }
+    } catch (e) {
+      // Se der erro, tenta como número simples
+      const num = parseFloat(valor);
+      if (!isNaN(num)) input.value = num;
+    }
     salvar();
+    
   } catch(e) {
-    // Se falhar, tenta como número simples
-    const num = parseInt(valor) || 0;
-    input.value = num;
-    salvar();
+    const num = parseFloat(valor);
+    if (!isNaN(num)) {
+      input.value = num;
+      salvar();
+    }
   }
 }
-
-function toggleTema() { document.body.classList.toggle("light"); salvar(); }
+function toggleTema() { 
+  document.body.classList.toggle("light"); 
+  salvar(); // salva o tema global
+}
 
 // ==================== EVENTOS ====================
 document.getElementById('fotoInput').addEventListener('change', function(e) {
@@ -2017,6 +2162,7 @@ document.getElementById('poderMax').onchange = function() {
 };
 document.getElementById('pesoMax').onchange = function() {
   this.value = Math.max(0, +this.value||0);
+  // Recalcula peso para aplicar possível limite
   recalcularPesoTotal();
   salvar(); 
 };
@@ -2054,11 +2200,8 @@ document.addEventListener('click', function initAudioOnClick() {
   document.removeEventListener('click', initAudioOnClick);
 });
 
-// Inicializa com um pequeno delay para evitar piscada
 window.addEventListener('load', function() {
-  setTimeout(() => {
-    carregarTodasFichas();
-  }, 10);
+  carregarTodasFichas();
 });
 </script>
 </body>
