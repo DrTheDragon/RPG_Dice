@@ -246,6 +246,23 @@ body.light .fade-5 { color: #eee; }
  .atributo-extra, .recurso-item, .peso-container{text-align:center;}
  .roll-details{font-size:13px; max-height:80px; overflow:hidden;}
  .resultado{min-height:65px;}
+
+ /* Melhorias para armas no mobile */
+ .arma-detalhes {
+   grid-template-columns: 1fr !important;
+   gap: 5px !important;
+ }
+ .arma-acoes {
+   flex-direction: column !important;
+ }
+ .arma-acoes button {
+   width: 100% !important;
+   margin: 2px 0 !important;
+ }
+ .arma-municao {
+   flex-wrap: wrap;
+   justify-content: center;
+ }
 }
 @media(max-width:480px){
  .controls{flex-direction:row; gap:4px;}
@@ -629,7 +646,7 @@ body.light .fade-5 { color: #eee; }
     </div>
     <div class="section">
       <h3>🎯 Dados Personalizados</h3>
-      <p style="font-size:12px; margin-bottom:10px;">Ex: "2d6", "1d20+4", "2#d20", "2#d20+2#d3", "2d6-1d4"</p>
+      <p style="font-size:12px; margin-bottom:10px;">Ex: "2d6", "1d20+4", "2#d20", "2#d20+2#d3", "2d6-1d4", " (2d6+4)*3", "10/2d4"</p>
       <input id="dadoPersonalizado" type="text" placeholder="Digite a fórmula">
       <button onclick="rolarDadoPersonalizado()">ROLAR DADOS</button>
       <div class="resultado" id="resDadoPersonalizado"></div>
@@ -832,8 +849,148 @@ function testeSanidade() {
   salvar(); atualizarHistoricoSan();
 }
 
-// FUNÇÃO PARA DADOS PERSONALIZADOS (COM SUPORTE A +, - E COMBINAÇÃO DE #)
-// GUARDA OS VALORES INDIVIDUAIS DE CADA DADO NO HISTÓRICO
+// ==================== NOVO PARSER COM * E / ====================
+// Função para tokenizar a expressão
+function tokenizar(expr) {
+  const regex = /(\d+#?d\d+|\d+|[+\-*/()])/g;
+  return expr.match(regex) || [];
+}
+
+// Verifica precedência
+function precedencia(op) {
+  if (op === '+' || op === '-') return 1;
+  if (op === '*' || op === '/') return 2;
+  return 0;
+}
+
+// Shunting-yard algorithm para converter infix em RPN
+function shuntingYard(tokens) {
+  const output = [];
+  const stack = [];
+  for (let token of tokens) {
+    if (token === '(') {
+      stack.push(token);
+    } else if (token === ')') {
+      while (stack.length && stack[stack.length-1] !== '(') {
+        output.push(stack.pop());
+      }
+      stack.pop(); // remove '('
+    } else if (['+', '-', '*', '/'].includes(token)) {
+      while (stack.length && precedencia(stack[stack.length-1]) >= precedencia(token)) {
+        output.push(stack.pop());
+      }
+      stack.push(token);
+    } else {
+      // É um operando (número ou dado)
+      output.push(token);
+    }
+  }
+  while (stack.length) {
+    output.push(stack.pop());
+  }
+  return output;
+}
+
+// Avalia um operando (número ou dado) - reutiliza a função existente adaptada
+function avaliarOperando(token) {
+  if (/^\d+$/.test(token)) {
+    return { tipo: 'escalar', valor: parseInt(token), str: token };
+  } else if (token.includes('d')) {
+    // Pode ter #
+    if (token.includes('#')) {
+      const [qtd, dadosPart] = token.split('#');
+      const faces = parseInt(dadosPart.substring(1));
+      const q = parseInt(qtd);
+      const rolagens = [];
+      for (let i = 0; i < q; i++) {
+        rolagens.push(Math.floor(Math.random() * faces) + 1);
+      }
+      return { tipo: 'lista', valores: rolagens, str: `[${rolagens.join(', ')}]` };
+    } else {
+      const dIndex = token.indexOf('d');
+      const qtd = parseInt(token.substring(0, dIndex) || '1');
+      const faces = parseInt(token.substring(dIndex + 1));
+      const valores = [];
+      for (let i = 0; i < qtd; i++) {
+        valores.push(Math.floor(Math.random() * faces) + 1);
+      }
+      const soma = valores.reduce((a,b) => a+b, 0);
+      return { tipo: 'dados', valores, soma, str: valores.join('+') };
+    }
+  } else {
+    throw new Error('Token inválido: ' + token);
+  }
+}
+
+// Aplica operador entre dois operandos (podem ser escalares, dados ou listas)
+function aplicarOperador(op, a, b) {
+  // Se ambos forem escalares, retorna escalar
+  if (a.tipo === 'escalar' && b.tipo === 'escalar') {
+    let res;
+    if (op === '+') res = a.valor + b.valor;
+    else if (op === '-') res = a.valor - b.valor;
+    else if (op === '*') res = a.valor * b.valor;
+    else if (op === '/') res = a.valor / b.valor;
+    return { tipo: 'escalar', valor: res, str: res.toString() };
+  }
+
+  // Se um for lista, converte o outro para lista do mesmo tamanho
+  if (a.tipo === 'lista' || b.tipo === 'lista') {
+    let listaA, listaB;
+    if (a.tipo === 'lista') {
+      listaA = a.valores;
+      listaB = (b.tipo === 'lista') ? b.valores : Array(a.valores.length).fill(b.valor);
+    } else {
+      listaB = b.valores;
+      listaA = Array(b.valores.length).fill(a.valor);
+    }
+    if (listaA.length !== listaB.length) throw new Error('Listas de tamanhos diferentes');
+    const resultados = [];
+    for (let i = 0; i < listaA.length; i++) {
+      let valA = listaA[i], valB = listaB[i];
+      if (op === '+') resultados.push(valA + valB);
+      else if (op === '-') resultados.push(valA - valB);
+      else if (op === '*') resultados.push(valA * valB);
+      else if (op === '/') resultados.push(valA / valB);
+    }
+    return { tipo: 'lista', valores: resultados, str: `[${resultados.join(', ')}]` };
+  }
+
+  // Se um for dados (soma) e outro escalar, trata como escalar com a soma
+  let valA = (a.tipo === 'dados') ? a.soma : a.valor;
+  let valB = (b.tipo === 'dados') ? b.soma : b.valor;
+  let res;
+  if (op === '+') res = valA + valB;
+  else if (op === '-') res = valA - valB;
+  else if (op === '*') res = valA * valB;
+  else if (op === '/') res = valA / valB;
+
+  // Para manter o histórico, podemos tentar preservar os detalhes
+  let strA = a.str || valA.toString();
+  let strB = b.str || valB.toString();
+  return { tipo: 'escalar', valor: res, str: `(${strA} ${op} ${strB})` };
+}
+
+// Avalia uma expressão RPN
+function avaliarRPN(rpn) {
+  const pilha = [];
+  for (let token of rpn) {
+    if (['+', '-', '*', '/'].includes(token)) {
+      const b = pilha.pop();
+      const a = pilha.pop();
+      if (a === undefined || b === undefined) throw new Error('Expressão inválida');
+      const res = aplicarOperador(token, a, b);
+      pilha.push(res);
+    } else {
+      // operando
+      pilha.push(avaliarOperando(token));
+    }
+  }
+  if (pilha.length !== 1) throw new Error('Expressão inválida');
+  return pilha[0];
+}
+
+// Função principal de rolagem personalizada (substitui a anterior)
 function rolarDadoPersonalizado() {
   somDado();
   let input = document.getElementById('dadoPersonalizado').value.trim();
@@ -842,195 +999,51 @@ function rolarDadoPersonalizado() {
   if (!input) { resultadoDiv.innerHTML = 'Digite uma fórmula'; detalhesDiv.innerHTML = ''; return; }
 
   try {
-    // Remove espaços e converte para minúsculas
-    input = input.replace(/\s+/g, '').toLowerCase();
-    
-    // Tokeniza a expressão: captura números, expressões de dados e operadores +/-
-    const tokenRegex = /(\d+#?d\d+|\d+|[+-])/g;
-    const tokens = input.match(tokenRegex);
-    if (!tokens) throw new Error('Expressão inválida');
+    // Remove espaços
+    input = input.replace(/\s+/g, '');
+    const tokens = tokenizar(input);
+    const rpn = shuntingYard(tokens);
+    const resultado = avaliarRPN(rpn);
 
-    // Separa operandos e operadores
-    const operadores = [];
-    const operandos = [];
-    for (let token of tokens) {
-      if (token === '+' || token === '-') {
-        operadores.push(token);
-      } else {
-        operandos.push(token);
-      }
-    }
-    if (operandos.length === 0) throw new Error('Nenhum operando');
-    if (operadores.length !== operandos.length - 1) throw new Error('Número de operandos e operadores incompatível');
-
-    // Avalia cada operando (pode ser número ou expressão de dados)
-    const resultados = operandos.map(op => avaliarOperandoDetalhado(op));
-    
-    // Verifica se há listas (resultados do tipo 'lista') ou dados individuais
-    const temLista = resultados.some(r => r.tipo === 'lista');
-    
-    // Se houver listas, todos os operandos devem ser convertidos para listas de mesmo tamanho
-    let tamanhoLista = null;
-    if (temLista) {
-      // Descobre o tamanho da primeira lista (assumimos que todas têm o mesmo tamanho)
-      for (let r of resultados) {
-        if (r.tipo === 'lista') {
-          if (tamanhoLista === null) tamanhoLista = r.valores.length;
-          else if (r.valores.length !== tamanhoLista) throw new Error('Listas de tamanhos diferentes');
-        }
-      }
-      // Converte operandos escalares e dados para lista repetindo o valor
-      const resultadosConvertidos = resultados.map(r => {
-        if (r.tipo === 'escalar') {
-          return Array(tamanhoLista).fill(r.valor);
-        } else if (r.tipo === 'dados') {
-          // Para dados, usamos a soma como valor para cálculos (mas guardamos os valores)
-          return Array(tamanhoLista).fill(r.soma);
-        } else { // lista
-          return r.valores;
-        }
-      });
-      
-      // Combina as listas elemento a elemento com os operadores
-      const listaFinal = [];
-      for (let i = 0; i < tamanhoLista; i++) {
-        let valor = resultadosConvertidos[0][i];
-        for (let j = 0; j < operadores.length; j++) {
-          const op = operadores[j];
-          const prox = resultadosConvertidos[j+1][i];
-          if (op === '+') valor += prox;
-          else if (op === '-') valor -= prox;
-        }
-        listaFinal.push(valor);
-      }
-      
-      // Exibe resultado
-      resultadoDiv.innerHTML = `🎲 ${input}<br>Resultados: <b>${listaFinal.join(', ')}</b>`;
-      
-      // Gera detalhes das rolagens individuais
-      let detalhesHtml = '<p><b>Detalhes:</b></p>';
-      operandos.forEach((op, idx) => {
-        const r = resultados[idx];
-        if (r.tipo === 'lista') {
-          detalhesHtml += `${op}: [${r.valores.join(', ')}]<br>`;
-        } else if (r.tipo === 'dados') {
-          detalhesHtml += `${op}: ${r.valores.join(' + ')} = ${r.soma}<br>`;
-        } else {
-          detalhesHtml += `${op}: ${r.valor}<br>`;
-        }
-      });
-      detalhesDiv.innerHTML = detalhesHtml;
-      
-      // Constrói entrada para o histórico com valores individuais
-      let historicoStr = `${input} → `;
-      operandos.forEach((op, idx) => {
-        const r = resultados[idx];
-        if (r.tipo === 'lista') {
-          historicoStr += `[${r.valores.join(', ')}]`;
-        } else if (r.tipo === 'dados') {
-          historicoStr += `${r.valores.join('+')}`;
-        } else {
-          historicoStr += r.valor;
-        }
-        if (idx < operadores.length) historicoStr += ` ${operadores[idx]} `;
-      });
-      historicoStr += ` = [${listaFinal.join(', ')}]`;
-      historicoDados.unshift(`🎲 ${historicoStr}`);
-      
+    // Exibir resultado
+    if (resultado.tipo === 'lista') {
+      resultadoDiv.innerHTML = `🎲 ${input}<br>Resultados: <b>${resultado.valores.join(', ')}</b>`;
     } else {
-      // Todos são escalares ou dados individuais (sem #)
-      // Primeiro, calcula o total usando as somas
-      let total = (resultados[0].tipo === 'dados' ? resultados[0].soma : resultados[0].valor);
-      for (let j = 0; j < operadores.length; j++) {
-        const op = operadores[j];
-        const prox = resultados[j+1];
-        const val = (prox.tipo === 'dados' ? prox.soma : prox.valor);
-        if (op === '+') total += val;
-        else if (op === '-') total -= val;
-      }
-      resultadoDiv.innerHTML = `🎲 ${input}<br>Total: <b>${total}</b>`;
-      
-      let detalhesHtml = '<p><b>Detalhes:</b></p>';
-      operandos.forEach((op, idx) => {
-        const r = resultados[idx];
-        if (r.tipo === 'dados') {
-          detalhesHtml += `${op}: ${r.valores.join(' + ')} = ${r.soma}<br>`;
-        } else {
-          detalhesHtml += `${op}: ${r.valor}<br>`;
-        }
-      });
-      detalhesDiv.innerHTML = detalhesHtml;
-      
-      // Constrói entrada para o histórico com valores individuais
-      let historicoStr = `${input} → `;
-      operandos.forEach((op, idx) => {
-        const r = resultados[idx];
-        if (r.tipo === 'dados') {
-          historicoStr += `${r.valores.join('+')}`;
-        } else {
-          historicoStr += r.valor;
-        }
-        if (idx < operadores.length) historicoStr += ` ${operadores[idx]} `;
-      });
-      historicoStr += ` = ${total}`;
-      historicoDados.unshift(`🎲 ${historicoStr}`);
+      resultadoDiv.innerHTML = `🎲 ${input}<br>Total: <b>${resultado.valor}</b>`;
     }
-    
+
+    // Gerar detalhes
+    let detalhesHtml = '<p><b>Detalhes:</b></p>';
+    // Reavaliar cada token para mostrar os valores individuais (podemos refazer a avaliação com impressão)
+    // Para simplificar, usaremos a mesma lógica mas guardando os strings
+    const tokensDetalhes = tokens.map(t => {
+      if (['+','-','*','/','(',')'].includes(t)) return t;
+      else {
+        const val = avaliarOperando(t);
+        return val.str || (val.valor !== undefined ? val.valor.toString() : '?');
+      }
+    });
+    detalhesHtml += tokensDetalhes.join(' ');
+    detalhesDiv.innerHTML = detalhesHtml;
+
+    // Histórico
+    let historicoStr = `${input} → `;
+    if (resultado.tipo === 'lista') {
+      historicoStr += `[${resultado.valores.join(', ')}]`;
+    } else {
+      historicoStr += resultado.valor;
+    }
+    historicoDados.unshift(`🎲 ${historicoStr}`);
     if (historicoDados.length > 6) historicoDados.pop();
+
     salvar();
     atualizarHistoricoDados();
-    
-  } catch (e) {
-    resultadoDiv.innerHTML = 'Formato inválido. Use expressões como "2d6", "1d20+4", "2#d20", "2#d20+2#d3", "2d6-1d4".';
-    detalhesDiv.innerHTML = '';
-  }
-}
 
-// Avalia um token que pode ser um número ou uma expressão de dados (ex: "2d6", "2#d20")
-// Agora retorna um objeto com tipo e, se for dados, guarda os valores individuais
-function avaliarOperandoDetalhado(token) {
-  // Se for apenas número
-  if (/^\d+$/.test(token)) {
-    return { tipo: 'escalar', valor: parseInt(token) };
+  } catch (e) {
+    resultadoDiv.innerHTML = 'Formato inválido. Use expressões como "2d6", "1d20+4", "2#d20", "(2d6+4)*3", "10/2d4".';
+    detalhesDiv.innerHTML = '';
+    console.error(e);
   }
-  
-  // Expressão com dados
-  if (token.includes('d')) {
-    // Verifica se tem #
-    if (token.includes('#')) {
-      // Formato: qtd#dfaces
-      const partes = token.split('#');
-      if (partes.length !== 2) throw new Error('Formato # inválido');
-      const qtd = parseInt(partes[0]);
-      const dadosPart = partes[1];
-      if (!dadosPart.startsWith('d')) throw new Error('Esperado d após #');
-      const faces = parseInt(dadosPart.substring(1));
-      if (isNaN(qtd) || qtd <= 0 || isNaN(faces) || faces <= 0) throw new Error('Valores inválidos');
-      
-      const rolagens = [];
-      for (let i = 0; i < qtd; i++) {
-        rolagens.push(Math.floor(Math.random() * faces) + 1);
-      }
-      return { tipo: 'lista', valores: rolagens };
-    } else {
-      // Formato: qtddfaces ou dfaces (qtd=1 implícito)
-      const dIndex = token.indexOf('d');
-      const qtdStr = token.substring(0, dIndex) || '1';
-      const facesStr = token.substring(dIndex + 1);
-      const qtd = parseInt(qtdStr);
-      const faces = parseInt(facesStr);
-      if (isNaN(qtd) || qtd <= 0 || isNaN(faces) || faces <= 0) throw new Error('Valores inválidos');
-      
-      const valores = [];
-      for (let i = 0; i < qtd; i++) {
-        valores.push(Math.floor(Math.random() * faces) + 1);
-      }
-      const soma = valores.reduce((a,b) => a+b, 0);
-      return { tipo: 'dados', valores, soma };
-    }
-  }
-  
-  throw new Error('Token não reconhecido');
 }
 
 // ==================== STATUS (com novas regras de descanso e peso) ====================
