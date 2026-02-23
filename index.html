@@ -1103,6 +1103,26 @@ function rolarDadoPersonalizado() {
   }
 }
 
+// ==================== FUNÇÃO PARA RECALCULAR PESO TOTAL (ITENS + ARMAS) ====================
+function recalcularPesoTotal() {
+  // Peso dos itens
+  const textoItens = document.getElementById('itens').value;
+  const regex = /\([pP]:\s*([0-9]*\.?[0-9]+)\)/g;
+  let match;
+  let somaItens = 0;
+  while ((match = regex.exec(textoItens)) !== null) {
+    let valor = parseFloat(match[1]);
+    if (valor > 0) somaItens += valor; // ignora negativos
+  }
+
+  // Peso das armas
+  let somaArmas = armas.reduce((acc, arma) => acc + (arma.peso || 0), 0);
+
+  peso = somaItens + somaArmas;
+  salvar();
+  atualizar();
+}
+
 // ==================== STATUS ====================
 function atualizar() {
   document.getElementById('vidaAtual').textContent = vida;
@@ -1153,26 +1173,6 @@ function verificarDescanso() {
   } else {
     avisoDiv.innerHTML = '';
   }
-}
-
-// ==================== EXTRAIR PESO DOS ITENS (valores negativos ignorados) ====================
-function extrairPesoDosItens() {
-  const texto = document.getElementById('itens').value;
-  const regex = /\([pP]:\s*([0-9]*\.?[0-9]+)\)/g;
-  let match;
-  let soma = 0;
-  while ((match = regex.exec(texto)) !== null) {
-    let valor = parseFloat(match[1]);
-    if (valor > 0) soma += valor;
-  }
-  let max = parseFloat(document.getElementById('pesoMax').value) || 0;
-  if (max > 0 && soma > max * 1.5) {
-    // Apenas avisa, não trunca
-    alert("Atenção: o peso dos itens ultrapassa 150% da capacidade. Considere remover alguns itens.");
-  }
-  peso = soma;
-  salvar();
-  atualizar();
 }
 
 // ==================== REGRAS DE PESO E DESLOCAMENTO ====================
@@ -1383,10 +1383,11 @@ function adicionarArma() {
   if (tipo === 'fogo' && capacidade <= 0) { alert('Capacidade deve ser maior que zero para arma de fogo.'); return; }
   if (pesoArma < 0) { alert('Peso não pode ser negativo.'); return; }
 
+  // Verificar se o peso total não ultrapassa 150% (apenas aviso)
   let pesoMax = parseFloat(document.getElementById('pesoMax').value) || 0;
-  if (pesoMax > 0 && peso + pesoArma > pesoMax * 1.5) {
-    alert("Essa arma é pesada demais para você carregar agora (ultrapassaria 150% da capacidade).");
-    return;
+  let pesoFuturo = peso + pesoArma; // peso atual + nova arma
+  if (pesoMax > 0 && pesoFuturo > pesoMax * 1.5) {
+    alert("Atenção: essa arma fará você ultrapassar 150% da capacidade. Considere remover algo.");
   }
 
   const novaArma = {
@@ -1399,11 +1400,10 @@ function adicionarArma() {
     peso: pesoArma
   };
   armas.push(novaArma);
-  peso += pesoArma;
   renderizarArmas();
-  salvar();
-  atualizar();
+  recalcularPesoTotal(); // recalcula peso após adicionar
 
+  // Limpar campos
   document.getElementById('novaArmaNome').value = '';
   document.getElementById('novaArmaDano').value = '';
   document.getElementById('novaArmaCapacidade').value = '';
@@ -1419,13 +1419,6 @@ function editarArma(index) {
   const novoPeso = parseFloat(prompt('Novo peso da arma:', arma.peso));
   if (isNaN(novoPeso) || novoPeso < 0) {
     alert('Peso inválido.');
-    return;
-  }
-
-  let diferencaPeso = novoPeso - arma.peso;
-  let pesoMax = parseFloat(document.getElementById('pesoMax').value) || 0;
-  if (pesoMax > 0 && peso + diferencaPeso > pesoMax * 1.5) {
-    alert("Essa alteração faria você exceder 150% da capacidade de carga.");
     return;
   }
 
@@ -1451,20 +1444,15 @@ function editarArma(index) {
       peso: novoPeso
     };
   }
-  peso += diferencaPeso;
   renderizarArmas();
-  salvar();
-  atualizar();
+  recalcularPesoTotal(); // recalcula peso após editar
 }
 
 function excluirArma(index) {
   if (confirm('Remover esta arma?')) {
-    const arma = armas[index];
-    peso = Math.max(0, peso - arma.peso); // não deixa negativo
     armas.splice(index, 1);
     renderizarArmas();
-    salvar();
-    atualizar();
+    recalcularPesoTotal(); // recalcula peso após remover
   }
 }
 
@@ -1634,7 +1622,7 @@ function carregarFicha(index) {
   san = ficha.san || 0;
   descanso = ficha.descanso || 0;
   poder = ficha.poder || 0;
-  peso = ficha.peso || 0;
+  // Não carregar peso salvo, será recalculado
   defesa = ficha.defesa || 0;
   exposicao = ficha.exposicao || 0;
   deslocamentoBase = ficha.deslocamentoBase || 0;
@@ -1685,12 +1673,12 @@ function carregarFicha(index) {
   ordenarAtributos();
   renderizarAtributos();
   renderizarArmas();
-  atualizar();
+  recalcularPesoTotal(); // recalcula peso a partir dos itens e armas
+  aplicarPenalidadeDeslocamento();
   atualizarHistorico();
   atualizarHistoricoSan();
   atualizarHistoricoDados();
   atualizarHistoricoArmas();
-  aplicarPenalidadeDeslocamento();
 }
 
 function salvar() {
@@ -1703,7 +1691,7 @@ function salvar() {
   ficha.san = san;
   ficha.descanso = descanso;
   ficha.poder = poder;
-  ficha.peso = peso;
+  // Não salvamos peso, será recalculado no carregamento
   ficha.defesa = defesa;
   ficha.exposicao = exposicao;
   ficha.deslocamentoBase = deslocamentoBase;
@@ -1909,8 +1897,7 @@ function processarArquivo(files) {
         novaFicha.descanso = dados.status.descanso || 0;
         novaFicha.poder = dados.status.poder.atual || 0;
         novaFicha.poderMax = dados.status.poder.max || 0;
-        novaFicha.peso = dados.status.peso.atual || 0;
-        novaFicha.pesoMax = dados.status.peso.max || 0;
+        novaFicha.pesoMax = dados.status.peso.max || 0; // só o máximo
         novaFicha.defesa = dados.status.defesa || 0;
         novaFicha.exposicao = dados.status.exposicaoParanormal || 0;
       }
@@ -2028,9 +2015,9 @@ document.getElementById('fotoInput').addEventListener('change', function(e) {
   }
 });
 
-['vidaMax','sanMax','poderMax','pesoMax','defesa','exposicaoInput',
+['vidaMax','sanMax','poderMax','defesa','exposicaoInput',
  'dinheiro','traumasPerm','traumasTemp','pessoasImportantes','talentos',
- 'itens','rituais','anotacoes',
+ 'rituais','anotacoes',
  'nomePersonagem','apelidoPersonagem','idadePersonagem',
  'empregoPersonagem','cidadeNatal','cidadeResidente','tamanho','aparencia',
  'caracteristicasPersonagem','personalidadePersonagem','historiaPersonagem'
@@ -2055,7 +2042,9 @@ document.getElementById('exposicaoInput').addEventListener('input', atualizarExp
 document.getElementById('exposicaoInput').addEventListener('change', atualizarExposicao);
 document.getElementById('dinheiro').addEventListener('blur', calcularDinheiro);
 document.getElementById('dinheiro').addEventListener('keypress', e => { if(e.key==='Enter') calcularDinheiro(); });
-document.getElementById('itens').addEventListener('input', extrairPesoDosItens);
+
+// Ao alterar o campo de itens, recalcula o peso
+document.getElementById('itens').addEventListener('input', recalcularPesoTotal);
 
 document.getElementById('vidaMax').onchange = function() {
   this.value = Math.max(0, +this.value||0);
