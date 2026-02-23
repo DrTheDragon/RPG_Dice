@@ -995,7 +995,7 @@ function avaliarOperando(token) {
         tipo: 'lista', 
         valores: rolagens, 
         str: `[${rolagens.join(', ')}]`, 
-        detalhes: rolagens // guardamos os valores para uso posterior
+        detalhes: [`[${rolagens.join(', ')}]`] // string única
       };
     } else {
       const dIndex = lowerToken.indexOf('d');
@@ -1006,12 +1006,13 @@ function avaliarOperando(token) {
         valores.push(Math.floor(Math.random() * faces) + 1);
       }
       const soma = valores.reduce((a,b) => a+b, 0);
+      // detalhes: uma única string com os valores separados por '+'
       return { 
         tipo: 'dados', 
         valores, 
         soma, 
         str: valores.join('+'), 
-        detalhes: valores.map(v => v.toString()) 
+        detalhes: [valores.join('+')] 
       };
     }
   } else {
@@ -1020,7 +1021,6 @@ function avaliarOperando(token) {
 }
 
 function aplicarOperador(op, a, b) {
-  // Para construção do histórico, precisamos dos detalhes
   let detalhesA = a.detalhes || [a.str || a.valor.toString()];
   let detalhesB = b.detalhes || [b.str || b.valor.toString()];
   
@@ -1034,7 +1034,7 @@ function aplicarOperador(op, a, b) {
       tipo: 'escalar', 
       valor: res, 
       str: res.toString(),
-      detalhes: [`${a.str} ${op} ${b.str}`]
+      detalhes: [...detalhesA, op, ...detalhesB]
     };
   }
 
@@ -1082,19 +1082,12 @@ function aplicarOperador(op, a, b) {
   else if (op === '*') res = valA * valB;
   else if (op === '/') res = Math.floor(valA / valB); // divisão inteira
 
-  // Concatena detalhes com operadores
-  let detalhes = [];
-  detalhes.push(...detalhesA);
-  detalhes.push(op);
-  detalhes.push(...detalhesB);
-  
-  let strA = a.str || valA.toString();
-  let strB = b.str || valB.toString();
+  // Concatena detalhes: detalhesA já são strings (para dados, uma string com "+")
   return { 
     tipo: 'escalar', 
     valor: res, 
     str: res.toString(),
-    detalhes: detalhes
+    detalhes: [...detalhesA, op, ...detalhesB]
   };
 }
 
@@ -1135,11 +1128,11 @@ function rolarDadoPersonalizado() {
       resultadoDiv.innerHTML = `🎲 ${input}<br>Total: <b>${valor}</b>`;
     }
 
-    // Gerar detalhes: apenas a operação com os valores rolados
+    // Gerar detalhes: percorrer o array de detalhes e montar a string
     let detalhesHtml = '<p><b>Detalhes:</b> ';
     if (resultado.detalhes) {
       if (resultado.tipo === 'lista') {
-        // Para lista, detalhes[0] já é a string da operação (ex: "[14, 20] + 4")
+        // Para lista, detalhes[0] já é a string da operação
         detalhesHtml += resultado.detalhes[0];
       } else {
         // Para não-lista, construir com espaços
@@ -1160,7 +1153,7 @@ function rolarDadoPersonalizado() {
     detalhesHtml += '</p>';
     detalhesDiv.innerHTML = detalhesHtml;
 
-    // Histórico: expressão original → operação detalhada = resultado
+    // Histórico: expressão → operação detalhada = resultado
     let historicoStr = `${input} → `;
     if (resultado.detalhes) {
       if (resultado.tipo === 'lista') {
