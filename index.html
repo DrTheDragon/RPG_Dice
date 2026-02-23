@@ -249,7 +249,7 @@ body.light .fade-5 { color: #eee; }
 
  /* Melhorias para armas no mobile */
  .arma-detalhes {
-   grid-template-columns: 1fr !important;
+   grid-template-columns: 1fr 1fr !important;
    gap: 5px !important;
  }
  .arma-acoes {
@@ -548,8 +548,6 @@ body.light .fade-5 { color: #eee; }
 <div class="toggle">
 <button onclick="toggleTema()">🌗 Alternar Tema</button>
 <button onclick="abrirGerenciadorFichas()">📂 Gerenciar Fichas</button>
-<button onclick="exportarDados()">📤 Exportar Ficha</button>
-<button onclick="importarDados()">📥 Importar Ficha</button>
 <input type="file" id="fileInput" class="file-input" accept=".json,.txt" onchange="processarArquivo(this.files)">
 </div>
 
@@ -559,6 +557,7 @@ body.light .fade-5 { color: #eee; }
     <span class="modal-close" onclick="fecharGerenciadorFichas()">&times;</span>
     <h2>📂 Gerenciar Fichas</h2>
     <div style="margin-bottom: 15px;">
+      <button onclick="importarDados()" style="width: 100%; margin-bottom: 10px;">📥 Importar Ficha</button>
       <button onclick="criarNovaFicha()" style="width: 100%;">➕ Nova Ficha</button>
     </div>
     <ul id="listaFichasModal"></ul>
@@ -1176,7 +1175,7 @@ function verificarDescanso() {
     avisoDiv.innerHTML = '<span style="color: #ff4c4c;">⚠️ Você desmaiou de exaustão!</span>';
     alert("Você está desmaiado de exaustão!");
   } else if (descanso <= -9 && descanso > -12) {
-    avisoDiv.innerHTML = '⚠️ Exausto: desvantagem em testes de pensamento/ações rápidas.';
+    avisoDiv.innerHTML = '<span style="color: #ffaa00;">⚠️ Exausto: desvantagem em testes de pensamento/ações rápidas.</span>';
   } else {
     avisoDiv.innerHTML = '';
   }
@@ -1757,11 +1756,90 @@ function atualizarListaFichasModal() {
       <span><b>${nome}</b> ${idx === currentSheetIndex ? '(atual)' : ''}</span>
       <div>
         <button onclick="switchParaFicha(${idx})">📂 Abrir</button>
+        <button onclick="exportarFichaEspecifica(${idx})">📤 Exportar</button>
         <button onclick="excluirFicha(${idx})" style="color:#ff4c4c;">🗑️</button>
       </div>
     `;
     lista.appendChild(li);
   });
+}
+
+function exportarFichaEspecifica(idx) {
+  const ficha = sheets[idx];
+  if (!ficha) return;
+
+  const nome = ficha.nomePersonagem || `Ficha ${idx+1}`;
+  const data = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+  const hora = new Date().toLocaleTimeString('pt-BR');
+
+  const dadosParaExportar = {
+    meta: { sistema:"Teste RPG", versao:"1.0", dataExportacao:new Date().toISOString(), dataLegivel:`${data} ${hora}`, nomePersonagem:nome },
+    status: {
+      vida:{ atual:ficha.vida || 0, max:ficha.vidaMax || 0 },
+      sanidade:{ atual:ficha.san || 0, max:ficha.sanMax || 0 },
+      descanso: ficha.descanso || 0,
+      poder:{ atual:ficha.poder || 0, max:ficha.poderMax || 0 },
+      peso:{ atual:0, max:ficha.pesoMax || 0 }, // peso não é salvo
+      defesa: ficha.defesa || 0,
+      exposicaoParanormal: ficha.exposicao || 0
+    },
+    estado: {
+      gravementeFerido: ficha.checkFerido || false,
+      caido: ficha.checkCaido || false,
+      marcadoresVida: {
+        marcador1: ficha.checkVida1 || false,
+        marcador2: ficha.checkVida2 || false,
+        marcador3: ficha.checkVida3 || false
+      }
+    },
+    recursos: {
+      dinheiro: ficha.dinheiro || "",
+      traumasPerm: ficha.traumasPerm || "",
+      traumasTemp: ficha.traumasTemp || "",
+      pessoasImportantes: ficha.pessoasImportantes || "",
+      talentos: ficha.talentos || "",
+      itens: ficha.itens || "",
+      rituais: ficha.rituais || "",
+      anotacoes: ficha.anotacoes || ""
+    },
+    armas: ficha.armas || [],
+    fichaPersonagem: {
+      nome: ficha.nomePersonagem || "",
+      apelido: ficha.apelido || "",
+      idade: ficha.idade || "",
+      emprego: ficha.emprego || "",
+      cidadeNatal: ficha.cidadeNatal || "",
+      cidadeResidente: ficha.cidadeResidente || "",
+      tamanho: ficha.tamanho || "",
+      aparencia: ficha.aparencia || "",
+      deslocamento: ficha.deslocamento || "",
+      deslocamentoBase: ficha.deslocamentoBase || 0,
+      caracteristicas: ficha.caracteristicas || "",
+      personalidade: ficha.personalidade || "",
+      historia: ficha.historia || "",
+      imagem: ficha.imagem || null
+    },
+    atributosPersonalizados: ficha.atributosPersonalizados || [],
+    historicos: {
+      testesAtributo: ficha.historico || [],
+      testesSanidade: ficha.historicoSan || [],
+      dadosPersonalizados: ficha.historicoDados || [],
+      danoArmas: ficha.historicoArmas || []
+    },
+    configuracao: { tema: ficha.tema || "" }
+  };
+
+  const jsonString = JSON.stringify(dadosParaExportar, null, 2);
+  const blob = new Blob([jsonString], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `ficha_rpg_${nome.replace(/\s+/g,'_')}_${data}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  alert(`Ficha de ${nome} exportada como JSON!`);
 }
 
 function switchParaFicha(idx) {
@@ -1806,77 +1884,7 @@ function removerFoto() {
 
 // ==================== EXPORTAÇÃO/IMPORTAÇÃO JSON ====================
 function exportarDados() {
-  const nome = document.getElementById('nomePersonagem').value || "PersonagemSemNome";
-  const data = new Date().toLocaleDateString('pt-BR');
-  const hora = new Date().toLocaleTimeString('pt-BR');
-  const fotoPlaceholder = document.getElementById('fotoPlaceholder');
-  const img = fotoPlaceholder.querySelector('img');
-  const imagemBase64 = img ? img.src : null;
-
-  const dadosParaExportar = {
-    meta: { sistema:"Teste RPG", versao:"1.0", dataExportacao:new Date().toISOString(), dataLegivel:`${data} ${hora}`, nomePersonagem:nome },
-    status: {
-      vida:{ atual:vida, max:document.getElementById('vidaMax').value||0 },
-      sanidade:{ atual:san, max:document.getElementById('sanMax').value||0 },
-      descanso, poder:{ atual:poder, max:document.getElementById('poderMax').value||0 },
-      peso:{ atual:peso, max:document.getElementById('pesoMax').value||0 },
-      defesa, exposicaoParanormal:exposicao
-    },
-    estado: {
-      gravementeFerido:document.getElementById('checkFerido').checked,
-      caido:document.getElementById('checkCaido').checked,
-      marcadoresVida: { marcador1:document.getElementById('checkVida1').checked,
-                        marcador2:document.getElementById('checkVida2').checked,
-                        marcador3:document.getElementById('checkVida3').checked }
-    },
-    recursos: {
-      dinheiro:document.getElementById('dinheiro').value||"0",
-      traumasPerm:document.getElementById('traumasPerm').value||"",
-      traumasTemp:document.getElementById('traumasTemp').value||"",
-      pessoasImportantes:document.getElementById('pessoasImportantes').value||"",
-      talentos:document.getElementById('talentos').value||"",
-      itens:document.getElementById('itens').value||"",
-      rituais:document.getElementById('rituais').value||"",
-      anotacoes:document.getElementById('anotacoes').value||""
-    },
-    armas: armas,
-    fichaPersonagem: {
-      nome:document.getElementById('nomePersonagem').value,
-      apelido:document.getElementById('apelidoPersonagem').value,
-      idade:document.getElementById('idadePersonagem').value,
-      emprego:document.getElementById('empregoPersonagem').value,
-      cidadeNatal:document.getElementById('cidadeNatal').value,
-      cidadeResidente:document.getElementById('cidadeResidente').value,
-      tamanho:document.getElementById('tamanho').value,
-      aparencia:document.getElementById('aparencia').value,
-      deslocamento: document.getElementById('deslocamento').value,
-      deslocamentoBase: deslocamentoBase,
-      caracteristicas:document.getElementById('caracteristicasPersonagem').value,
-      personalidade:document.getElementById('personalidadePersonagem').value,
-      historia:document.getElementById('historiaPersonagem').value,
-      imagem:imagemBase64
-    },
-    atributosPersonalizados,
-    historicos: { 
-      testesAtributo:historico, 
-      testesSanidade:historicoSan, 
-      dadosPersonalizados:historicoDados,
-      danoArmas:historicoArmas
-    },
-    configuracao: { tema:document.body.className }
-  };
-
-  const jsonString = JSON.stringify(dadosParaExportar, null, 2);
-  const blob = new Blob([jsonString], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `ficha_rpg_${nome.replace(/\s+/g,'_')}_${data.replace(/\//g,'-')}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  alert(`Ficha de ${nome} exportada como JSON!`);
+  // Mantida para compatibilidade, mas não é mais usada
 }
 
 function importarDados() { document.getElementById('fileInput').click(); }
@@ -1897,7 +1905,7 @@ function processarArquivo(files) {
         novaFicha.descanso = dados.status.descanso || 0;
         novaFicha.poder = dados.status.poder.atual || 0;
         novaFicha.poderMax = dados.status.poder.max || 0;
-        novaFicha.pesoMax = dados.status.peso.max || 0; // só o máximo
+        novaFicha.pesoMax = dados.status.peso.max || 0;
         novaFicha.defesa = dados.status.defesa || 0;
         novaFicha.exposicao = dados.status.exposicaoParanormal || 0;
       }
@@ -1948,6 +1956,7 @@ function processarArquivo(files) {
       sheets.push(novaFicha);
       salvarTodasFichas();
       alert(`Ficha importada com sucesso!`);
+      fecharGerenciadorFichas();
     } catch(error) {
       alert('Erro ao ler o arquivo. Formato inválido.');
     }
