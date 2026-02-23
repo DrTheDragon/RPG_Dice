@@ -545,6 +545,11 @@ body.light .fade-5 { color: #eee; }
   <!-- COLUNA 1: STATUS -->
   <div class="panel">
     <h2>📊 STATUS</h2>
+    <!-- DEFESA agora aparece antes da VIDA -->
+    <div class="section">
+      <h3>🛡️ DEFESA</h3>
+      <input id="defesa" type="number" placeholder="Defesa" min="0" value="0">
+    </div>
     <div class="section">
       <h3>❤️ Vida</h3>
       <input id="vidaMax" type="number" placeholder="Vida Máxima">
@@ -647,8 +652,7 @@ body.light .fade-5 { color: #eee; }
         <input id="exposicaoInput" type="number" min="0" max="100" value="0" placeholder="0-100">
       </div>
     </div>
-    <h3 style="margin-top:30px;">🛡️ DEFESA</h3>
-    <input id="defesa" type="number" placeholder="Defesa" min="0" value="0">
+    <!-- DEFESA foi removida daqui -->
   </div>
   <div class="atributo-extra">
     <h3>✨ PONTOS DE PODER</h3>
@@ -662,16 +666,6 @@ body.light .fade-5 { color: #eee; }
     </div>
     <button class="max-button" onclick="setPoderMaximo()">PODER MÁXIMO</button>
   </div>
-</div>
-
-<!-- PESO -->
-<div class="peso-container">
-  <h3>⚖️ PESO</h3>
-  <div class="peso-inputs">
-    <div class="peso-item"><input id="pesoMax" type="number" placeholder="Peso Máximo" min="0"></div>
-    <div class="peso-item"><p>Atual: <b><span id="pesoAtual">0</span></b></p></div>
-  </div>
-  <div id="pesoAviso" style="color: #ffaa00; margin-top:10px; text-align:center;"></div>
 </div>
 
 <!-- RECURSOS: DINHEIRO + TRAUMAS -->
@@ -702,6 +696,16 @@ body.light .fade-5 { color: #eee; }
     <h3>⭐ TALENTOS</h3>
     <textarea id="talentos" placeholder="Habilidades especiais, talentos..." rows="4"></textarea>
   </div>
+</div>
+
+<!-- PESO (agora após Pessoas/Talentos e antes de Armas) -->
+<div class="peso-container">
+  <h3>⚖️ PESO</h3>
+  <div class="peso-inputs">
+    <div class="peso-item"><input id="pesoMax" type="number" placeholder="Peso Máximo" min="0"></div>
+    <div class="peso-item"><p>Atual: <b><span id="pesoAtual">0</span></b></p></div>
+  </div>
+  <div id="pesoAviso" style="color: #ffaa00; margin-top:10px; text-align:center;"></div>
 </div>
 
 <!-- ARMAS -->
@@ -1258,12 +1262,23 @@ function removerAtributo(index) {
   }
 }
 
-// ==================== FUNÇÕES PARA ARMAS (COM PESO) ====================
+// ==================== FUNÇÕES PARA ARMAS (COM PESO E ORDENAÇÃO) ====================
 function renderizarArmas() {
+  // Ordenar: primeiro brancas, depois fogo; dentro de cada, alfabético
+  const armasOrdenadas = [...armas].sort((a, b) => {
+    if (a.tipo === b.tipo) {
+      return a.nome.localeCompare(b.nome);
+    }
+    // branca vem antes de fogo
+    return a.tipo === 'branca' ? -1 : 1;
+  });
+
   const container = document.getElementById('listaArmas');
   if (!container) return;
   container.innerHTML = '';
-  armas.forEach((arma, index) => {
+  armasOrdenadas.forEach((arma, index) => {
+    // precisamos do índice original para as funções de editar/excluir, então vamos buscar o índice real
+    const originalIndex = armas.findIndex(a => a.id === arma.id);
     const div = document.createElement('div');
     div.className = 'arma-item';
     div.innerHTML = `
@@ -1284,18 +1299,18 @@ function renderizarArmas() {
         <div class="arma-campo">
           <label>Munição</label>
           <div class="arma-municao">
-            <button onclick="alterarMunicao(${index}, -1)">-1</button>
+            <button onclick="alterarMunicao(${originalIndex}, -1)">-1</button>
             <span>${arma.municaoAtual}/${arma.capacidade}</span>
-            <button onclick="alterarMunicao(${index}, 1)">+1</button>
-            <button onclick="recarregarArma(${index})">Recarregar totalmente</button>
+            <button onclick="alterarMunicao(${originalIndex}, 1)">+1</button>
+            <button onclick="recarregarArma(${originalIndex})">Recarregar totalmente</button>
           </div>
         </div>
         ` : ''}
       </div>
       <div class="arma-acoes">
-        <button onclick="rolarDanoArma(${index})">🎲 Rolar dano</button>
-        <button onclick="editarArma(${index})">✏️ Editar</button>
-        <button onclick="excluirArma(${index})">🗑️ Excluir</button>
+        <button onclick="rolarDanoArma(${originalIndex})">🎲 Rolar dano</button>
+        <button onclick="editarArma(${originalIndex})">✏️ Editar</button>
+        <button onclick="excluirArma(${originalIndex})">🗑️ Excluir</button>
       </div>
     `;
     container.appendChild(div);
