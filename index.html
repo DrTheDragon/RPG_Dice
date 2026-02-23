@@ -249,9 +249,9 @@ body.light .fade-5 { color: #eee; }
 
  /* Melhorias para armas no mobile */
  .arma-detalhes {
-  grid-template-columns: 1fr !important;
-  gap: 5px !important;
-}
+   grid-template-columns: 1fr 1fr !important;
+   gap: 5px !important;
+ }
  .arma-acoes {
    flex-direction: column !important;
  }
@@ -264,7 +264,7 @@ body.light .fade-5 { color: #eee; }
    justify-content: center;
  }
 
- /* --- CORREÇÃO: formulário de adicionar armas em coluna no mobile --- */
+ /* --- FORMULÁRIO DE ADICIONAR ARMAS EM COLUNA NO MOBILE --- */
  .armas > div:first-of-type {
    flex-direction: column !important;
    align-items: stretch !important;
@@ -796,7 +796,7 @@ body.light .fade-5 { color: #eee; }
   </div>
 </div>
 
-<!-- PESO (agora após Pessoas/Talentos e antes de Armas) -->
+<!-- PESO -->
 <div class="peso-container">
   <h3>⚖️ PESO</h3>
   <div class="peso-inputs">
@@ -934,22 +934,18 @@ function testeSanidade() {
   salvar(); atualizarHistoricoSan();
 }
 
-// ==================== PARSER COM * E / (CORRIGIDO) ====================
-// Função para tokenizar a expressão (agora aceita "d20")
+// ==================== PARSER COM * E / ====================
 function tokenizar(expr) {
-  // Regex: captura números com d (2d6, 2#d6), ou "d20", ou números puros, ou operadores
   const regex = /(\d+#?d\d+|d\d+|\d+|[+\-*/()])/gi;
   return expr.match(regex) || [];
 }
 
-// Verifica precedência
 function precedencia(op) {
   if (op === '+' || op === '-') return 1;
   if (op === '*' || op === '/') return 2;
   return 0;
 }
 
-// Shunting-yard algorithm para converter infix em RPN
 function shuntingYard(tokens) {
   const output = [];
   const stack = [];
@@ -967,7 +963,6 @@ function shuntingYard(tokens) {
       }
       stack.push(token);
     } else {
-      // É um operando (número ou dado)
       output.push(token);
     }
   }
@@ -977,12 +972,10 @@ function shuntingYard(tokens) {
   return output;
 }
 
-// Avalia um operando (número ou dado) - retorna objeto com tipo, valor(s) e string representação
 function avaliarOperando(token) {
   if (/^\d+$/.test(token)) {
     return { tipo: 'escalar', valor: parseInt(token), str: token };
   } else if (token.includes('d')) {
-    // Pode ter #
     if (token.includes('#')) {
       const [qtd, dadosPart] = token.split('#');
       const faces = parseInt(dadosPart.substring(1));
@@ -1008,9 +1001,7 @@ function avaliarOperando(token) {
   }
 }
 
-// Aplica operador entre dois operandos (podem ser escalares, dados ou listas)
 function aplicarOperador(op, a, b) {
-  // Se ambos forem escalares, retorna escalar
   if (a.tipo === 'escalar' && b.tipo === 'escalar') {
     let res;
     if (op === '+') res = a.valor + b.valor;
@@ -1020,7 +1011,6 @@ function aplicarOperador(op, a, b) {
     return { tipo: 'escalar', valor: res, str: res.toString() };
   }
 
-  // Se um for lista, converte o outro para lista do mesmo tamanho
   if (a.tipo === 'lista' || b.tipo === 'lista') {
     let listaA, listaB;
     if (a.tipo === 'lista') {
@@ -1042,7 +1032,6 @@ function aplicarOperador(op, a, b) {
     return { tipo: 'lista', valores: resultados, str: `[${resultados.join(', ')}]` };
   }
 
-  // Se um for dados (soma) e outro escalar, trata como escalar com a soma
   let valA = (a.tipo === 'dados') ? a.soma : a.valor;
   let valB = (b.tipo === 'dados') ? b.soma : b.valor;
   let res;
@@ -1051,13 +1040,11 @@ function aplicarOperador(op, a, b) {
   else if (op === '*') res = valA * valB;
   else if (op === '/') res = valA / valB;
 
-  // Constrói string representativa
   let strA = a.str || valA.toString();
   let strB = b.str || valB.toString();
   return { tipo: 'escalar', valor: res, str: `(${strA} ${op} ${strB})` };
 }
 
-// Avalia uma expressão RPN, retornando o resultado final (e armazenando os valores para detalhes)
 function avaliarRPN(rpn) {
   const pilha = [];
   for (let token of rpn) {
@@ -1068,7 +1055,6 @@ function avaliarRPN(rpn) {
       const res = aplicarOperador(token, a, b);
       pilha.push(res);
     } else {
-      // operando
       pilha.push(avaliarOperando(token));
     }
   }
@@ -1076,7 +1062,6 @@ function avaliarRPN(rpn) {
   return pilha[0];
 }
 
-// Função principal de rolagem personalizada
 function rolarDadoPersonalizado() {
   somDado();
   let input = document.getElementById('dadoPersonalizado').value.trim();
@@ -1085,25 +1070,20 @@ function rolarDadoPersonalizado() {
   if (!input) { resultadoDiv.innerHTML = 'Digite uma fórmula'; detalhesDiv.innerHTML = ''; return; }
 
   try {
-    // Remove espaços
     input = input.replace(/\s+/g, '');
     const tokens = tokenizar(input);
     const rpn = shuntingYard(tokens);
     const resultado = avaliarRPN(rpn);
 
-    // Exibir resultado (considerando tipo)
     if (resultado.tipo === 'lista') {
       resultadoDiv.innerHTML = `🎲 ${input}<br>Resultados: <b>${resultado.valores.join(', ')}</b>`;
     } else {
-      // Pode ser 'escalar' ou 'dados' - usamos 'valor' ou 'soma'
       const valor = resultado.valor !== undefined ? resultado.valor : resultado.soma;
       resultadoDiv.innerHTML = `🎲 ${input}<br>Total: <b>${valor}</b>`;
     }
 
-    // Gerar detalhes (agora usando a string já calculada)
     detalhesDiv.innerHTML = `<p><b>Detalhes:</b> ${resultado.str || ''}</p>`;
 
-    // Histórico
     let historicoStr = `${input} → `;
     if (resultado.tipo === 'lista') {
       historicoStr += `[${resultado.valores.join(', ')}]`;
@@ -1116,7 +1096,6 @@ function rolarDadoPersonalizado() {
 
     salvar();
     atualizarHistoricoDados();
-
   } catch (e) {
     resultadoDiv.innerHTML = 'Formato inválido. Use expressões como "2d6", "1d20+4", "2#d20", "(2d6+4)*3", "10/2d4", "d20".';
     detalhesDiv.innerHTML = '';
@@ -1124,7 +1103,7 @@ function rolarDadoPersonalizado() {
   }
 }
 
-// ==================== STATUS (com novas regras de descanso e peso) ====================
+// ==================== STATUS ====================
 function atualizar() {
   document.getElementById('vidaAtual').textContent = vida;
   document.getElementById('sanAtual').textContent = san;
@@ -1133,10 +1112,7 @@ function atualizar() {
   document.getElementById('pesoAtual').textContent = peso;
   document.getElementById('exposicaoValor').textContent = exposicao;
 
-  // Verifica limites de descanso e exibe avisos na página
   verificarDescanso();
-
-  // Aplica penalidade de deslocamento por peso
   aplicarPenalidadeDeslocamento();
 }
 
@@ -1145,7 +1121,6 @@ function alterar(t, v) {
   else if(t==="san") san = Math.max(0, Math.min(+document.getElementById('sanMax').value, san+v));
   else if(t==="descanso") {
     let novo = descanso + v;
-    // Limite máximo 12, mínimo -12
     if (novo > 12) novo = 12;
     if (novo < -12) novo = -12;
     descanso = novo;
@@ -1172,7 +1147,7 @@ function verificarDescanso() {
   const avisoDiv = document.getElementById('descansoAviso');
   if (descanso <= -12) {
     avisoDiv.innerHTML = '<span style="color: #ff4c4c;">⚠️ Você desmaiou de exaustão!</span>';
-    alert("Você está desmaiado de exaustão!"); // mantém o alerta original
+    alert("Você está desmaiado de exaustão!");
   } else if (descanso <= -9 && descanso > -12) {
     avisoDiv.innerHTML = '⚠️ Exausto: desvantagem em testes de pensamento/ações rápidas.';
   } else {
@@ -1180,17 +1155,16 @@ function verificarDescanso() {
   }
 }
 
-// ==================== FUNÇÃO PARA EXTRAIR PESO DOS ITENS ====================
+// ==================== EXTRAIR PESO DOS ITENS (CORRIGIDO: valores negativos ignorados) ====================
 function extrairPesoDosItens() {
   const texto = document.getElementById('itens').value;
-  // Regex para encontrar (P: 2.5) ou (p: 2.5) - captura o número
   const regex = /\([pP]:\s*([0-9]*\.?[0-9]+)\)/g;
   let match;
   let soma = 0;
   while ((match = regex.exec(texto)) !== null) {
-    soma += parseFloat(match[1]);
+    let valor = parseFloat(match[1]);
+    if (valor > 0) soma += valor; // ignora valores negativos
   }
-  // Atualiza o peso, respeitando limite de 150% se houver máximo
   let max = parseFloat(document.getElementById('pesoMax').value) || 0;
   if (max > 0 && soma > max * 1.5) {
     soma = max * 1.5;
@@ -1206,17 +1180,16 @@ function aplicarPenalidadeDeslocamento() {
   const deslocInput = document.getElementById('deslocamento');
   let maxPeso = parseFloat(document.getElementById('pesoMax').value) || 0;
   let atualPeso = peso;
-  let base = deslocamentoBase; // valor original armazenado
+  let base = deslocamentoBase;
 
   if (maxPeso <= 0) {
-    // Sem peso máximo definido, não há penalidade
     deslocInput.value = base.toFixed(1);
     document.getElementById('pesoAviso').innerHTML = '';
     return;
   }
 
   let percentual = (atualPeso / maxPeso) * 100;
-  let reducaoFracao = 0; // fração de 1/6 a reduzir
+  let reducaoFracao = 0;
   let aviso = '';
 
   if (percentual > 100) {
@@ -1228,33 +1201,21 @@ function aplicarPenalidadeDeslocamento() {
       reducaoFracao = 5;
       aviso = '<span style="color: #ff4c4c;">⚠️ Você atingiu o limite possível, precisa retirar algo</span>';
     } else {
-      reducaoFracao = 5; // acima de 150 já foi limitado, mas por segurança
+      reducaoFracao = 5;
     }
   }
 
   let novoDesloc = base * (1 - reducaoFracao / 6);
   if (novoDesloc < 0) novoDesloc = 0;
 
-  // Se não for o aviso especial de 150%, gera o aviso normal
   if (reducaoFracao > 0 && percentual <= 150 && !aviso) {
     aviso = `⚠️ Carga excessiva: deslocamento reduzido em ${reducaoFracao}/6 (${(reducaoFracao/6*100).toFixed(0)}%).`;
   }
 
   document.getElementById('pesoAviso').innerHTML = aviso;
 
-  // Atualiza o campo de deslocamento (se diferente)
   if (Math.abs(deslocInput.value - novoDesloc) > 0.01) {
     deslocInput.value = novoDesloc.toFixed(1);
-  }
-}
-
-// Função para atualizar a base do deslocamento quando o usuário editar manualmente
-function atualizarBaseDeslocamento() {
-  let val = parseFloat(document.getElementById('deslocamento').value);
-  if (!isNaN(val) && val > 0) {
-    deslocamentoBase = val;
-    // Reaplica penalidade para mostrar o valor correto (mas a base já é a nova)
-    aplicarPenalidadeDeslocamento();
   }
 }
 
@@ -1358,22 +1319,19 @@ function removerAtributo(index) {
   }
 }
 
-// ==================== FUNÇÕES PARA ARMAS (COM PESO E ORDENAÇÃO) ====================
+// ==================== FUNÇÕES PARA ARMAS ====================
 function renderizarArmas() {
-  // Ordenar: primeiro brancas, depois fogo; dentro de cada, alfabético
   const armasOrdenadas = [...armas].sort((a, b) => {
     if (a.tipo === b.tipo) {
       return a.nome.localeCompare(b.nome);
     }
-    // branca vem antes de fogo
     return a.tipo === 'branca' ? -1 : 1;
   });
 
   const container = document.getElementById('listaArmas');
   if (!container) return;
   container.innerHTML = '';
-  armasOrdenadas.forEach((arma, index) => {
-    // precisamos do índice original para as funções de editar/excluir, então vamos buscar o índice real
+  armasOrdenadas.forEach((arma) => {
     const originalIndex = armas.findIndex(a => a.id === arma.id);
     const div = document.createElement('div');
     div.className = 'arma-item';
@@ -1425,7 +1383,6 @@ function adicionarArma() {
   if (tipo === 'fogo' && capacidade <= 0) { alert('Capacidade deve ser maior que zero para arma de fogo.'); return; }
   if (pesoArma < 0) { alert('Peso não pode ser negativo.'); return; }
 
-  // Verificar se o peso total não ultrapassa 150%
   let pesoMax = parseFloat(document.getElementById('pesoMax').value) || 0;
   if (pesoMax > 0 && peso + pesoArma > pesoMax * 1.5) {
     alert("Essa arma é pesada demais para você carregar agora (ultrapassaria 150% da capacidade).");
@@ -1442,12 +1399,11 @@ function adicionarArma() {
     peso: pesoArma
   };
   armas.push(novaArma);
-  peso += pesoArma; // incrementa peso atual
+  peso += pesoArma;
   renderizarArmas();
   salvar();
-  atualizar(); // atualiza exibição do peso e possíveis penalidades
+  atualizar();
 
-  // Limpar campos
   document.getElementById('novaArmaNome').value = '';
   document.getElementById('novaArmaDano').value = '';
   document.getElementById('novaArmaCapacidade').value = '';
@@ -1456,7 +1412,6 @@ function adicionarArma() {
 
 function editarArma(index) {
   const arma = armas[index];
-  // Não permite alterar o tipo
   const novoNome = prompt('Novo nome da arma:', arma.nome);
   if (novoNome === null) return;
   const novoDano = prompt('Nova fórmula de dano (ex: 2d6, 1d20+2, d20):', arma.danoFormula);
@@ -1467,7 +1422,6 @@ function editarArma(index) {
     return;
   }
 
-  // Calcular diferença de peso para ajustar peso total
   let diferencaPeso = novoPeso - arma.peso;
   let pesoMax = parseFloat(document.getElementById('pesoMax').value) || 0;
   if (pesoMax > 0 && peso + diferencaPeso > pesoMax * 1.5) {
@@ -1506,7 +1460,7 @@ function editarArma(index) {
 function excluirArma(index) {
   if (confirm('Remover esta arma?')) {
     const arma = armas[index];
-    peso -= arma.peso; // subtrai o peso
+    peso = Math.max(0, peso - arma.peso); // não deixa negativo
     armas.splice(index, 1);
     renderizarArmas();
     salvar();
@@ -1537,7 +1491,6 @@ function rolarDanoArma(index) {
   const arma = armas[index];
   const resultadoDiv = document.getElementById('resArma');
   
-  // Verifica se tem munição (se for de fogo)
   if (arma.tipo === 'fogo' && arma.municaoAtual <= 0) {
     resultadoDiv.innerHTML = `❌ ${arma.nome} sem munição. Necessita recarregar.`;
     return;
@@ -1558,7 +1511,6 @@ function rolarDanoArma(index) {
 
     let historicoEntry = `🔫 ${arma.nome}: ${formula} → ${resultado.total}`;
     if (resultado.detalhes) historicoEntry += ` (${resultado.detalhes})`;
-    // Adiciona info de munição se for de fogo
     if (arma.tipo === 'fogo') {
       historicoEntry += ` | Munição: ${arma.municaoAtual-1}/${arma.capacidade}`;
     }
@@ -1577,10 +1529,8 @@ function rolarDanoArma(index) {
   }
 }
 
-// Função para processar fórmula de dano das armas (agora aceita "d20")
 function processarFormulaDano(formula) {
   formula = formula.replace(/\s+/g, '').toLowerCase();
-  // Regex atualizado para aceitar "d20"
   const tokenRegex = /(\d+d\d+|d\d+|\d+|[+-])/g;
   const tokens = formula.match(tokenRegex);
   if (!tokens) throw new Error('Fórmula inválida');
@@ -1652,7 +1602,6 @@ function carregarTodasFichas() {
   sheets = data.sheets;
   currentSheetIndex = data.current;
   if (sheets.length === 0) {
-    // cria uma ficha padrão
     sheets.push(criarFichaPadrao());
     currentSheetIndex = 0;
   }
@@ -1681,7 +1630,6 @@ function criarFichaPadrao() {
 function carregarFicha(index) {
   const ficha = sheets[index];
   if (!ficha) return;
-  // Atribuir todas as variáveis globais
   vida = ficha.vida || 0;
   san = ficha.san || 0;
   descanso = ficha.descanso || 0;
@@ -1745,7 +1693,6 @@ function carregarFicha(index) {
   aplicarPenalidadeDeslocamento();
 }
 
-// Salva a ficha atual no array
 function salvar() {
   if (sheets.length === 0) {
     sheets.push(criarFichaPadrao());
@@ -1831,7 +1778,6 @@ function atualizarListaFichasModal() {
 
 function switchParaFicha(idx) {
   if (idx < 0 || idx >= sheets.length) return;
-  // Salva a atual
   salvar();
   currentSheetIndex = idx;
   carregarFicha(idx);
@@ -1858,8 +1804,6 @@ function criarNovaFicha() {
   const nova = criarFichaPadrao();
   sheets.push(nova);
   salvarTodasFichas();
-  // Opcional: abrir automaticamente a nova ficha
-  // switchParaFicha(sheets.length - 1);
   atualizarListaFichasModal();
 }
 
@@ -1874,7 +1818,6 @@ function removerFoto() {
 
 // ==================== EXPORTAÇÃO/IMPORTAÇÃO JSON ====================
 function exportarDados() {
-  // Exporta a ficha atual (compatibilidade com versão anterior)
   const nome = document.getElementById('nomePersonagem').value || "PersonagemSemNome";
   const data = new Date().toLocaleDateString('pt-BR');
   const hora = new Date().toLocaleTimeString('pt-BR');
@@ -1956,9 +1899,7 @@ function processarArquivo(files) {
   reader.onload = function(e) {
     try {
       const dados = JSON.parse(e.target.result);
-      // Cria uma nova ficha com os dados importados
       const novaFicha = criarFichaPadrao();
-      // Mapear dados antigos para a nova estrutura (simplificado)
       if (dados.meta && dados.meta.nomePersonagem) novaFicha.nomePersonagem = dados.meta.nomePersonagem;
       if (dados.status) {
         novaFicha.vida = dados.status.vida.atual || 0;
@@ -2020,8 +1961,6 @@ function processarArquivo(files) {
       sheets.push(novaFicha);
       salvarTodasFichas();
       alert(`Ficha importada com sucesso!`);
-      // Opcional: abrir a nova ficha
-      // switchParaFicha(sheets.length - 1);
     } catch(error) {
       alert('Erro ao ler o arquivo. Formato inválido.');
     }
@@ -2103,23 +2042,19 @@ document.getElementById('fotoInput').addEventListener('change', function(e) {
   document.getElementById(id).addEventListener('change', salvar);
 });
 
-// Quando o deslocamento for alterado manualmente, atualiza a base
 document.getElementById('deslocamento').addEventListener('blur', function() {
   let val = parseFloat(this.value);
   if (!isNaN(val) && val > 0) {
     deslocamentoBase = val;
-    aplicarPenalidadeDeslocamento(); // reaplica para mostrar o valor correto (pode ser o mesmo)
+    aplicarPenalidadeDeslocamento();
   }
   salvar();
 });
 
 document.getElementById('exposicaoInput').addEventListener('input', atualizarExposicao);
 document.getElementById('exposicaoInput').addEventListener('change', atualizarExposicao);
-
 document.getElementById('dinheiro').addEventListener('blur', calcularDinheiro);
 document.getElementById('dinheiro').addEventListener('keypress', e => { if(e.key==='Enter') calcularDinheiro(); });
-
-// Sempre que o campo itens mudar, recalcula o peso
 document.getElementById('itens').addEventListener('input', extrairPesoDosItens);
 
 document.getElementById('vidaMax').onchange = function() {
@@ -2139,9 +2074,11 @@ document.getElementById('poderMax').onchange = function() {
 };
 document.getElementById('pesoMax').onchange = function() {
   this.value = Math.max(0, +this.value||0);
-  if(peso > this.value * 1.5) {
-    peso = this.value * 1.5;
-    alert("Peso atual ajustado para 150% do máximo devido à alteração do máximo.");
+  // Ao alterar o peso máximo, verifica se o atual ultrapassa o novo limite
+  let limite = this.value * 1.5;
+  if (peso > limite) {
+    peso = limite;
+    alert("Peso atual ajustado para 150% do novo máximo.");
   }
   salvar(); atualizar();
 };
@@ -2179,13 +2116,9 @@ document.addEventListener('click', function initAudioOnClick() {
   document.removeEventListener('click', initAudioOnClick);
 });
 
-// Inicializa a base de deslocamento e carrega fichas
 window.addEventListener('load', function() {
   carregarTodasFichas();
-  // A base de deslocamento já está definida em carregarFicha
 });
-
-// carregar() substituído por carregarTodasFichas()
 </script>
 </body>
 </html>
