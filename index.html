@@ -995,7 +995,7 @@ function avaliarOperando(token) {
         tipo: 'lista', 
         valores: rolagens, 
         str: `[${rolagens.join(', ')}]`, 
-        detalhes: [`[${rolagens.join(', ')}]`] 
+        detalhes: rolagens // guardamos os valores para uso posterior
       };
     } else {
       const dIndex = lowerToken.indexOf('d');
@@ -1033,25 +1033,26 @@ function aplicarOperador(op, a, b) {
     return { 
       tipo: 'escalar', 
       valor: res, 
-      str: `(${a.str} ${op} ${b.str})`,
-      detalhes: [`(${detalhesA.join('')} ${op} ${detalhesB.join('')})`]
+      str: res.toString(),
+      detalhes: [`${a.str} ${op} ${b.str}`]
     };
   }
 
   if (a.tipo === 'lista' || b.tipo === 'lista') {
-    let listaA, listaB, strA, strB;
+    let listaA, listaB;
+    let strA, strB;
     if (a.tipo === 'lista') {
       listaA = a.valores;
-      strA = a.str;
+      strA = `[${a.valores.join(', ')}]`;
     } else {
-      listaA = Array(b.valores.length).fill(a.valor);
+      listaA = Array((b.tipo === 'lista' ? b.valores.length : 1)).fill(a.valor);
       strA = a.valor.toString();
     }
     if (b.tipo === 'lista') {
       listaB = b.valores;
-      strB = b.str;
+      strB = `[${b.valores.join(', ')}]`;
     } else {
-      listaB = Array(a.valores.length).fill(b.valor);
+      listaB = Array((a.tipo === 'lista' ? a.valores.length : 1)).fill(b.valor);
       strB = b.valor.toString();
     }
     if (listaA.length !== listaB.length) throw new Error('Listas de tamanhos diferentes');
@@ -1063,13 +1064,13 @@ function aplicarOperador(op, a, b) {
       else if (op === '*') resultados.push(valA * valB);
       else if (op === '/') resultados.push(Math.floor(valA / valB));
     }
-    // Gerar detalhes
-    let detalhesStr = `${strA} ${op} ${strB} = [${resultados.join(', ')}]`;
+    // String de detalhes da operação
+    let detalhesOp = `${strA} ${op} ${strB}`;
     return { 
       tipo: 'lista', 
       valores: resultados, 
       str: `[${resultados.join(', ')}]`,
-      detalhes: [detalhesStr]
+      detalhes: [detalhesOp]
     };
   }
 
@@ -1092,7 +1093,7 @@ function aplicarOperador(op, a, b) {
   return { 
     tipo: 'escalar', 
     valor: res, 
-    str: `(${strA} ${op} ${strB})`,
+    str: res.toString(),
     detalhes: detalhes
   };
 }
@@ -1134,11 +1135,11 @@ function rolarDadoPersonalizado() {
       resultadoDiv.innerHTML = `🎲 ${input}<br>Total: <b>${valor}</b>`;
     }
 
-    // Gerar detalhes passo a passo
+    // Gerar detalhes
     let detalhesHtml = '<p><b>Detalhes:</b> ';
     if (resultado.detalhes) {
-      // Se for lista, já temos uma string pronta
       if (resultado.tipo === 'lista') {
+        // Para lista, detalhes[0] já é a string da operação
         detalhesHtml += resultado.detalhes[0];
       } else {
         // Para não-lista, construir com espaços
@@ -1159,14 +1160,25 @@ function rolarDadoPersonalizado() {
     detalhesHtml += '</p>';
     detalhesDiv.innerHTML = detalhesHtml;
 
-    // Histórico: apenas expressão e resultado final
+    // Histórico: expressão → operação detalhada = resultado
     let historicoStr = `${input} → `;
-    if (resultado.tipo === 'lista') {
-      historicoStr += `[${resultado.valores.join(', ')}]`;
-    } else {
-      const valor = resultado.valor !== undefined ? resultado.valor : resultado.soma;
-      historicoStr += valor;
+    if (resultado.detalhes) {
+      if (resultado.tipo === 'lista') {
+        historicoStr += resultado.detalhes[0] + ' = ';
+      } else {
+        let detalhesStr = '';
+        for (let i = 0; i < resultado.detalhes.length; i++) {
+          let d = resultado.detalhes[i];
+          if (d === '+' || d === '-' || d === '*' || d === '/') {
+            detalhesStr += ' ' + d + ' ';
+          } else {
+            detalhesStr += d;
+          }
+        }
+        historicoStr += detalhesStr + ' = ';
+      }
     }
+    historicoStr += resultado.str;
     historicoDados.unshift(`🎲 ${historicoStr}`);
     if (historicoDados.length > 6) historicoDados.pop();
 
@@ -1564,8 +1576,7 @@ function rolarDanoArma(index) {
   const formula = arma.danoFormula;
   
   try {
-    // Reutiliza o mesmo parser, mas precisamos de uma versão que retorne detalhes
-    const resultado = avaliarFormulaDanoDetalhado(formula);
+    const resultado = processarFormulaDano(formula);
     
     let html = `<b>${arma.nome}</b> — Dano: ${formula}<br>`;
     html += `Resultado: <b>${resultado.total}</b>`;
@@ -1574,7 +1585,6 @@ function rolarDanoArma(index) {
     }
     resultadoDiv.innerHTML = html;
 
-    // Histórico com passo a passo
     let historicoEntry = `🔫 ${arma.nome}: ${formula} → `;
     if (resultado.detalhes) {
       historicoEntry += resultado.detalhes + ' = ';
@@ -1598,61 +1608,16 @@ function rolarDanoArma(index) {
   }
 }
 
-function avaliarFormulaDanoDetalhado(formula) {
-  formula = formula.replace(/\s+/g, '').toLowerCase();
-  const tokenRegex = /(\d+d\d+|d\d+|\d+|[+-])/g;
-  const tokens = formula.match(tokenRegex);
-  if (!tokens) throw new Error('Fórmula inválida');
-
-  const operadores = [];
-  const operandos = [];
-  for (let token of tokens) {
-    if (token === '+' || token === '-') {
-      operadores.push(token);
-    } else {
-      operandos.push(token);
-    }
-  }
-  if (operandos.length === 0) throw new Error('Nenhum operando');
-  
-  const resultados = operandos.map(op => {
-    if (/^\d+$/.test(op)) {
-      return { tipo: 'escalar', valor: parseInt(op), str: op, detalhes: op };
-    } else if (/^\d+d\d+$/.test(op)) {
-      const [qtd, faces] = op.split('d').map(Number);
-      const valores = [];
-      for (let i = 0; i < qtd; i++) {
-        valores.push(Math.floor(Math.random() * faces) + 1);
-      }
-      const soma = valores.reduce((a,b) => a+b, 0);
-      return { tipo: 'dados', valores, soma, str: valores.join('+'), detalhes: valores.join('+') };
-    } else if (/^d\d+$/.test(op)) {
-      const faces = parseInt(op.substring(1));
-      const valor = Math.floor(Math.random() * faces) + 1;
-      return { tipo: 'dados', valores: [valor], soma: valor, str: valor.toString(), detalhes: valor.toString() };
-    } else {
-      throw new Error('Operando inválido');
-    }
-  });
-
-  // Construir detalhes passo a passo
-  let detalhesStr = resultados[0].detalhes;
-  let total = resultados[0].soma !== undefined ? resultados[0].soma : resultados[0].valor;
-  for (let i = 0; i < operadores.length; i++) {
-    const op = operadores[i];
-    const prox = resultados[i+1];
-    const val = prox.soma !== undefined ? prox.soma : prox.valor;
-    detalhesStr += ` ${op} ${prox.detalhes}`;
-    if (op === '+') total += val;
-    else total -= val;
-  }
-
-  return { total, detalhes: detalhesStr };
-}
-
 function processarFormulaDano(formula) {
-  const resultado = avaliarFormulaDanoDetalhado(formula);
-  return { total: resultado.total, detalhes: resultado.detalhes };
+  // Usa o mesmo parser, mas simplificado
+  try {
+    const tokens = tokenizar(formula);
+    const rpn = shuntingYard(tokens);
+    const resultado = avaliarRPN(rpn);
+    return { total: resultado.valor !== undefined ? resultado.valor : resultado.soma, detalhes: resultado.str };
+  } catch (e) {
+    throw e;
+  }
 }
 
 function atualizarHistoricoArmas() {
@@ -1669,13 +1634,11 @@ function atualizarHistoricoArmas() {
 
 // ==================== FUNÇÕES PARA MÚLTIPLAS FICHAS ====================
 function salvarTodasFichas() {
-  // Salva o tema global separadamente
   localStorage.setItem('noir_rpg_theme', document.body.className);
   localStorage.setItem('noir_rpg_sheets', JSON.stringify({ sheets, current: currentSheetIndex }));
 }
 
 function carregarTodasFichas() {
-  // Carrega o tema global
   const temaSalvo = localStorage.getItem('noir_rpg_theme');
   if (temaSalvo) {
     document.body.className = temaSalvo;
@@ -1688,7 +1651,6 @@ function carregarTodasFichas() {
     currentSheetIndex = 0;
   }
   carregarFicha(currentSheetIndex);
-  // Remove a classe loading para mostrar a página
   document.body.classList.remove('loading');
 }
 
@@ -1700,7 +1662,6 @@ function criarFichaPadrao() {
     dinheiro:"", traumasPerm:"", traumasTemp:"", pessoasImportantes:"", talentos:"",
     itens:"", rituais:"", anotacoes:"",
     historico:[], historicoSan:[], historicoDados:[], historicoArmas:[],
-    // tema removido
     nomePersonagem:"", apelido:"", idade:"", emprego:"", cidadeNatal:"", cidadeResidente:"",
     tamanho:"", aparencia:"", deslocamento:"",
     caracteristicas:"", personalidade:"", historia:"",
@@ -1718,7 +1679,6 @@ function carregarFicha(index) {
   san = ficha.san || 0;
   descanso = ficha.descanso || 0;
   poder = ficha.poder || 0;
-  // Não carregar peso salvo, será recalculado
   defesa = ficha.defesa || 0;
   exposicao = ficha.exposicao || 0;
   deslocamentoBase = ficha.deslocamentoBase || 0;
@@ -1740,7 +1700,6 @@ function carregarFicha(index) {
   historicoSan = ficha.historicoSan || [];
   historicoDados = ficha.historicoDados || [];
   historicoArmas = ficha.historicoArmas || [];
-  // Não carregar tema da ficha
   document.getElementById('nomePersonagem').value = ficha.nomePersonagem || "";
   document.getElementById('apelidoPersonagem').value = ficha.apelido || "";
   document.getElementById('idadePersonagem').value = ficha.idade || "";
@@ -1769,7 +1728,7 @@ function carregarFicha(index) {
   ordenarAtributos();
   renderizarAtributos();
   renderizarArmas();
-  recalcularPesoTotal(); // recalcula peso a partir dos itens e armas, aplica limite
+  recalcularPesoTotal();
   aplicarPenalidadeDeslocamento();
   atualizarHistorico();
   atualizarHistoricoSan();
@@ -1787,7 +1746,6 @@ function salvar() {
   ficha.san = san;
   ficha.descanso = descanso;
   ficha.poder = poder;
-  // Não salvamos peso, será recalculado no carregamento
   ficha.defesa = defesa;
   ficha.exposicao = exposicao;
   ficha.deslocamentoBase = deslocamentoBase;
@@ -1807,7 +1765,6 @@ function salvar() {
   ficha.historicoSan = historicoSan;
   ficha.historicoDados = historicoDados;
   ficha.historicoArmas = historicoArmas;
-  // Não salvamos tema
   ficha.nomePersonagem = document.getElementById('nomePersonagem').value;
   ficha.apelido = document.getElementById('apelidoPersonagem').value;
   ficha.idade = document.getElementById('idadePersonagem').value;
@@ -1876,7 +1833,7 @@ function exportarFichaEspecifica(idx) {
       sanidade:{ atual:ficha.san || 0, max:ficha.sanMax || 0 },
       descanso: ficha.descanso || 0,
       poder:{ atual:ficha.poder || 0, max:ficha.poderMax || 0 },
-      peso:{ atual:0, max:ficha.pesoMax || 0 }, // peso não é salvo
+      peso:{ atual:0, max:ficha.pesoMax || 0 },
       defesa: ficha.defesa || 0,
       exposicaoParanormal: ficha.exposicao || 0
     },
@@ -1923,7 +1880,6 @@ function exportarFichaEspecifica(idx) {
       dadosPersonalizados: ficha.historicoDados || [],
       danoArmas: ficha.historicoArmas || []
     }
-    // tema removido
   };
 
   const jsonString = JSON.stringify(dadosParaExportar, null, 2);
@@ -1959,7 +1915,6 @@ function excluirFicha(idx) {
     }
     salvarTodasFichas();
     carregarFicha(currentSheetIndex);
-    // Atualiza a lista do modal (se estiver aberto)
     if (document.getElementById('modalFichas').style.display === 'flex') {
       atualizarListaFichasModal();
     }
@@ -1970,7 +1925,6 @@ function criarNovaFicha() {
   const nova = criarFichaPadrao();
   sheets.push(nova);
   salvarTodasFichas();
-  // Atualiza a lista do modal (se estiver aberto)
   if (document.getElementById('modalFichas').style.display === 'flex') {
     atualizarListaFichasModal();
   }
@@ -1986,10 +1940,6 @@ function removerFoto() {
 }
 
 // ==================== EXPORTAÇÃO/IMPORTAÇÃO JSON ====================
-function exportarDados() {
-  // Mantida para compatibilidade, mas não é mais usada
-}
-
 function importarDados() { document.getElementById('fileInput').click(); }
 function processarArquivo(files) {
   if(files.length===0) return;
@@ -2054,22 +2004,18 @@ function processarArquivo(files) {
         novaFicha.historicoDados = dados.historicos.dadosPersonalizados || [];
         novaFicha.historicoArmas = dados.historicos.danoArmas || [];
       }
-      // tema ignorado
 
       sheets.push(novaFicha);
       salvarTodasFichas();
       alert(`Ficha importada com sucesso!`);
-      // Atualiza a lista do modal (mantém aberto)
       if (document.getElementById('modalFichas').style.display === 'flex') {
         atualizarListaFichasModal();
       } else {
-        // Se o modal não estiver aberto, podemos abri-lo
         abrirGerenciadorFichas();
       }
     } catch(error) {
       alert('Erro ao ler o arquivo. Formato inválido.');
     } finally {
-      // Limpa o input file para permitir nova importação do mesmo arquivo
       document.getElementById('fileInput').value = '';
     }
   };
@@ -2088,10 +2034,8 @@ function calcularDinheiro() {
   if(!valor) return;
   
   try {
-    // Permite números decimais, operadores + - * /
     const validInput = valor.replace(/\s+/g, '');
     if(!/^[0-9+\-*/.\s]+$/.test(validInput)) {
-      // Se não for uma expressão válida, tenta converter para número
       const num = parseFloat(valor);
       if (!isNaN(num)) {
         input.value = num;
@@ -2100,18 +2044,12 @@ function calcularDinheiro() {
       return;
     }
     
-    // Usa eval de forma segura? Melhor implementar um parser simples
-    // Vamos usar uma função segura para avaliar a expressão
     try {
-      // Função eval segura? Podemos usar Function para criar um escopo
       const result = new Function('return ' + validInput)();
       if (!isNaN(result) && isFinite(result)) {
         input.value = result;
-      } else {
-        // Se não for número, mantém o original
       }
     } catch (e) {
-      // Se der erro, tenta como número simples
       const num = parseFloat(valor);
       if (!isNaN(num)) input.value = num;
     }
@@ -2127,7 +2065,7 @@ function calcularDinheiro() {
 }
 function toggleTema() { 
   document.body.classList.toggle("light"); 
-  salvar(); // salva o tema global
+  salvar();
 }
 
 // ==================== EVENTOS ====================
@@ -2171,7 +2109,6 @@ document.getElementById('exposicaoInput').addEventListener('change', atualizarEx
 document.getElementById('dinheiro').addEventListener('blur', calcularDinheiro);
 document.getElementById('dinheiro').addEventListener('keypress', e => { if(e.key==='Enter') calcularDinheiro(); });
 
-// Ao alterar o campo de itens, recalcula o peso
 document.getElementById('itens').addEventListener('input', recalcularPesoTotal);
 
 document.getElementById('vidaMax').onchange = function() {
@@ -2191,7 +2128,6 @@ document.getElementById('poderMax').onchange = function() {
 };
 document.getElementById('pesoMax').onchange = function() {
   this.value = Math.max(0, +this.value||0);
-  // Recalcula peso para aplicar possível limite
   recalcularPesoTotal();
   salvar(); 
 };
