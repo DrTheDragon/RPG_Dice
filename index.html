@@ -749,7 +749,7 @@ body.light .fade-5 { color: #eee; }
     </div>
     <div class="section">
       <h3>🎯 Dados Personalizados</h3>
-      <p style="font-size:12px; margin-bottom:10px;">Ex: "2d6", "1d20+4", "2#d20", "2#d20+2d3", "2d6-1d4", " (2d6+4)*3", "10/2d4", "d20"</p>
+      <p style="font-size:12px; margin-bottom:10px;">Ex: "2d6", "1d20+4", "2#d20", "2#d20+2d30", "2d6-1d4", " (2d6+4)*3", "10/2d4", "d20"</p>
       <input id="dadoPersonalizado" type="text" placeholder="Digite a fórmula">
       <button onclick="rolarDadoPersonalizado()">ROLAR DADOS</button>
       <div class="resultado" id="resDadoPersonalizado"></div>
@@ -1130,12 +1130,16 @@ function avaliarRPN(rpn) {
   return pilha[0];
 }
 
-rolarDadoPersonalizado = function() {
+function rolarDadoPersonalizado() {
   somDado();
   let input = document.getElementById('dadoPersonalizado').value.trim();
   const resultadoDiv = document.getElementById('resDadoPersonalizado');
   const detalhesDiv = document.getElementById('detalhesRolagem');
-  if (!input) { resultadoDiv.innerHTML = 'Digite uma fórmula'; detalhesDiv.innerHTML = ''; return; }
+  if (!input) {
+    resultadoDiv.innerHTML = 'Digite uma fórmula';
+    detalhesDiv.innerHTML = '';
+    return;
+  }
 
   try {
     input = input.replace(/\s+/g, '');
@@ -1143,7 +1147,7 @@ rolarDadoPersonalizado = function() {
     const tokensComHash = tokens.filter(t => t.includes('#'));
     
     if (tokensComHash.length > 1) {
-      resultadoDiv.innerHTML = '❌ Expressão inválida: use no máximo um #.';
+      resultadoDiv.innerHTML = 'Expressão inválida: use no máximo um #.';
       detalhesDiv.innerHTML = '';
       return;
     }
@@ -1152,58 +1156,133 @@ rolarDadoPersonalizado = function() {
       const tokenHash = tokensComHash[0];
       const objLista = avaliarOperando(tokenHash);
       if (objLista.tipo !== 'lista') throw new Error('Não é lista');
-      const valoresLista = objLista.valores;
-      const resultados = [], detalhes = [];
+      const valoresLista = objLista.valores; // ex: [7, 14]
+      
+      const resultados = [];
+      const detalhesItens = []; // para armazenar a string de cada iteração
+      const valoresHash = []; // os valores do #
+      const stringsDados = []; // a string dos dados comuns de cada iteração
       
       for (let v of valoresLista) {
+        // Substitui o token hash pelo valor numérico
         const tokensSubst = tokens.map(t => t === tokenHash ? v.toString() : t);
         const rpnSubst = shuntingYard(tokensSubst);
         const resSubst = avaliarRPN(rpnSubst);
-        let valorFinal = resSubst.tipo === 'escalar' ? resSubst.valor : (resSubst.tipo === 'dados' ? resSubst.soma : resSubst.str);
+        
+        let valorFinal;
+        if (resSubst.tipo === 'escalar') {
+          valorFinal = resSubst.valor;
+        } else if (resSubst.tipo === 'dados') {
+          valorFinal = resSubst.soma;
+        } else {
+          valorFinal = resSubst.str; // fallback (lista)
+        }
+        
         resultados.push(valorFinal);
-        detalhes.push(`Iteração: ${v} + (${tokensSubst.join('').replace(v.toString(), '').replace(/^\+/, '')}) = ${valorFinal}`);
+        valoresHash.push(v);
+        
+        // Extrai a parte dos dados comuns: tudo depois do primeiro token (que é v)
+        // Os detalhes de resSubst são um array de strings na ordem da expressão
+        // Ex: [v, "+", "5+17", "-", "3"] para v+2d30-1d4
+        // Queremos a string que representa os dados comuns, ou seja, a expressão sem o v
+        let dadosComunsStr = '';
+        if (resSubst.detalhes && resSubst.detalhes.length > 1) {
+          // Pula o primeiro (v) e junta o resto com espaços
+          dadosComunsStr = resSubst.detalhes.slice(1).join(' ');
+        } else {
+          dadosComunsStr = resSubst.str || '';
+        }
+        stringsDados.push(dadosComunsStr);
+        
+        // Detalhe da iteração: v + (dadosComuns) = valorFinal
+        detalhesItens.push(`${v} + (${dadosComunsStr}) = ${valorFinal}`);
       }
       
+      // Exibe resultados
       resultadoDiv.innerHTML = `🎲 ${input}<br>Resultados: <b>${resultados.join(', ')}</b>`;
-      detalhesDiv.innerHTML = '<p><b>Detalhes:</b><br>' + detalhes.join('<br>') + '</p>';
-      historicoDados.unshift(`🎲 ${input} → ${resultados.join(', ')}`);
+      
+      // Detalhes: lista de iterações
+      let detalhesHtml = '<p><b>Detalhes:</b><br>';
+      detalhesItens.forEach(d => detalhesHtml += d + '<br>');
+      detalhesHtml += '</p>';
+      detalhesDiv.innerHTML = detalhesHtml;
+      
+      // Histórico: formato [v1, v2] + [(dados1), (dados2)] = [r1, r2]
+      const hashStr = `[${valoresHash.join(', ')}]`;
+      const dadosStr = `[(${stringsDados.join('), (')})]`;
+      const resStr = `[${resultados.join(', ')}]`;
+      const historicoEntry = `${input} → ${hashStr} + ${dadosStr} = ${resStr}`;
+      historicoDados.unshift(`🎲 ${historicoEntry}`);
       if (historicoDados.length > 6) historicoDados.pop();
-      salvar(); atualizarHistoricoDados();
+      
+      salvar();
+      atualizarHistoricoDados();
       return;
     }
     
-    // Sem # (código original simplificado)
+    // Sem # (código original)
     const rpn = shuntingYard(tokens);
     const resultado = avaliarRPN(rpn);
+    
     if (resultado.tipo === 'lista') {
       resultadoDiv.innerHTML = `🎲 ${input}<br>Resultados: <b>${resultado.valores.join(', ')}</b>`;
     } else {
       const valor = resultado.valor !== undefined ? resultado.valor : resultado.soma;
       resultadoDiv.innerHTML = `🎲 ${input}<br>Total: <b>${valor}</b>`;
     }
-    detalhesDiv.innerHTML = '<p><b>Detalhes:</b> ' + (resultado.detalhes ? resultado.detalhes.join(' ') : resultado.str) + '</p>';
-    historicoDados.unshift(`🎲 ${input} → ${resultado.str}`);
-    if (historicoDados.length > 6) historicoDados.pop();
-    salvar(); atualizarHistoricoDados();
-  } catch (e) {
-    resultadoDiv.innerHTML = 'Formato inválido.';
-    detalhesDiv.innerHTML = '';
-  }
-};
 
-// ==================== FUNÇÃO PARA AVALIAR EXPRESSÕES MATEMÁTICAS SIMPLES (para pesos) ====================
-function avaliarExpressao(expr) {
-  expr = expr.replace(/\s+/g, '');
-  // Permite apenas números, operadores e parênteses
-  if (!/^[0-9+\-*/()]+$/.test(expr)) return NaN;
-  try {
-    // Usar Function para evitar eval global
-    return new Function('return ' + expr)();
+    let detalhesHtml = '<p><b>Detalhes:</b> ';
+    if (resultado.detalhes) {
+      if (resultado.tipo === 'lista') {
+        detalhesHtml += resultado.detalhes[0];
+      } else {
+        let detalhesStr = '';
+        for (let i = 0; i < resultado.detalhes.length; i++) {
+          let d = resultado.detalhes[i];
+          if (d === '+' || d === '-' || d === '*' || d === '/') {
+            detalhesStr += ' ' + d + ' ';
+          } else {
+            detalhesStr += d;
+          }
+        }
+        detalhesHtml += detalhesStr;
+      }
+    } else {
+      detalhesHtml += resultado.str || '';
+    }
+    detalhesHtml += '</p>';
+    detalhesDiv.innerHTML = detalhesHtml;
+
+    let historicoStr = `${input} → `;
+    if (resultado.detalhes) {
+      if (resultado.tipo === 'lista') {
+        historicoStr += resultado.detalhes[0] + ' = ';
+      } else {
+        let detalhesStr = '';
+        for (let i = 0; i < resultado.detalhes.length; i++) {
+          let d = resultado.detalhes[i];
+          if (d === '+' || d === '-' || d === '*' || d === '/') {
+            detalhesStr += ' ' + d + ' ';
+          } else {
+            detalhesStr += d;
+          }
+        }
+        historicoStr += detalhesStr + ' = ';
+      }
+    }
+    historicoStr += resultado.str;
+    historicoDados.unshift(`🎲 ${historicoStr}`);
+    if (historicoDados.length > 6) historicoDados.pop();
+
+    salvar();
+    atualizarHistoricoDados();
+
   } catch (e) {
-    return NaN;
+    resultadoDiv.innerHTML = 'Formato inválido. Use expressões como "2d6", "1d20+4", "2#d20", "(2d6+4)*3", "10/2d4", "d20".';
+    detalhesDiv.innerHTML = '';
+    console.error(e);
   }
 }
-
 // ==================== FUNÇÃO PARA EXTRAIR PESO DOS ITENS COM SUPORTE A EXPRESSÕES E SUBSTITUIÇÃO ====================
 function extrairPesoDosItens() {
   if (processandoItens) return; // evita loop
