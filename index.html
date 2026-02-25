@@ -1130,19 +1130,95 @@ function avaliarRPN(rpn) {
   return pilha[0];
 }
 
-function rolarDadoPersonalizado() {
+ function rolarDadoPersonalizado() {
   somDado();
   let input = document.getElementById('dadoPersonalizado').value.trim();
   const resultadoDiv = document.getElementById('resDadoPersonalizado');
   const detalhesDiv = document.getElementById('detalhesRolagem');
-  if (!input) { resultadoDiv.innerHTML = 'Digite uma fórmula'; detalhesDiv.innerHTML = ''; return; }
+  if (!input) {
+    resultadoDiv.innerHTML = 'Digite uma fórmula';
+    detalhesDiv.innerHTML = '';
+    return;
+  }
 
   try {
     input = input.replace(/\s+/g, '');
     const tokens = tokenizar(input);
+    
+    // Verifica quantos tokens contêm '#'
+    const tokensComHash = tokens.filter(t => t.includes('#'));
+    
+    // Caso 1: mais de um # → erro
+    if (tokensComHash.length > 1) {
+      resultadoDiv.innerHTML = '❌ Expressão inválida: use no máximo um #.';
+      detalhesDiv.innerHTML = '';
+      return;
+    }
+    
+    // Caso 2: exatamente um # → processamento especial com repetição
+    if (tokensComHash.length === 1) {
+      const tokenHash = tokensComHash[0];
+      // Obtém a lista de valores do token #
+      const objLista = avaliarOperando(tokenHash);
+      if (objLista.tipo !== 'lista') {
+        resultadoDiv.innerHTML = 'Erro interno: token # não gerou uma lista.';
+        return;
+      }
+      const valoresLista = objLista.valores;
+      const resultados = [];
+      const detalhesLista = [];
+      
+      // Para cada valor na lista, reavalia a expressão substituindo o token #
+      for (let v of valoresLista) {
+        // Substitui o token # pelo valor atual na expressão original
+        const novaExpr = input.replace(tokenHash, v.toString());
+        // Avalia a nova expressão (agora sem #)
+        const tokens2 = tokenizar(novaExpr);
+        if (tokens2.some(t => t.includes('#'))) {
+          throw new Error('Substituição gerou um novo # inesperado.');
+        }
+        const rpn2 = shuntingYard(tokens2);
+        const res2 = avaliarRPN(rpn2);
+        
+        // Extrai o valor final (escalar ou soma de dados)
+        let valorFinal;
+        if (res2.tipo === 'escalar') {
+          valorFinal = res2.valor;
+        } else if (res2.tipo === 'dados') {
+          valorFinal = res2.soma;
+        } else {
+          throw new Error('Resultado não escalar após substituição.');
+        }
+        
+        resultados.push(valorFinal);
+        detalhesLista.push(`${v} + (${novaExpr.replace(v.toString(), '').replace(/^\+/, '')}) = ${valorFinal}`);
+      }
+      
+      // Exibe os resultados
+      resultadoDiv.innerHTML = `🎲 ${input}<br>Resultados: <b>${resultados.join(', ')}</b>`;
+      
+      // Monta detalhes (opcional, igual ao print)
+      let detalhesHtml = '<p><b>Detalhes:</b><br>';
+      detalhesLista.forEach((d, i) => {
+        detalhesHtml += `Iteração ${i+1}: ${d}<br>`;
+      });
+      detalhesHtml += '</p>';
+      detalhesDiv.innerHTML = detalhesHtml;
+      
+      // Histórico
+      historicoDados.unshift(`🎲 ${input} → ${resultados.join(', ')}`);
+      if (historicoDados.length > 6) historicoDados.pop();
+      
+      salvar();
+      atualizarHistoricoDados();
+      return;
+    }
+    
+    // Caso 3: nenhum # → avaliação normal (já existente)
     const rpn = shuntingYard(tokens);
     const resultado = avaliarRPN(rpn);
-
+    
+    // (todo o código de exibição normal permanece igual)
     if (resultado.tipo === 'lista') {
       resultadoDiv.innerHTML = `🎲 ${input}<br>Resultados: <b>${resultado.valores.join(', ')}</b>`;
     } else {
@@ -1150,14 +1226,12 @@ function rolarDadoPersonalizado() {
       resultadoDiv.innerHTML = `🎲 ${input}<br>Total: <b>${valor}</b>`;
     }
 
-    // Gerar detalhes: percorrer o array de detalhes e montar a string
+    // Gerar detalhes (igual ao código original)
     let detalhesHtml = '<p><b>Detalhes:</b> ';
     if (resultado.detalhes) {
       if (resultado.tipo === 'lista') {
-        // Para lista, detalhes[0] já é a string da operação
         detalhesHtml += resultado.detalhes[0];
       } else {
-        // Para não-lista, construir com espaços
         let detalhesStr = '';
         for (let i = 0; i < resultado.detalhes.length; i++) {
           let d = resultado.detalhes[i];
@@ -1175,7 +1249,7 @@ function rolarDadoPersonalizado() {
     detalhesHtml += '</p>';
     detalhesDiv.innerHTML = detalhesHtml;
 
-    // Histórico: expressão → operação detalhada = resultado
+    // Histórico
     let historicoStr = `${input} → `;
     if (resultado.detalhes) {
       if (resultado.tipo === 'lista') {
@@ -1199,13 +1273,13 @@ function rolarDadoPersonalizado() {
 
     salvar();
     atualizarHistoricoDados();
+
   } catch (e) {
     resultadoDiv.innerHTML = 'Formato inválido. Use expressões como "2d6", "1d20+4", "2#d20", "(2d6+4)*3", "10/2d4", "d20".';
     detalhesDiv.innerHTML = '';
     console.error(e);
   }
 }
-
 // ==================== FUNÇÃO PARA AVALIAR EXPRESSÕES MATEMÁTICAS SIMPLES (para pesos) ====================
 function avaliarExpressao(expr) {
   expr = expr.replace(/\s+/g, '');
