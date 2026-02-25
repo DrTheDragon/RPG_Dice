@@ -749,7 +749,7 @@ body.light .fade-5 { color: #eee; }
     </div>
     <div class="section">
       <h3>🎯 Dados Personalizados</h3>
-      <p style="font-size:12px; margin-bottom:10px;">Ex: "2d6", "1d20+4", "2#d20", "2#d20+2#d3", "2d6-1d4", " (2d6+4)*3", "10/2d4", "d20"</p>
+      <p style="font-size:12px; margin-bottom:10px;">Ex: "2d6", "1d20+4", "2#d20", "2#d20+2d3", "2d6-1d4", " (2d6+4)*3", "10/2d4", "d20"</p>
       <input id="dadoPersonalizado" type="text" placeholder="Digite a fórmula">
       <button onclick="rolarDadoPersonalizado()">ROLAR DADOS</button>
       <div class="resultado" id="resDadoPersonalizado"></div>
@@ -1171,30 +1171,28 @@ function avaliarRPN(rpn) {
       for (let i = 0; i < valoresLista.length; i++) {
         const valorAtual = valoresLista[i];
         
-        // Reconstrói a expressão substituindo o token # pelo valor atual
-        const novaExprTokens = tokens.map(t => t === tokenHash ? valorAtual.toString() : t);
-        const novaExpr = novaExprTokens.join('');
+        // Substitui o token hash pelo valor atual na lista de tokens
+        const tokensSubst = tokens.map(t => t === tokenHash ? valorAtual.toString() : t);
         
-        // Avalia a nova expressão (agora sem #)
-        const tokens2 = tokenizar(novaExpr);
-        if (tokens2.some(t => t.includes('#'))) {
-          throw new Error('Substituição gerou um novo # inesperado.');
-        }
-        const rpn2 = shuntingYard(tokens2);
-        const res2 = avaliarRPN(rpn2);
+        // Avalia a expressão com esses tokens (agora sem #)
+        const rpnSubst = shuntingYard(tokensSubst);
+        const resSubst = avaliarRPN(rpnSubst);
         
         // Extrai o valor final
         let valorFinal;
-        if (res2.tipo === 'escalar') {
-          valorFinal = res2.valor;
-        } else if (res2.tipo === 'dados') {
-          valorFinal = res2.soma;
+        if (resSubst.tipo === 'escalar') {
+          valorFinal = resSubst.valor;
+        } else if (resSubst.tipo === 'dados') {
+          valorFinal = resSubst.soma;
         } else {
-          valorFinal = res2.str;
+          valorFinal = resSubst.str; // fallback (lista)
         }
         
         resultados.push(valorFinal);
-        detalhes.push(`Iteração ${i+1}: ${valorAtual} + (${novaExpr.replace(valorAtual.toString(), '').replace(/^\+/, '')}) = ${valorFinal}`);
+        
+        // Constrói a expressão substituída como string para detalhes
+        const exprSubst = tokensSubst.join('');
+        detalhes.push(`Iteração ${i+1}: ${valorAtual} + (${exprSubst.replace(valorAtual.toString(), '').replace(/^\+/, '')}) = ${valorFinal}`);
       }
       
       resultadoDiv.innerHTML = `🎲 ${input}<br>Resultados: <b>${resultados.join(', ')}</b>`;
