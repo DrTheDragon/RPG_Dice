@@ -1130,150 +1130,66 @@ function avaliarRPN(rpn) {
   return pilha[0];
 }
 
- function rolarDadoPersonalizado() {
+rolarDadoPersonalizado = function() {
   somDado();
   let input = document.getElementById('dadoPersonalizado').value.trim();
   const resultadoDiv = document.getElementById('resDadoPersonalizado');
   const detalhesDiv = document.getElementById('detalhesRolagem');
-  if (!input) {
-    resultadoDiv.innerHTML = 'Digite uma fórmula';
-    detalhesDiv.innerHTML = '';
-    return;
-  }
+  if (!input) { resultadoDiv.innerHTML = 'Digite uma fórmula'; detalhesDiv.innerHTML = ''; return; }
 
   try {
     input = input.replace(/\s+/g, '');
     const tokens = tokenizar(input);
-    
-    // Verifica quantos tokens contêm '#'
     const tokensComHash = tokens.filter(t => t.includes('#'));
     
-    // Mais de um # → erro
     if (tokensComHash.length > 1) {
       resultadoDiv.innerHTML = '❌ Expressão inválida: use no máximo um #.';
       detalhesDiv.innerHTML = '';
       return;
     }
     
-    // Exatamente um # → processamento especial
     if (tokensComHash.length === 1) {
       const tokenHash = tokensComHash[0];
       const objLista = avaliarOperando(tokenHash);
-      if (objLista.tipo !== 'lista') {
-        resultadoDiv.innerHTML = 'Erro: token # não gerou uma lista.';
-        return;
-      }
-      const valoresLista = objLista.valores; // ex: [7, 14]
+      if (objLista.tipo !== 'lista') throw new Error('Não é lista');
+      const valoresLista = objLista.valores;
+      const resultados = [], detalhes = [];
       
-      const resultados = [];
-      const detalhes = [];
-      
-      for (let i = 0; i < valoresLista.length; i++) {
-        const valorAtual = valoresLista[i];
-        
-        // Substitui o token hash pelo valor atual na lista de tokens
-        const tokensSubst = tokens.map(t => t === tokenHash ? valorAtual.toString() : t);
-        
-        // Avalia a expressão com esses tokens (agora sem #)
+      for (let v of valoresLista) {
+        const tokensSubst = tokens.map(t => t === tokenHash ? v.toString() : t);
         const rpnSubst = shuntingYard(tokensSubst);
         const resSubst = avaliarRPN(rpnSubst);
-        
-        // Extrai o valor final
-        let valorFinal;
-        if (resSubst.tipo === 'escalar') {
-          valorFinal = resSubst.valor;
-        } else if (resSubst.tipo === 'dados') {
-          valorFinal = resSubst.soma;
-        } else {
-          valorFinal = resSubst.str; // fallback (lista)
-        }
-        
+        let valorFinal = resSubst.tipo === 'escalar' ? resSubst.valor : (resSubst.tipo === 'dados' ? resSubst.soma : resSubst.str);
         resultados.push(valorFinal);
-        
-        // Constrói a expressão substituída como string para detalhes
-        const exprSubst = tokensSubst.join('');
-        detalhes.push(`Iteração ${i+1}: ${valorAtual} + (${exprSubst.replace(valorAtual.toString(), '').replace(/^\+/, '')}) = ${valorFinal}`);
+        detalhes.push(`Iteração: ${v} + (${tokensSubst.join('').replace(v.toString(), '').replace(/^\+/, '')}) = ${valorFinal}`);
       }
       
       resultadoDiv.innerHTML = `🎲 ${input}<br>Resultados: <b>${resultados.join(', ')}</b>`;
-      
-      let detalhesHtml = '<p><b>Detalhes:</b><br>';
-      detalhes.forEach(d => detalhesHtml += d + '<br>');
-      detalhesHtml += '</p>';
-      detalhesDiv.innerHTML = detalhesHtml;
-      
+      detalhesDiv.innerHTML = '<p><b>Detalhes:</b><br>' + detalhes.join('<br>') + '</p>';
       historicoDados.unshift(`🎲 ${input} → ${resultados.join(', ')}`);
       if (historicoDados.length > 6) historicoDados.pop();
-      
-      salvar();
-      atualizarHistoricoDados();
+      salvar(); atualizarHistoricoDados();
       return;
     }
     
-    // Sem # → avaliação normal (já existente)
+    // Sem # (código original simplificado)
     const rpn = shuntingYard(tokens);
     const resultado = avaliarRPN(rpn);
-    
-    // Exibição normal (igual ao original)
     if (resultado.tipo === 'lista') {
       resultadoDiv.innerHTML = `🎲 ${input}<br>Resultados: <b>${resultado.valores.join(', ')}</b>`;
     } else {
       const valor = resultado.valor !== undefined ? resultado.valor : resultado.soma;
       resultadoDiv.innerHTML = `🎲 ${input}<br>Total: <b>${valor}</b>`;
     }
-
-    let detalhesHtml = '<p><b>Detalhes:</b> ';
-    if (resultado.detalhes) {
-      if (resultado.tipo === 'lista') {
-        detalhesHtml += resultado.detalhes[0];
-      } else {
-        let detalhesStr = '';
-        for (let i = 0; i < resultado.detalhes.length; i++) {
-          let d = resultado.detalhes[i];
-          if (d === '+' || d === '-' || d === '*' || d === '/') {
-            detalhesStr += ' ' + d + ' ';
-          } else {
-            detalhesStr += d;
-          }
-        }
-        detalhesHtml += detalhesStr;
-      }
-    } else {
-      detalhesHtml += resultado.str || '';
-    }
-    detalhesHtml += '</p>';
-    detalhesDiv.innerHTML = detalhesHtml;
-
-    let historicoStr = `${input} → `;
-    if (resultado.detalhes) {
-      if (resultado.tipo === 'lista') {
-        historicoStr += resultado.detalhes[0] + ' = ';
-      } else {
-        let detalhesStr = '';
-        for (let i = 0; i < resultado.detalhes.length; i++) {
-          let d = resultado.detalhes[i];
-          if (d === '+' || d === '-' || d === '*' || d === '/') {
-            detalhesStr += ' ' + d + ' ';
-          } else {
-            detalhesStr += d;
-          }
-        }
-        historicoStr += detalhesStr + ' = ';
-      }
-    }
-    historicoStr += resultado.str;
-    historicoDados.unshift(`🎲 ${historicoStr}`);
+    detalhesDiv.innerHTML = '<p><b>Detalhes:</b> ' + (resultado.detalhes ? resultado.detalhes.join(' ') : resultado.str) + '</p>';
+    historicoDados.unshift(`🎲 ${input} → ${resultado.str}`);
     if (historicoDados.length > 6) historicoDados.pop();
-
-    salvar();
-    atualizarHistoricoDados();
-
+    salvar(); atualizarHistoricoDados();
   } catch (e) {
-    resultadoDiv.innerHTML = 'Formato inválido. Use expressões como "2d6", "1d20+4", "2#d20", "(2d6+4)*3", "10/2d4", "d20".';
+    resultadoDiv.innerHTML = 'Formato inválido.';
     detalhesDiv.innerHTML = '';
-    console.error(e);
   }
-}
+};
 
 // ==================== FUNÇÃO PARA AVALIAR EXPRESSÕES MATEMÁTICAS SIMPLES (para pesos) ====================
 function avaliarExpressao(expr) {
