@@ -568,12 +568,14 @@ body.light .fade-5 { color: #eee; }
 .modal-close:hover {
   color: #f00;
 }
- .section input,
-.section .max-button {
+.section > input[type="text"],
+.section > button {
+  width: 100%;
   max-width: 400px;
   margin-left: auto;
   margin-right: auto;
   display: block;
+  box-sizing: border-box;
 }
 </style>
 </head>
