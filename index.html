@@ -13,7 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
 <link rel="manifest" href="manifest.json">
 <style>
-/* ========== ESTILOS ========== */
+/* ========== SEUS ESTILOS (mantenha exatamente como estão) ========== */
 :root{
  --bg1:#111;--bg2:#000;--panel:#080808;--text:#e0e0e0;
  --border:#222;
@@ -2372,19 +2372,21 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('service-worker.js').then(reg => {
       console.log('Service Worker registrado com sucesso:', reg.scope);
 
-      // Verifica se há uma nova versão instalada
+      // Força verificação de atualização agora
+      reg.update();
+
+      // Monitora se há um novo service worker sendo instalado
       reg.addEventListener('updatefound', () => {
         const newWorker = reg.installing;
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            console.log('Nova versão disponível. Recarregando...');
-            window.location.reload();
+            // Nova versão instalada: pergunta ao usuário
+            if (confirm('Nova versão disponível! Recarregar agora?')) {
+              window.location.reload();
+            }
           }
         });
       });
-
-      // Força a verificação de atualização a cada carregamento
-      reg.update();
     }).catch(err => {
       console.log('Falha no registro do Service Worker:', err);
     });
@@ -2401,30 +2403,6 @@ window.addEventListener('load', function() {
   carregarTodasFichas();
 });
 
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('service-worker.js').then(reg => {
-      console.log('Service Worker registrado:', reg.scope);
-      reg.update(); // verifica atualizações
-    }).catch(err => console.log('Erro no SW:', err));
-  });
-}
- 
-reg.addEventListener('updatefound', () => {
-  const newWorker = reg.installing;
-  newWorker.addEventListener('statechange', () => {
-    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-      // Opcional: pergunta ao usuário
-      if (confirm('Nova versão disponível! Recarregar agora?')) {
-        window.location.reload();
-      }
-      // Ou recarrega direto:
-      // window.location.reload();
-    }
-  });
-});
-
-             
 </script>
 </body>
 </html>
