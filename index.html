@@ -2398,33 +2398,40 @@ document.getElementById('checkCaido').addEventListener('change', function() {
   }
 });
 
-// ==================== SERVICE WORKER COM ATUALIZAÇÃO AUTOMÁTICA ====================
+// ==================== SERVICE WORKER COM ATUALIZAÇÃO AUTOMÁTICA E OFFLINE ====================
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('service-worker.js').then(reg => {
-      console.log('Service Worker registrado com sucesso:', reg.scope);
+    // Registra com updateViaCache: 'none' para garantir que o SW seja verificado na rede
+    navigator.serviceWorker.register('service-worker.js', { updateViaCache: 'none' })
+      .then(reg => {
+        console.log('Service Worker registrado com sucesso:', reg.scope);
 
-      // Força verificação de atualização agora
-      reg.update();
+        // Força verificação de atualização agora
+        reg.update();
 
-      // Monitora se há um novo service worker sendo instalado
-      reg.addEventListener('updatefound', () => {
-        const newWorker = reg.installing;
-        newWorker.addEventListener('statechange', () => {
-          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            // Nova versão instalada: pergunta ao usuário
-            if (confirm('Nova versão disponível! Recarregar agora?')) {
-              window.location.reload();
+        // Verifica atualizações a cada 60 segundos (enquanto o app estiver aberto)
+        setInterval(() => {
+          reg.update();
+        }, 60000);
+
+        // Monitora se há um novo service worker sendo instalado
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              // Nova versão instalada: pergunta ao usuário se deseja recarregar
+              if (confirm('Nova versão disponível! Recarregar agora?')) {
+                window.location.reload();
+              }
             }
-          }
+          });
         });
+      })
+      .catch(err => {
+        console.log('Falha no registro do Service Worker:', err);
       });
-    }).catch(err => {
-      console.log('Falha no registro do Service Worker:', err);
-    });
   });
 }
-
 // ==================== INICIALIZAÇÃO ====================
 document.addEventListener('click', function initAudioOnClick() {
   if(!audioInitialized) initAudio();
