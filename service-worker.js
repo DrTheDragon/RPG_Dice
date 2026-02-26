@@ -9,6 +9,7 @@ const urlsToCache = [
   // Adicione outros assets se necessário (ex: imagens, fontes)
 ];
 
+
 self.addEventListener('install', event => {
   self.skipWaiting(); // Ativa imediatamente
   event.waitUntil(
