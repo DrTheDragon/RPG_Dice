@@ -910,6 +910,26 @@ const tabela = {
   19:{N:2,B:12,E:18},20:{N:1,B:11,E:17}
 };
 
+// ==================== FUNÇÃO PARA AVALIAR EXPRESSÕES NO PESO ====================
+function avaliarExpressao(expr) {
+    expr = expr.trim();
+    // Se for apenas um número, retorna ele
+    if (/^\d+(\.\d+)?$/.test(expr)) {
+        return parseFloat(expr);
+    }
+    // Tenta avaliar como expressão matemática (cuidado com eval)
+    try {
+        // Permite apenas números e operadores + - * / ( )
+        if (/^[0-9+\-*/().\s]+$/.test(expr)) {
+            // Usar Function para evitar eval direto
+            return new Function('return ' + expr)();
+        }
+    } catch (e) {
+        // Se falhar, retorna NaN
+    }
+    return NaN;
+}
+
 // ==================== ÁUDIO ====================
 function initAudio() {
   if (!audioInitialized) {
@@ -1283,35 +1303,19 @@ function rolarDadoPersonalizado() {
     detalhesHtml += '</p>';
     detalhesDiv.innerHTML = detalhesHtml;
 
-    // Histórico - CORRIGIDO para mostrar o total após o '='
-    let historicoStr = `${input} -> `;
-    if (resultado.detalhes) {
-      if (resultado.tipo === 'lista') {
-        historicoStr += resultado.detalhes[0] + ' = ';
+    // Histórico: agora mostra detalhes = total
+    let detalhesParaHistorico = '';
+    if (resultado.tipo === 'lista') {
+      detalhesParaHistorico = resultado.detalhes[0];
+    } else {
+      if (resultado.detalhes) {
+        detalhesParaHistorico = resultado.detalhes.join(' ');
       } else {
-        let detalhesStr = '';
-        for (let i = 0; i < resultado.detalhes.length; i++) {
-          let d = resultado.detalhes[i];
-          if (d === '+' || d === '-' || d === '*' || d === '/') {
-            detalhesStr += ' ' + d + ' ';
-          } else {
-            detalhesStr += d;
-          }
-        }
-        historicoStr += detalhesStr + ' = ';
+        detalhesParaHistorico = resultado.str;
       }
     }
-    // Agora coloca o valor total (soma ou valor)
-    if (resultado.tipo === 'escalar') {
-      historicoStr += resultado.valor;
-    } else if (resultado.tipo === 'dados') {
-      historicoStr += resultado.soma;
-    } else if (resultado.tipo === 'lista') {
-      historicoStr += `[${resultado.valores.join(', ')}]`;
-    } else {
-      historicoStr += resultado.str; // fallback
-    }
-    
+    let valorFinal = resultado.valor !== undefined ? resultado.valor : (resultado.soma !== undefined ? resultado.soma : resultado.str);
+    let historicoStr = `${input} -> ${detalhesParaHistorico} = ${valorFinal}`;
     historicoDados.unshift(`🎲 ${historicoStr}`);
     if (historicoDados.length > 6) historicoDados.pop();
 
@@ -1345,7 +1349,7 @@ function extrairPesoDosItens() {
     let valor = avaliarExpressao(expr);
     if (!isNaN(valor) && valor > 0) {
       // Substitui a expressão pelo valor numérico
-      novaExpressao = `(p:${valor})`;
+      let novaExpressao = `(p:${valor})`;
       novoTexto = novoTexto.replace(match[0], novaExpressao);
     }
   }
