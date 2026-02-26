@@ -1263,11 +1263,19 @@ function rolarDadoPersonalizado() {
     detalhesIteracoes.push(detalhesSemValor);
   }
   
+  // Verifica se todos os detalhes das iterações são iguais
+  const todosIguais = detalhesIteracoes.every(d => d === detalhesIteracoes[0]);
+  
   // Monta os detalhes totais
   let detalhesStr = `[${valoresLista.join(', ')}]`;
-  const temOperadores = tokens.length > 1; // há outros tokens além do #
-  if (temOperadores && detalhesIteracoes.length > 0 && detalhesIteracoes[0] !== '') {
-    detalhesStr += ` + [${detalhesIteracoes.map(d => '(' + d + ')').join(', ')}]`;
+  if (tokens.length > 1) { // há outros tokens além do #
+    if (todosIguais) {
+      // Se todos iguais, mostra apenas um
+      detalhesStr += ` ${detalhesIteracoes[0]}`;
+    } else {
+      // Se diferentes, mostra a lista entre parênteses
+      detalhesStr += ` + [${detalhesIteracoes.map(d => '(' + d + ')').join(', ')}]`;
+    }
   }
   
   // Exibe os resultados
@@ -1276,11 +1284,8 @@ function rolarDadoPersonalizado() {
   // Detalhes
   detalhesDiv.innerHTML = `<p><b>Detalhes:</b> ${detalhesStr}</p>`;
   
-  // Histórico: formato diferente quando não há operadores
-  const historicoStr = temOperadores
-    ? `${input} -> ${detalhesStr} = [${resultados.join(', ')}]`
-    : `${input} -> [${valoresLista.join(', ')}] = [${resultados.join(', ')}]`;
-  
+  // Histórico
+  const historicoStr = `${input} -> ${detalhesStr} = [${resultados.join(', ')}]`;
   historicoDados.unshift(`🎲 ${historicoStr}`);
   if (historicoDados.length > 6) historicoDados.pop();
   
