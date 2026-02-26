@@ -2378,21 +2378,32 @@ document.getElementById('checkCaido').addEventListener('change', function() {
 
 // ==================== SERVICE WORKER COM ATUALIZAÇÃO AUTOMÁTICA ====================
 if ('serviceWorker' in navigator) {
+  let swRegistration = null;
+
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('service-worker.js').then(reg => {
-      console.log('Service Worker registrado com sucesso:', reg.scope);
+      swRegistration = reg;
+      console.log('Service Worker registrado:', reg.scope);
 
-      // Força verificação de atualização agora
+      // Verifica atualizações a cada carregamento
       reg.update();
 
       // Monitora se há um novo service worker sendo instalado
       reg.addEventListener('updatefound', () => {
         const newWorker = reg.installing;
+        console.log('Novo service worker sendo instalado...');
+
         newWorker.addEventListener('statechange', () => {
-          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            // Nova versão instalada: pergunta ao usuário
-            if (confirm('Nova versão disponível! Recarregar agora?')) {
+          console.log('Estado do novo SW:', newWorker.state);
+          if (newWorker.state === 'installed') {
+            // Se já existe um SW ativo, significa que há uma nova versão
+            if (navigator.serviceWorker.controller) {
+              console.log('Nova versão detectada. Recarregando...');
+              // Recarrega a página para ativar o novo SW
               window.location.reload();
+            } else {
+              // Primeira instalação, não precisa recarregar
+              console.log('Service Worker instalado pela primeira vez.');
             }
           }
         });
@@ -2400,9 +2411,26 @@ if ('serviceWorker' in navigator) {
     }).catch(err => {
       console.log('Falha no registro do Service Worker:', err);
     });
+
+    // Opcional: verificar atualizações periodicamente (ex: a cada 10 segundos)
+    setInterval(() => {
+      if (swRegistration) {
+        swRegistration.update();
+        console.log('Verificando atualizações do SW...');
+      }
+    }, 10000);
+  });
+
+  // Força o recarregamento quando um novo SW tomar controle
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!refreshing) {
+      refreshing = true;
+      console.log('Novo service worker ativado. Recarregando...');
+      window.location.reload();
+    }
   });
 }
-
 // ==================== INICIALIZAÇÃO ====================
 document.addEventListener('click', function initAudioOnClick() {
   if(!audioInitialized) initAudio();
