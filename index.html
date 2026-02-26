@@ -317,16 +317,23 @@ body.light .fade-5 { color: #eee; }
    min-height: 48px;
  }
 
- .dado{font-size:48px; margin:5px 0;}
- /* Animação suavizada no mobile */
- .dado.rolando {
-   animation: roll-mobile .25s ease-in-out;
+ /* Dados maiores e centralizados no mobile */
+ .dado {
+   font-size: 72px !important;
+   text-align: center !important;
+   margin: 10px auto !important;
+   display: block;
  }
- @keyframes roll-mobile {
-   0%{transform:rotate(0) scale(1)}
-   30%{transform:rotate(15deg) scale(1.02)}
-   60%{transform:rotate(-10deg) scale(1.02)}
-   100%{transform:rotate(0) scale(1)}
+
+ /* Animação mais suave no mobile */
+ .dado.rolando {
+   animation: roll-mobile-suave .3s ease-in-out !important;
+ }
+ @keyframes roll-mobile-suave {
+   0% { transform: rotate(0) scale(1); }
+   25% { transform: rotate(10deg) scale(1.02); }
+   50% { transform: rotate(-5deg) scale(1.02); }
+   100% { transform: rotate(0) scale(1); }
  }
 
  .exposicao-input input{width:120px;}
@@ -346,17 +353,23 @@ body.light .fade-5 { color: #eee; }
  .checkbox-vida{width:28px; height:28px;}
  .checkboxes-status{margin-top:10px;}
 
- /* CORREÇÃO: checkbox-status agora centralizado no mobile */
+ /* CORREÇÃO: checkbox-status perfeitamente centralizado no mobile */
  .checkbox-status {
-   display: flex;
-   align-items: center;
-   justify-content: center;
-   gap: 5px;
-   width: 100%;
+   display: flex !important;
+   align-items: center !important;
+   justify-content: center !important;
+   gap: 8px !important;
+   width: 100% !important;
+   margin: 5px 0 !important;
  }
  .checkbox-status label {
-   text-align: center;
-   flex: 1;
+   display: inline !important;
+   text-align: center !important;
+   white-space: nowrap;
+ }
+ .checkbox-status input {
+   margin: 0 !important;
+   width: auto !important;
  }
 
  .atributo-extra, .recurso-item, .peso-container{text-align:center;}
@@ -708,6 +721,7 @@ body.light .fade-5 { color: #eee; }
 .modal-close:hover {
   color: #f00;
 }
+</style>
 </style>
 </head>
 <body class="loading">
