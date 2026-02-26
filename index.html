@@ -1249,32 +1249,28 @@ function rolarDadoPersonalizado() {
     }
     resultados.push(valorFinal);
     
-    // Obtém os detalhes completos desta iteração
-    let detalhesCompletos = '';
-    if (resSubst.detalhes) {
-      // Junta os detalhes em uma string
-      detalhesCompletos = resSubst.detalhes.join(' ');
-    } else {
-      detalhesCompletos = resSubst.str || '';
+    // Obtém os detalhes completos desta iteração (array)
+    let detalhesArray = resSubst.detalhes || [];
+    // Remove o valor do # do array (primeira ocorrência)
+    const valorStr = valorAtual.toString();
+    const indexToRemove = detalhesArray.indexOf(valorStr);
+    if (indexToRemove !== -1) {
+      detalhesArray.splice(indexToRemove, 1);
     }
-    
-    // Remove o valor do # dos detalhes
-    let detalhesSemValor = removerValorDetalhes(detalhesCompletos, valorAtual);
+    // Junta os detalhes restantes
+    let detalhesSemValor = detalhesArray.join(' ');
     detalhesIteracoes.push(detalhesSemValor);
   }
-  
-  // Verifica se todos os detalhes das iterações são iguais
-  const todosIguais = detalhesIteracoes.every(d => d === detalhesIteracoes[0]);
   
   // Monta os detalhes totais
   let detalhesStr = `[${valoresLista.join(', ')}]`;
   if (tokens.length > 1) { // há outros tokens além do #
+    // Verifica se todos os detalhes das iterações são iguais
+    const todosIguais = detalhesIteracoes.every(d => d === detalhesIteracoes[0]);
     if (todosIguais) {
-      // Se todos iguais, mostra apenas um
       detalhesStr += ` ${detalhesIteracoes[0]}`;
     } else {
-      // Se diferentes, mostra a lista entre parênteses
-      detalhesStr += ` + [${detalhesIteracoes.map(d => '(' + d + ')').join(', ')}]`;
+      detalhesStr += ` [${detalhesIteracoes.map(d => '(' + d + ')').join(', ')}]`;
     }
   }
   
