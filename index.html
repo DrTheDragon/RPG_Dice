@@ -1218,73 +1218,76 @@ function rolarDadoPersonalizado() {
     }
     
     // Exatamente um # → processamento especial
-    if (tokensComHash.length === 1) {
-      const tokenHash = tokensComHash[0];
-      const objLista = avaliarOperando(tokenHash);
-      if (objLista.tipo !== 'lista') {
-        resultadoDiv.innerHTML = 'Erro: token # não gerou uma lista.';
-        return;
-      }
-      const valoresLista = objLista.valores; // ex: [7, 14]
-      
-      const resultados = [];
-      const detalhesIteracoes = []; // armazenará os detalhes de cada iteração (sem o valor do #)
-      
-      for (let i = 0; i < valoresLista.length; i++) {
-        const valorAtual = valoresLista[i];
-        // Substitui o token hash pelo valor atual na lista de tokens
-        const tokensSubst = tokens.map(t => t === tokenHash ? valorAtual.toString() : t);
-        // Avalia a expressão com esses tokens (agora sem #)
-        const rpnSubst = shuntingYard(tokensSubst);
-        const resSubst = avaliarRPN(rpnSubst);
-        
-        // Extrai o valor final
-        let valorFinal;
-        if (resSubst.tipo === 'escalar') {
-          valorFinal = resSubst.valor;
-        } else if (resSubst.tipo === 'dados') {
-          valorFinal = resSubst.soma;
-        } else {
-          valorFinal = resSubst.str; // fallback (lista)
-        }
-        resultados.push(valorFinal);
-        
-        // Obtém os detalhes completos desta iteração
-        let detalhesCompletos = '';
-        if (resSubst.detalhes) {
-          // Junta os detalhes em uma string
-          detalhesCompletos = resSubst.detalhes.join(' ');
-        } else {
-          detalhesCompletos = resSubst.str || '';
-        }
-        
-        // Remove o valor do # dos detalhes
-        let detalhesSemValor = removerValorDetalhes(detalhesCompletos, valorAtual);
-        // Se a remoção não funcionar, tenta também remover com parênteses? Por simplicidade, mantém.
-        detalhesIteracoes.push(detalhesSemValor);
-      }
-      
-      // Monta os detalhes totais
-      let detalhesStr = `[${valoresLista.join(', ')}]`;
-      if (detalhesIteracoes.length > 0 && detalhesIteracoes[0] !== '') {
-        detalhesStr += ` + [${detalhesIteracoes.map(d => '(' + d + ')').join(', ')}]`;
-      }
-      
-      // Exibe os resultados
-      resultadoDiv.innerHTML = `🎲 ${input}<br>Resultados: <b>${resultados.join(', ')}</b>`;
-      
-      // Detalhes
-      detalhesDiv.innerHTML = `<p><b>Detalhes:</b> ${detalhesStr}</p>`;
-      
-      // Histórico
-      const historicoStr = `${input} -> ${detalhesStr} = [${resultados.join(', ')}]`;
-      historicoDados.unshift(`🎲 ${historicoStr}`);
-      if (historicoDados.length > 6) historicoDados.pop();
-      
-      salvar();
-      atualizarHistoricoDados();
-      return;
+  if (tokensComHash.length === 1) {
+  const tokenHash = tokensComHash[0];
+  const objLista = avaliarOperando(tokenHash);
+  if (objLista.tipo !== 'lista') {
+    resultadoDiv.innerHTML = 'Erro: token # não gerou uma lista.';
+    return;
+  }
+  const valoresLista = objLista.valores; // ex: [7, 14]
+  
+  const resultados = [];
+  const detalhesIteracoes = []; // armazenará os detalhes de cada iteração (sem o valor do #)
+  
+  for (let i = 0; i < valoresLista.length; i++) {
+    const valorAtual = valoresLista[i];
+    // Substitui o token hash pelo valor atual na lista de tokens
+    const tokensSubst = tokens.map(t => t === tokenHash ? valorAtual.toString() : t);
+    // Avalia a expressão com esses tokens (agora sem #)
+    const rpnSubst = shuntingYard(tokensSubst);
+    const resSubst = avaliarRPN(rpnSubst);
+    
+    // Extrai o valor final
+    let valorFinal;
+    if (resSubst.tipo === 'escalar') {
+      valorFinal = resSubst.valor;
+    } else if (resSubst.tipo === 'dados') {
+      valorFinal = resSubst.soma;
+    } else {
+      valorFinal = resSubst.str; // fallback (lista)
     }
+    resultados.push(valorFinal);
+    
+    // Obtém os detalhes completos desta iteração
+    let detalhesCompletos = '';
+    if (resSubst.detalhes) {
+      // Junta os detalhes em uma string
+      detalhesCompletos = resSubst.detalhes.join(' ');
+    } else {
+      detalhesCompletos = resSubst.str || '';
+    }
+    
+    // Remove o valor do # dos detalhes
+    let detalhesSemValor = removerValorDetalhes(detalhesCompletos, valorAtual);
+    detalhesIteracoes.push(detalhesSemValor);
+  }
+  
+  // Monta os detalhes totais
+  let detalhesStr = `[${valoresLista.join(', ')}]`;
+  const temOperadores = tokens.length > 1; // há outros tokens além do #
+  if (temOperadores && detalhesIteracoes.length > 0 && detalhesIteracoes[0] !== '') {
+    detalhesStr += ` + [${detalhesIteracoes.map(d => '(' + d + ')').join(', ')}]`;
+  }
+  
+  // Exibe os resultados
+  resultadoDiv.innerHTML = `🎲 ${input}<br>Resultados: <b>${resultados.join(', ')}</b>`;
+  
+  // Detalhes
+  detalhesDiv.innerHTML = `<p><b>Detalhes:</b> ${detalhesStr}</p>`;
+  
+  // Histórico: formato diferente quando não há operadores
+  const historicoStr = temOperadores
+    ? `${input} -> ${detalhesStr} = [${resultados.join(', ')}]`
+    : `${input} -> [${valoresLista.join(', ')}] = [${resultados.join(', ')}]`;
+  
+  historicoDados.unshift(`🎲 ${historicoStr}`);
+  if (historicoDados.length > 6) historicoDados.pop();
+  
+  salvar();
+  atualizarHistoricoDados();
+  return;
+}
     
     // Sem # → avaliação normal
     const rpn = shuntingYard(tokens);
