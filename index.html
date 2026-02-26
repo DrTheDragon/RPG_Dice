@@ -13,7 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
 <link rel="manifest" href="manifest.json">
 <style>
-/* ========== SEUS ESTILOS (mantenha exatamente como estão) ========== */
+/* ========== ESTILOS ========== */
 :root{
  --bg1:#111;--bg2:#000;--panel:#080808;--text:#e0e0e0;
  --border:#222;
@@ -51,28 +51,98 @@ body{
 h2,h3{text-align:center;letter-spacing:2px}
 h4{text-align:center;letter-spacing:1px;margin:10px 0 5px;font-size:1.1em}
 .section{border-top:1px solid var(--border);margin-top:20px;padding-top:15px}
-input,button,textarea{
- width:100%;padding:10px;margin-top:8px;
- background:transparent;border:1px solid var(--border);
- color:var(--text);text-align:center;
+
+/* ===== CENTRALIZAÇÃO DE CAMPOS DE TEXTO ===== */
+input, button, textarea{
+ width:100%; padding:10px; margin-top:8px;
+ background:transparent; border:1px solid var(--border);
+ color:var(--text); text-align:center; /* já existente, mantido */
  font-family:'Special Elite',monospace;
- font-size:15px
+ font-size:15px;
+ box-sizing: border-box; /* garante que padding não estoure a largura */
 }
-textarea{min-height:140px;text-align:left}
-button{cursor:pointer}
-button:hover{background:rgba(255,255,255,.05)}
-button:active{transform:scale(.97)}
-.dado{font-size:58px;text-align:center;margin:10px 0}
-.resultado{min-height:90px;text-align:center;margin-top:10px}
-.controls{display:flex;gap:6px;flex-wrap:wrap}
-.controls button{flex:1 1 48%}
-.E{color:#ff4c4c}
-.B{color:#4fa3ff}
-.N{color:#9acd32}
-.F{color:#777}
-.historico{margin-top:15px;font-size:14px}
-.historico ul{list-style:none;padding:0;margin:0;height:180px;overflow:hidden}
-.historico li{padding:5px 6px;border-bottom:1px solid var(--border);line-height:1.3;min-height:28px;display:flex;align-items:center}
+textarea{
+ text-align: left; /* para textareas, o padrão é left, mas podemos centralizar se quiser */
+ /* Se quiser centralizar o texto do textarea, mude para text-align: center; */
+}
+/* Para labels e grupos, garantir centralização */
+.campo-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 5px;
+  align-items: center; /* centraliza os itens do grupo */
+}
+.campo-label {
+  font-size: 0.7em;
+  opacity: 0.7;
+  margin-bottom: 2px;
+  text-align: center; /* centraliza o label */
+  letter-spacing: 0.5px;
+  width: 100%;
+}
+.linha-flex {
+  display: flex;
+  gap: 10px;
+  justify-content: center; /* centraliza os filhos */
+  flex-wrap: wrap; /* para mobile */
+}
+.linha-flex .campo-group {
+  flex: 1 1 auto; /* permite que os grupos cresçam */
+  min-width: 120px; /* evita que fiquem muito pequenos */
+}
+/* Centralizar inputs numéricos também */
+input[type="number"] {
+  text-align: center;
+}
+/* Ajuste para os checkboxes e labels */
+.checkbox-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.checkbox-status input {
+  width: auto;
+  margin: 0;
+}
+/* Centralizar o conteúdo dos painéis */
+.panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.panel > * {
+  width: 100%; /* ocupa toda a largura do painel */
+}
+/* Para os botões de controle, já estão com flex */
+.controls {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center; /* centraliza os botões */
+}
+/* Resultados e detalhes */
+.resultado, .roll-details {
+  text-align: center;
+}
+/* Histórico */
+.historico ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  height: 180px;
+  overflow: hidden;
+}
+.historico li {
+  padding: 5px 6px;
+  border-bottom: 1px solid var(--border);
+  line-height: 1.3;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* centraliza o texto do histórico */
+}
+/* Demais estilos permanecem iguais */
 .fade-0{color:var(--text)}
 .fade-1{color:var(--text)}
 .fade-2{color:var(--text)}
@@ -111,7 +181,8 @@ body.light .fade-5 { color: #eee; }
 }
 .checkboxes-vida{
  display:flex;
- justify-content:space-between;
+ justify-content:center; /* centraliza */
+ gap:25px;
  margin:15px 0 10px 0;
 }
 .checkbox-vida{
@@ -121,14 +192,9 @@ body.light .fade-5 { color: #eee; }
 }
 .checkboxes-status{
  margin-top:15px;
-}
-.checkbox-status{
- display:block;
- margin:8px 0;
-}
-.checkbox-status input{
- width:auto;
- margin-right:10px;
+ display: flex;
+ flex-direction: column;
+ align-items: center;
 }
 .atributos-extras{
  width:820px;
@@ -143,6 +209,9 @@ body.light .fade-5 { color: #eee; }
  border:1px solid var(--border);
  box-shadow:0 0 40px rgba(0,0,0,.7);
  padding:25px;
+ display: flex;
+ flex-direction: column;
+ align-items: center;
 }
 .atributo-extra h3{
  margin-top:0;
@@ -156,6 +225,9 @@ body.light .fade-5 { color: #eee; }
  border:1px solid var(--border);
  box-shadow:0 0 40px rgba(0,0,0,.7);
  padding:25px;
+ display: flex;
+ flex-direction: column;
+ align-items: center;
 }
 .peso-container h3{
  margin-top:0;
@@ -166,15 +238,21 @@ body.light .fade-5 { color: #eee; }
  display:flex;
  flex-direction:column;
  gap:15px;
+ width: 100%;
+ align-items: center;
 }
 .peso-item{
  text-align:center;
+ width: 100%;
 }
 .peso-item p{
  margin:8px 0;
 }
 .peso-buttons{
  margin-top:10px;
+ display: flex;
+ gap: 10px;
+ justify-content: center;
 }
 .exposicao-container{
  text-align:center;
@@ -182,6 +260,8 @@ body.light .fade-5 { color: #eee; }
 }
 .exposicao-input{
  margin-top:10px;
+ display: flex;
+ justify-content: center;
 }
 .exposicao-input input{
  width:150px;
@@ -202,6 +282,9 @@ body.light .fade-5 { color: #eee; }
  box-shadow:0 0 40px rgba(0,0,0,.7);
  padding:25px;
  text-align:center;
+ display: flex;
+ flex-direction: column;
+ align-items: center;
 }
 .recurso-item h3{
  margin-top:0;
@@ -386,6 +469,9 @@ body.light .fade-5 { color: #eee; }
  grid-template-columns:1fr 2fr;
  gap:15px;
 }
+@media(max-width:768px){
+ .identidade-grid { grid-template-columns:1fr; }
+}
 .identidade-grid .foto-area {
  text-align:center;
 }
@@ -417,29 +503,31 @@ body.light .fade-5 { color: #eee; }
  width:100%;
  box-sizing:border-box;
 }
-@media(max-width:768px){
- .identidade-grid { grid-template-columns:1fr; }
-}
 
 /* NOVOS ESTILOS PARA LABELS DA IDENTIDADE */
 .campo-group {
   display: flex;
   flex-direction: column;
   margin-bottom: 5px;
+  align-items: center;
 }
 .campo-label {
   font-size: 0.7em;
   opacity: 0.7;
   margin-bottom: 2px;
-  text-align: left;
+  text-align: center;
   letter-spacing: 0.5px;
+  width: 100%;
 }
 .linha-flex {
   display: flex;
   gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 .linha-flex .campo-group {
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 120px;
 }
 
 /* ===== ESTILOS PARA ARMAS ===== */
@@ -476,6 +564,7 @@ body.light .fade-5 { color: #eee; }
 .arma-campo {
   display: flex;
   flex-direction: column;
+  align-items: center;
 }
 .arma-campo label {
   font-size: 0.7em;
@@ -486,6 +575,7 @@ body.light .fade-5 { color: #eee; }
   gap: 8px;
   flex-wrap: wrap;
   margin-top: 10px;
+  justify-content: center;
 }
 .arma-acoes button {
   flex: 1;
@@ -497,6 +587,7 @@ body.light .fade-5 { color: #eee; }
   display: flex;
   align-items: center;
   gap: 5px;
+  justify-content: center;
 }
 .arma-municao span {
   font-size: 1.1em;
@@ -508,6 +599,7 @@ body.light .fade-5 { color: #eee; }
   background: var(--panel);
   border-radius: 4px;
   font-size: 14px;
+  text-align: center;
 }
 .arma-resultado .detalhes {
   font-size: 12px;
@@ -731,7 +823,7 @@ body.light .fade-5 { color: #eee; }
       <h3>Teste de Atributo</h3>
       <div class="dado" id="dadoAtributo">🎲</div>
       <div id="listaAtributosPersonalizados" style="margin-bottom:15px;"></div>
-      <div style="display:flex; gap:10px; margin-top:10px;">
+      <div style="display:flex; gap:10px; margin-top:10px; justify-content:center;">
         <input type="text" id="novoAtributoNome" placeholder="Nome (ex: Força)" style="flex:2;">
         <input type="number" id="novoAtributoValor" min="1" max="20" placeholder="1–20" style="flex:1;">
         <button onclick="adicionarAtributoPersonalizado()" style="flex:1;">➕</button>
@@ -754,7 +846,7 @@ body.light .fade-5 { color: #eee; }
     </div>
     <div class="section">
       <h3>🎯 Dados Personalizados</h3>
-      <p style="font-size:12px; margin-bottom:10px;">Ex: "2d6", "1d20+4", "2#d20", "2#d20+2d30", "2d6-1d4", " (2d6+4)*3", "10/2d4", "d20"</p>
+      <p style="font-size:12px; margin-bottom:10px; text-align:center;">Ex: "2d6", "1d20+4", "2#d20", "2#d20+2d30", "2d6-1d4", " (2d6+4)*3", "10/2d4", "d20"</p>
       <input id="dadoPersonalizado" type="text" placeholder="Digite a fórmula">
       <button onclick="rolarDadoPersonalizado()">ROLAR DADOS</button>
       <div class="resultado" id="resDadoPersonalizado"></div>
@@ -836,7 +928,7 @@ body.light .fade-5 { color: #eee; }
 <!-- ARMAS -->
 <div class="panel armas" style="margin-top:25px; width:820px; max-width:95%;">
   <h2>🔫 ARMAS</h2>
-  <div style="margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap;">
+  <div style="margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
     <input type="text" id="novaArmaNome" placeholder="Nome da arma" style="flex:2;">
     <select id="novaArmaTipo" style="flex:1;">
       <option value="branca">Branca</option>
