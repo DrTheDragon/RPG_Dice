@@ -25,13 +25,28 @@ body.light{
 body.loading {
   opacity: 0;
 }
+/* Animação de rolagem - versão padrão */
 @keyframes roll{
  0%{transform:rotate(0) scale(1)}
- 30%{transform:rotate(25deg) scale(1.05)}
- 60%{transform:rotate(-20deg) scale(1.05)}
+ 30%{transform:rotate(15deg) scale(1.1)} /* reduzido de 25deg para 15deg */
+ 60%{transform:rotate(-10deg) scale(1.1)} /* reduzido de -20deg para -10deg */
  100%{transform:rotate(0) scale(1)}
 }
-.dado.rolando{animation:roll .35s ease-in-out}
+.dado.rolando{animation:roll .3s ease-in-out} /* duração reduzida de .35s para .3s */
+
+/* Para mobile, animação ainda mais suave */
+@media (max-width:768px){
+  @keyframes roll-mobile{
+    0%{transform:rotate(0) scale(1)}
+    30%{transform:rotate(8deg) scale(1.05)}
+    60%{transform:rotate(-5deg) scale(1.05)}
+    100%{transform:rotate(0) scale(1)}
+  }
+  .dado.rolando{
+    animation: roll-mobile .25s ease-in-out !important;
+  }
+}
+
 body{
  background:radial-gradient(circle at top,var(--bg1),var(--bg2));
  color:var(--text);
@@ -56,45 +71,41 @@ h4{text-align:center;letter-spacing:1px;margin:10px 0 5px;font-size:1.1em}
 input, button, textarea{
  width:100%; padding:10px; margin-top:8px;
  background:transparent; border:1px solid var(--border);
- color:var(--text); text-align:center; /* já existente, mantido */
+ color:var(--text); text-align:center;
  font-family:'Special Elite',monospace;
  font-size:15px;
- box-sizing: border-box; /* garante que padding não estoure a largura */
+ box-sizing: border-box;
 }
 textarea{
- text-align: left; /* para textareas, o padrão é left, mas podemos centralizar se quiser */
- /* Se quiser centralizar o texto do textarea, mude para text-align: center; */
+ text-align: left;
 }
-/* Para labels e grupos, garantir centralização */
 .campo-group {
   display: flex;
   flex-direction: column;
   margin-bottom: 5px;
-  align-items: center; /* centraliza os itens do grupo */
+  align-items: center;
 }
 .campo-label {
   font-size: 0.7em;
   opacity: 0.7;
   margin-bottom: 2px;
-  text-align: center; /* centraliza o label */
+  text-align: center;
   letter-spacing: 0.5px;
   width: 100%;
 }
 .linha-flex {
   display: flex;
   gap: 10px;
-  justify-content: center; /* centraliza os filhos */
-  flex-wrap: wrap; /* para mobile */
+  justify-content: center;
+  flex-wrap: wrap;
 }
 .linha-flex .campo-group {
-  flex: 1 1 auto; /* permite que os grupos cresçam */
-  min-width: 120px; /* evita que fiquem muito pequenos */
+  flex: 1 1 auto;
+  min-width: 120px;
 }
-/* Centralizar inputs numéricos também */
 input[type="number"] {
   text-align: center;
 }
-/* Ajuste para os checkboxes e labels */
 .checkbox-status {
   display: flex;
   align-items: center;
@@ -105,27 +116,23 @@ input[type="number"] {
   width: auto;
   margin: 0;
 }
-/* Centralizar o conteúdo dos painéis */
 .panel {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 .panel > * {
-  width: 100%; /* ocupa toda a largura do painel */
+  width: 100%;
 }
-/* Para os botões de controle, já estão com flex */
 .controls {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
-  justify-content: center; /* centraliza os botões */
+  justify-content: center;
 }
-/* Resultados e detalhes */
 .resultado, .roll-details {
   text-align: center;
 }
-/* Histórico */
 .historico ul {
   list-style: none;
   padding: 0;
@@ -140,16 +147,14 @@ input[type="number"] {
   min-height: 28px;
   display: flex;
   align-items: center;
-  justify-content: center; /* centraliza o texto do histórico */
+  justify-content: center;
 }
-/* Demais estilos permanecem iguais */
 .fade-0{color:var(--text)}
 .fade-1{color:var(--text)}
 .fade-2{color:var(--text)}
 .fade-3{color:#bbb}
 .fade-4{color:#888}
 .fade-5{color:#555}
-/* Ajuste do fade para o modo claro */
 body.light .fade-3 { color: #aaa; }
 body.light .fade-4 { color: #ccc; }
 body.light .fade-5 { color: #eee; }
@@ -181,7 +186,7 @@ body.light .fade-5 { color: #eee; }
 }
 .checkboxes-vida{
  display:flex;
- justify-content:center; /* centraliza */
+ justify-content:center;
  gap:25px;
  margin:15px 0 10px 0;
 }
@@ -387,6 +392,32 @@ body.light .fade-5 { color: #eee; }
    padding: 8px 5px;
    font-size: 14px;
  }
+
+ /* ===== CENTRALIZAÇÃO EXTRA PARA TESTES NO MOBILE ===== */
+ .panel .section {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+ }
+ .panel .section .dado {
+   margin: 10px auto;
+ }
+ .panel .section button {
+   max-width: 200px; /* limita largura do botão */
+   margin-left: auto;
+   margin-right: auto;
+ }
+ .panel .section .controls {
+   justify-content: center;
+ }
+ .panel .section input[type="text"],
+ .panel .section input[type="number"] {
+   text-align: center;
+ }
+ .panel .section .resultado {
+   width: 100%;
+   text-align: center;
+ }
 }
 @media(max-width:480px){
  .controls{flex-direction:row; gap:4px;}
@@ -504,7 +535,6 @@ body.light .fade-5 { color: #eee; }
  box-sizing:border-box;
 }
 
-/* NOVOS ESTILOS PARA LABELS DA IDENTIDADE */
 .campo-group {
   display: flex;
   flex-direction: column;
@@ -530,7 +560,6 @@ body.light .fade-5 { color: #eee; }
   min-width: 120px;
 }
 
-/* ===== ESTILOS PARA ARMAS ===== */
 .arma-item {
   background: var(--bg1);
   border: 1px solid var(--border);
@@ -606,7 +635,6 @@ body.light .fade-5 { color: #eee; }
   opacity: 0.8;
 }
 
-/* ===== MODAL PARA GERENCIAR FICHAS ===== */
 .modal {
   display: none;
   position: fixed;
