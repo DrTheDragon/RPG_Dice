@@ -2400,7 +2400,31 @@ document.addEventListener('click', function initAudioOnClick() {
 window.addEventListener('load', function() {
   carregarTodasFichas();
 });
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').then(reg => {
+      console.log('Service Worker registrado:', reg.scope);
+      reg.update(); // verifica atualizações
+    }).catch(err => console.log('Erro no SW:', err));
+  });
+}
  
+reg.addEventListener('updatefound', () => {
+  const newWorker = reg.installing;
+  newWorker.addEventListener('statechange', () => {
+    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+      // Opcional: pergunta ao usuário
+      if (confirm('Nova versão disponível! Recarregar agora?')) {
+        window.location.reload();
+      }
+      // Ou recarrega direto:
+      // window.location.reload();
+    }
+  });
+});
+
+             
 </script>
 </body>
 </html>
