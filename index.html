@@ -2361,6 +2361,29 @@ document.getElementById('checkCaido').addEventListener('change', function() {
   }
 });
 
+// ==================== SERVICE WORKER COM ATUALIZAÇÃO AUTOMÁTICA ====================
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').then(reg => {
+      console.log('Service Worker registrado com sucesso:', reg.scope);
+
+      // Verifica se há uma nova versão instalada
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            // Nova versão instalada, recarrega a página automaticamente
+            console.log('Nova versão disponível. Recarregando...');
+            window.location.reload();
+          }
+        });
+      });
+    }).catch(err => {
+      console.log('Falha no registro do Service Worker:', err);
+    });
+  });
+}
+
 // ==================== INICIALIZAÇÃO ====================
 document.addEventListener('click', function initAudioOnClick() {
   if(!audioInitialized) initAudio();
@@ -2370,17 +2393,6 @@ document.addEventListener('click', function initAudioOnClick() {
 window.addEventListener('load', function() {
   carregarTodasFichas();
 });
- 
-  // Registra o service worker
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('service-worker.js').then(function(registration) {
-      console.log('ServiceWorker registrado com sucesso: ', registration.scope);
-    }, function(err) {
-      console.log('Falha no registro do ServiceWorker: ', err);
-    });
-  });
-}
  
 </script>
 </body>
