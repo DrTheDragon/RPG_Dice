@@ -51,95 +51,35 @@ body{
 h2,h3{text-align:center;letter-spacing:2px}
 h4{text-align:center;letter-spacing:1px;margin:10px 0 5px;font-size:1.1em}
 .section{border-top:1px solid var(--border);margin-top:20px;padding-top:15px}
-
-/* ===== CENTRALIZAÇÃO DE CAMPOS DE TEXTO ===== */
-input, button, textarea{
- width:100%; padding:10px; margin-top:8px;
- background:transparent; border:1px solid var(--border);
- color:var(--text); text-align:center;
+input,button,textarea{
+ width:100%;padding:10px;margin-top:8px;
+ background:transparent;border:1px solid var(--border);
+ color:var(--text);text-align:center;
  font-family:'Special Elite',monospace;
- font-size:15px;
- box-sizing: border-box;
+ font-size:15px
 }
-textarea{
- text-align: left;
-}
-.campo-group {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 5px;
-  align-items: center;
-}
-.campo-label {
-  font-size: 0.7em;
-  opacity: 0.7;
-  margin-bottom: 2px;
-  text-align: center;
-  letter-spacing: 0.5px;
-  width: 100%;
-}
-.linha-flex {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-.linha-flex .campo-group {
-  flex: 1 1 auto;
-  min-width: 120px;
-}
-input[type="number"] {
-  text-align: center;
-}
-.checkbox-status {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-}
-.checkbox-status input {
-  width: auto;
-  margin: 0;
-}
-.panel {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.panel > * {
-  width: 100%;
-}
-.controls {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-.resultado, .roll-details {
-  text-align: center;
-}
-.historico ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  height: 180px;
-  overflow: hidden;
-}
-.historico li {
-  padding: 5px 6px;
-  border-bottom: 1px solid var(--border);
-  line-height: 1.3;
-  min-height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+textarea{min-height:140px;text-align:center; /* ALTERADO: de left para center */}
+button{cursor:pointer}
+button:hover{background:rgba(255,255,255,.05)}
+button:active{transform:scale(.97)}
+.dado{font-size:58px;text-align:center;margin:10px 0}
+.resultado{min-height:90px;text-align:center;margin-top:10px}
+.controls{display:flex;gap:6px;flex-wrap:wrap}
+.controls button{flex:1 1 48%}
+.E{color:#ff4c4c}
+.B{color:#4fa3ff}
+.N{color:#9acd32}
+.F{color:#777}
+.historico{margin-top:15px;font-size:14px}
+.historico ul{list-style:none;padding:0;margin:0;height:180px;overflow:hidden}
+.historico li{padding:5px 6px;border-bottom:1px solid var(--border);line-height:1.3;min-height:28px;display:flex;align-items:center}
 .fade-0{color:var(--text)}
 .fade-1{color:var(--text)}
 .fade-2{color:var(--text)}
 .fade-3{color:#bbb}
 .fade-4{color:#888}
 .fade-5{color:#555}
+/* Ajuste do fade para o modo claro */
 body.light .fade-3 { color: #aaa; }
 body.light .fade-4 { color: #ccc; }
 body.light .fade-5 { color: #eee; }
@@ -171,8 +111,7 @@ body.light .fade-5 { color: #eee; }
 }
 .checkboxes-vida{
  display:flex;
- justify-content:center;
- gap:25px;
+ justify-content:space-between;
  margin:15px 0 10px 0;
 }
 .checkbox-vida{
@@ -182,9 +121,14 @@ body.light .fade-5 { color: #eee; }
 }
 .checkboxes-status{
  margin-top:15px;
- display: flex;
- flex-direction: column;
- align-items: center;
+}
+.checkbox-status{
+ display:block;
+ margin:8px 0;
+}
+.checkbox-status input{
+ width:auto;
+ margin-right:10px;
 }
 .atributos-extras{
  width:820px;
@@ -199,9 +143,6 @@ body.light .fade-5 { color: #eee; }
  border:1px solid var(--border);
  box-shadow:0 0 40px rgba(0,0,0,.7);
  padding:25px;
- display: flex;
- flex-direction: column;
- align-items: center;
 }
 .atributo-extra h3{
  margin-top:0;
@@ -215,9 +156,6 @@ body.light .fade-5 { color: #eee; }
  border:1px solid var(--border);
  box-shadow:0 0 40px rgba(0,0,0,.7);
  padding:25px;
- display: flex;
- flex-direction: column;
- align-items: center;
 }
 .peso-container h3{
  margin-top:0;
@@ -228,21 +166,15 @@ body.light .fade-5 { color: #eee; }
  display:flex;
  flex-direction:column;
  gap:15px;
- width: 100%;
- align-items: center;
 }
 .peso-item{
  text-align:center;
- width: 100%;
 }
 .peso-item p{
  margin:8px 0;
 }
 .peso-buttons{
  margin-top:10px;
- display: flex;
- gap: 10px;
- justify-content: center;
 }
 .exposicao-container{
  text-align:center;
@@ -250,8 +182,6 @@ body.light .fade-5 { color: #eee; }
 }
 .exposicao-input{
  margin-top:10px;
- display: flex;
- justify-content: center;
 }
 .exposicao-input input{
  width:150px;
@@ -272,9 +202,6 @@ body.light .fade-5 { color: #eee; }
  box-shadow:0 0 40px rgba(0,0,0,.7);
  padding:25px;
  text-align:center;
- display: flex;
- flex-direction: column;
- align-items: center;
 }
 .recurso-item h3{
  margin-top:0;
@@ -298,13 +225,6 @@ body.light .fade-5 { color: #eee; }
 .file-input {
  display: none;
 }
-/* ===== DADO GRANDE E CENTRALIZADO NO PC (tamanho ajustado) ===== */
-.dado {
-  font-size: 60px;
-  text-align: center;
-  margin: 10px auto;
-  display: block;
-}
 /* Mobile */
 @media(max-width:768px){
  body{align-items:flex-start; padding:10px; justify-content:flex-start; min-height:100vh;}
@@ -314,35 +234,8 @@ body.light .fade-5 { color: #eee; }
  .recursos{grid-template-columns:1fr; width:100%; gap:12px; margin-top:12px;}
  .nome-personagem, .toggle, .itens, .atributos-extras, .peso-container{width:100%; max-width:100%;}
  .panel{padding:15px; width:100%; box-sizing:border-box;}
-
- /* Botões de controle mais largos */
- .controls button {
-   flex: 1 1 30%;
-   margin-bottom: 6px;
-   padding: 12px 5px;
-   font-size: 16px;
-   min-height: 48px;
- }
-
- /* Dados maiores e centralizados no mobile */
- .dado {
-    font-size: 48px !important;  /* antes era 60px */
-    text-align: center !important;
-    margin: 10px auto !important;
-    display: block;
-  }
-
- /* Animação mais suave no mobile */
- .dado.rolando {
-   animation: roll-mobile-suave .3s ease-in-out !important;
- }
- @keyframes roll-mobile-suave {
-   0% { transform: rotate(0) scale(1); }
-   25% { transform: rotate(10deg) scale(1.02); }
-   50% { transform: rotate(-5deg) scale(1.02); }
-   100% { transform: rotate(0) scale(1); }
- }
-
+ .controls button{padding:8px; font-size:14px; min-height:40px;}
+ .dado{font-size:48px; margin:5px 0;}
  .exposicao-input input{width:120px;}
  .section{margin-top:12px; padding-top:10px;}
  h2{font-size:1.3em; margin:5px 0; text-align:center;}
@@ -359,52 +252,10 @@ body.light .fade-5 { color: #eee; }
  .checkboxes-vida{justify-content:center; gap:25px; margin:10px 0;}
  .checkbox-vida{width:28px; height:28px;}
  .checkboxes-status{margin-top:10px;}
-
- /* CORREÇÃO: checkbox-status perfeitamente centralizado no mobile */
- .checkbox-status {
-   display: flex !important;
-   align-items: center !important;
-   justify-content: center !important;
-   gap: 8px !important;
-   width: 100% !important;
-   margin: 5px 0 !important;
- }
- .checkbox-status label {
-   display: inline !important;
-   text-align: center !important;
-   white-space: nowrap;
- }
- .checkbox-status input {
-   margin: 0 !important;
-   width: auto !important;
- }
-
+ .checkbox-status{margin:5px 0; font-size:14px;}
  .atributo-extra, .recurso-item, .peso-container{text-align:center;}
  .roll-details{font-size:13px; max-height:80px; overflow:hidden;}
  .resultado{min-height:65px;}
-
- /* Centralizar a linha de adicionar atributo */
- #listaAtributosPersonalizados + div {
-   flex-direction: column !important;
-   align-items: center;
- }
- #listaAtributosPersonalizados + div input,
- #listaAtributosPersonalizados + div button {
-   width: 100% !important;
-   margin: 4px 0 !important;
- }
-
- /* Garantir centralização nas seções */
- .panel .section {
-   display: flex;
-   flex-direction: column;
-   align-items: center;
- }
- .panel .section input,
- .panel .section .controls {
-   width: 100%;
-   max-width: 400px;
- }
 
  /* Melhorias para armas no mobile */
  .arma-detalhes {
@@ -453,22 +304,10 @@ body.light .fade-5 { color: #eee; }
    padding: 8px 5px;
    font-size: 14px;
  }
-.atributo-extra .controls {
-  width: 100%;
-  max-width: 400px;
-  margin-left: auto;
-  margin-right: auto;
 }
- 
-}
- 
 @media(max-width:480px){
- .controls button {
-   flex: 1 1 45%; /* em telas muito pequenas, volta a ser 2 por linha */
-   padding: 10px 3px;
-   font-size: 14px;
-   min-height: 44px;
- }
+ .controls{flex-direction:row; gap:4px;}
+ .controls button{flex:1 1 46%; margin-bottom:0; font-size:13px; padding:7px;}
  .checkboxes-vida{gap:20px;}
  .panel{padding:12px;}
  .historico{font-size:12px;}
@@ -547,9 +386,6 @@ body.light .fade-5 { color: #eee; }
  grid-template-columns:1fr 2fr;
  gap:15px;
 }
-@media(max-width:768px){
- .identidade-grid { grid-template-columns:1fr; }
-}
 .identidade-grid .foto-area {
  text-align:center;
 }
@@ -581,32 +417,32 @@ body.light .fade-5 { color: #eee; }
  width:100%;
  box-sizing:border-box;
 }
+@media(max-width:768px){
+ .identidade-grid { grid-template-columns:1fr; }
+}
 
+/* NOVOS ESTILOS PARA LABELS DA IDENTIDADE */
 .campo-group {
   display: flex;
   flex-direction: column;
   margin-bottom: 5px;
-  align-items: center;
 }
 .campo-label {
   font-size: 0.7em;
   opacity: 0.7;
   margin-bottom: 2px;
-  text-align: center;
+  text-align: left;
   letter-spacing: 0.5px;
-  width: 100%;
 }
 .linha-flex {
   display: flex;
   gap: 10px;
-  justify-content: center;
-  flex-wrap: wrap;
 }
 .linha-flex .campo-group {
-  flex: 1 1 auto;
-  min-width: 120px;
+  flex: 1;
 }
 
+/* ===== ESTILOS PARA ARMAS ===== */
 .arma-item {
   background: var(--bg1);
   border: 1px solid var(--border);
@@ -640,7 +476,6 @@ body.light .fade-5 { color: #eee; }
 .arma-campo {
   display: flex;
   flex-direction: column;
-  align-items: center;
 }
 .arma-campo label {
   font-size: 0.7em;
@@ -651,7 +486,6 @@ body.light .fade-5 { color: #eee; }
   gap: 8px;
   flex-wrap: wrap;
   margin-top: 10px;
-  justify-content: center;
 }
 .arma-acoes button {
   flex: 1;
@@ -663,7 +497,6 @@ body.light .fade-5 { color: #eee; }
   display: flex;
   align-items: center;
   gap: 5px;
-  justify-content: center;
 }
 .arma-municao span {
   font-size: 1.1em;
@@ -675,13 +508,13 @@ body.light .fade-5 { color: #eee; }
   background: var(--panel);
   border-radius: 4px;
   font-size: 14px;
-  text-align: center;
 }
 .arma-resultado .detalhes {
   font-size: 12px;
   opacity: 0.8;
 }
 
+/* ===== MODAL PARA GERENCIAR FICHAS ===== */
 .modal {
   display: none;
   position: fixed;
@@ -735,26 +568,6 @@ body.light .fade-5 { color: #eee; }
 .modal-close:hover {
   color: #f00;
 }
-
-.E { color: #ff4c4c; }  /* Extremo (vermelho) */
-.B { color: #4fa3ff; }  /* Bom (azul) */
-.N { color: #9acd32; }  /* Normal (verde) */
-.F { color: #777; }     /* Falha (cinza escuro) */
-
- @media (min-width: 769px) {
-  .controls {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
-  }
-  .atributo-extra .controls {
-  width: 100%;
-  max-width: 400px;
-  margin-left: auto;
-  margin-right: auto;
-}
-}
- 
 </style>
 </head>
 <body class="loading">
