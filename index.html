@@ -1255,10 +1255,7 @@ function rolarDadoPersonalizado() {
     }
     
     // Remove o valor do # da string de detalhes (a primeira ocorrência)
-    // Isso preserva o operador e o resto
     const valorStr = valorAtual.toString();
-    // Substitui a primeira ocorrência do valor por uma string vazia, mas mantém o operador
-    // Ex: "7 + 2" -> " + 2"
     detalhesCompletos = detalhesCompletos.replace(valorStr, '').trim();
     detalhesIteracoes.push(detalhesCompletos);
   }
@@ -1266,13 +1263,18 @@ function rolarDadoPersonalizado() {
   // Monta os detalhes totais
   let detalhesStr = `[${valoresLista.join(', ')}]`;
   if (tokens.length > 1) {
-    // Verifica se todos os detalhes das iterações são iguais
-    const todosIguais = detalhesIteracoes.every(d => d === detalhesIteracoes[0]);
-    if (todosIguais) {
-      detalhesStr += ` ${detalhesIteracoes[0]}`;
-    } else {
-      detalhesStr += ` [${detalhesIteracoes.map(d => '(' + d + ')').join(', ')}]`;
-    }
+    // Extrai o operador comum (o primeiro não espaço após a lista)
+    const primeiroDetalhe = detalhesIteracoes[0];
+    const matchOperador = primeiroDetalhe.match(/^\s*([+\-*/])/);
+    const operador = matchOperador ? matchOperador[1] : '';
+    
+    // Remove o operador de cada detalhe e cria os parênteses
+    const listaParenteses = detalhesIteracoes.map(d => {
+      const semOperador = d.replace(/^\s*[+\-*/]\s*/, '');
+      return `(${semOperador})`;
+    }).join(', ');
+    
+    detalhesStr += ` ${operador} [${listaParenteses}]`;
   }
   
   resultadoDiv.innerHTML = `🎲 ${input}<br>Resultados: <b>${resultados.join(', ')}</b>`;
@@ -1285,7 +1287,7 @@ function rolarDadoPersonalizado() {
   salvar();
   atualizarHistoricoDados();
   return;
-  }
+}
     // Sem # → avaliação normal
     const rpn = shuntingYard(tokens);
     const resultado = avaliarRPN(rpn);
