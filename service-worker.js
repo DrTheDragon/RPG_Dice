@@ -10,7 +10,7 @@ const urlsToCache = [
 ];
 
 self.addEventListener('install', event => {
-  self.skipWaiting();
+  self.skipWaiting(); // Ativa o novo SW imediatamente
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
       // Usamos allSettled para não falhar se algum recurso externo (fonte) não for cacheado
@@ -24,25 +24,26 @@ self.addEventListener('install', event => {
 self.addEventListener('fetch', event => {
   const { request } = event;
 
-  // Para navegação (HTML), network first com fallback para cache
+  // Para navegação (HTML), usa network first com fallback para cache
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
         .then(response => {
+          // Se conseguiu da rede, armazena a nova versão no cache
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(request, responseClone));
           return response;
         })
-        .catch(() => caches.match(request))
+        .catch(() => caches.match(request)) // Se falhou (offline), entrega do cache
     );
     return;
   }
 
-  // Para outros recursos, cache first
+  // Para outros recursos, usa cache first com atualização em background (stale-while-revalidate)
   event.respondWith(
     caches.match(request).then(cachedResponse => {
       if (cachedResponse) {
-        // Atualiza o cache em segundo plano (stale-while-revalidate)
+        // Atualiza o cache em segundo plano
         fetch(request).then(networkResponse => {
           caches.open(CACHE_NAME).then(cache => cache.put(request, networkResponse));
         }).catch(() => {});
@@ -68,7 +69,8 @@ self.addEventListener('fetch', event => {
 });
 
 self.addEventListener('activate', event => {
-  event.waitUntil(clients.claim());
+  event.waitUntil(clients.claim()); // Toma controle de todas as abas/clientes
+  // Remove caches antigos
   event.waitUntil(
     caches.keys().then(keys => 
       Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)))
