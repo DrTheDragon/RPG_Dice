@@ -1017,7 +1017,7 @@ function avaliarOperando(token) {
         tipo: 'lista', 
         valores: rolagens, 
         str: `[${rolagens.join(', ')}]`, 
-        detalhes: [`[${rolagens.join(', ')}]`] // string única
+        detalhes: [`[${rolagens.join(', ')}]`]
       };
     } else {
       const dIndex = lowerToken.indexOf('d');
@@ -1028,7 +1028,6 @@ function avaliarOperando(token) {
         valores.push(Math.floor(Math.random() * faces) + 1);
       }
       const soma = valores.reduce((a,b) => a+b, 0);
-      // detalhes: uma única string com os valores separados por '+'
       return { 
         tipo: 'dados', 
         valores, 
@@ -1086,7 +1085,6 @@ function aplicarOperador(op, a, b) {
       else if (op === '*') resultados.push(valA * valB);
       else if (op === '/') resultados.push(Math.floor(valA / valB));
     }
-    // String de detalhes da operação (sem o resultado)
     let detalhesOp = `${strA} ${op} ${strB}`;
     return { 
       tipo: 'lista', 
@@ -1102,9 +1100,8 @@ function aplicarOperador(op, a, b) {
   if (op === '+') res = valA + valB;
   else if (op === '-') res = valA - valB;
   else if (op === '*') res = valA * valB;
-  else if (op === '/') res = Math.floor(valA / valB); // divisão inteira
+  else if (op === '/') res = Math.floor(valA / valB);
 
-  // Concatena detalhes: detalhesA já são strings (para dados, uma string com "+")
   return { 
     tipo: 'escalar', 
     valor: res, 
@@ -1128,6 +1125,28 @@ function avaliarRPN(rpn) {
   }
   if (pilha.length !== 1) throw new Error('Expressão inválida');
   return pilha[0];
+}
+
+// Função auxiliar para remover o valor do # dos detalhes
+function removerValorDetalhes(detalhes, valor) {
+  // Tenta remover do início
+  const padroes = [
+    new RegExp(`^${valor} \\+ `),
+    new RegExp(`^${valor} \\- `),
+    new RegExp(`^${valor} \\* `),
+    new RegExp(`^${valor} \\/ `),
+    new RegExp(` \\+ ${valor}$`),
+    new RegExp(` \\- ${valor}$`),
+    new RegExp(` \\* ${valor}$`),
+    new RegExp(` \\/ ${valor}$`)
+  ];
+  for (let padrao of padroes) {
+    if (padrao.test(detalhes)) {
+      return detalhes.replace(padrao, '');
+    }
+  }
+  // Se não encontrar, retorna o original (pode acontecer em casos complexos)
+  return detalhes;
 }
 
 function rolarDadoPersonalizado() {
@@ -1166,6 +1185,7 @@ function rolarDadoPersonalizado() {
       const valoresLista = objLista.valores; // ex: [7, 14]
       
       const resultados = [];
+      const detalhesIteracoes = []; // armazenará os detalhes de cada iteração (sem o valor do #)
       
       for (let i = 0; i < valoresLista.length; i++) {
         const valorAtual = valoresLista[i];
@@ -1175,6 +1195,7 @@ function rolarDadoPersonalizado() {
         const rpnSubst = shuntingYard(tokensSubst);
         const resSubst = avaliarRPN(rpnSubst);
         
+        // Extrai o valor final
         let valorFinal;
         if (resSubst.tipo === 'escalar') {
           valorFinal = resSubst.valor;
@@ -1184,16 +1205,36 @@ function rolarDadoPersonalizado() {
           valorFinal = resSubst.str; // fallback (lista)
         }
         resultados.push(valorFinal);
+        
+        // Obtém os detalhes completos desta iteração
+        let detalhesCompletos = '';
+        if (resSubst.detalhes) {
+          // Junta os detalhes em uma string
+          detalhesCompletos = resSubst.detalhes.join(' ');
+        } else {
+          detalhesCompletos = resSubst.str || '';
+        }
+        
+        // Remove o valor do # dos detalhes
+        let detalhesSemValor = removerValorDetalhes(detalhesCompletos, valorAtual);
+        // Se a remoção não funcionar, tenta também remover com parênteses? Por simplicidade, mantém.
+        detalhesIteracoes.push(detalhesSemValor);
+      }
+      
+      // Monta os detalhes totais
+      let detalhesStr = `[${valoresLista.join(', ')}]`;
+      if (detalhesIteracoes.length > 0 && detalhesIteracoes[0] !== '') {
+        detalhesStr += ` + [${detalhesIteracoes.map(d => '(' + d + ')').join(', ')}]`;
       }
       
       // Exibe os resultados
       resultadoDiv.innerHTML = `🎲 ${input}<br>Resultados: <b>${resultados.join(', ')}</b>`;
       
-      // Detalhes: apenas a lista de valores do dado principal
-      detalhesDiv.innerHTML = `<p><b>Detalhes:</b> [${valoresLista.join(', ')}]</p>`;
+      // Detalhes
+      detalhesDiv.innerHTML = `<p><b>Detalhes:</b> ${detalhesStr}</p>`;
       
-      // Histórico: expressão → lista de resultados finais
-      const historicoStr = `${input} → [${resultados.join(', ')}]`;
+      // Histórico
+      const historicoStr = `${input} -> ${detalhesStr} = [${resultados.join(', ')}]`;
       historicoDados.unshift(`🎲 ${historicoStr}`);
       if (historicoDados.length > 6) historicoDados.pop();
       
@@ -1202,9 +1243,66 @@ function rolarDadoPersonalizado() {
       return;
     }
     
-    // Sem # → avaliação normal (já existente)
-    // ... (código existente para expressões sem # permanece igual)
+    // Sem # → avaliação normal
+    const rpn = shuntingYard(tokens);
+    const resultado = avaliarRPN(rpn);
     
+    // Exibição normal
+    if (resultado.tipo === 'lista') {
+      resultadoDiv.innerHTML = `🎲 ${input}<br>Resultados: <b>${resultado.valores.join(', ')}</b>`;
+    } else {
+      const valor = resultado.valor !== undefined ? resultado.valor : resultado.soma;
+      resultadoDiv.innerHTML = `🎲 ${input}<br>Total: <b>${valor}</b>`;
+    }
+
+    // Detalhes
+    let detalhesHtml = '<p><b>Detalhes:</b> ';
+    if (resultado.detalhes) {
+      if (resultado.tipo === 'lista') {
+        detalhesHtml += resultado.detalhes[0];
+      } else {
+        let detalhesStr = '';
+        for (let i = 0; i < resultado.detalhes.length; i++) {
+          let d = resultado.detalhes[i];
+          if (d === '+' || d === '-' || d === '*' || d === '/') {
+            detalhesStr += ' ' + d + ' ';
+          } else {
+            detalhesStr += d;
+          }
+        }
+        detalhesHtml += detalhesStr;
+      }
+    } else {
+      detalhesHtml += resultado.str || '';
+    }
+    detalhesHtml += '</p>';
+    detalhesDiv.innerHTML = detalhesHtml;
+
+    // Histórico
+    let historicoStr = `${input} -> `;
+    if (resultado.detalhes) {
+      if (resultado.tipo === 'lista') {
+        historicoStr += resultado.detalhes[0] + ' = ';
+      } else {
+        let detalhesStr = '';
+        for (let i = 0; i < resultado.detalhes.length; i++) {
+          let d = resultado.detalhes[i];
+          if (d === '+' || d === '-' || d === '*' || d === '/') {
+            detalhesStr += ' ' + d + ' ';
+          } else {
+            detalhesStr += d;
+          }
+        }
+        historicoStr += detalhesStr + ' = ';
+      }
+    }
+    historicoStr += resultado.str;
+    historicoDados.unshift(`🎲 ${historicoStr}`);
+    if (historicoDados.length > 6) historicoDados.pop();
+
+    salvar();
+    atualizarHistoricoDados();
+
   } catch (e) {
     resultadoDiv.innerHTML = 'Formato inválido. Use expressões como "2d6", "1d20+4", "2#d20", "(2d6+4)*3", "10/2d4", "d20".';
     detalhesDiv.innerHTML = '';
