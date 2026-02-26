@@ -1218,7 +1218,7 @@ function rolarDadoPersonalizado() {
     }
     
     // Exatamente um # → processamento especial
-  if (tokensComHash.length === 1) {
+ if (tokensComHash.length === 1) {
   const tokenHash = tokensComHash[0];
   const objLista = avaliarOperando(tokenHash);
   if (objLista.tipo !== 'lista') {
@@ -1229,6 +1229,7 @@ function rolarDadoPersonalizado() {
   
   const resultados = [];
   const detalhesIteracoes = [];
+  const tipos = []; // 'scalar' ou 'expr'
   
   for (let i = 0; i < valoresLista.length; i++) {
     const valorAtual = valoresLista[i];
@@ -1246,7 +1247,7 @@ function rolarDadoPersonalizado() {
     }
     resultados.push(valorFinal);
     
-    // Pega a string completa de detalhes desta iteração
+    // Obtém os detalhes completos desta iteração
     let detalhesCompletos = '';
     if (resSubst.detalhes) {
       detalhesCompletos = resSubst.detalhes.join(' ');
@@ -1254,27 +1255,33 @@ function rolarDadoPersonalizado() {
       detalhesCompletos = resSubst.str || '';
     }
     
-    // Remove o valor do # da string de detalhes (a primeira ocorrência)
+    // Remove o valor do # da string de detalhes
     const valorStr = valorAtual.toString();
     detalhesCompletos = detalhesCompletos.replace(valorStr, '').trim();
+    
+    // Verifica se o que sobrou é um escalar (operador + número)
+    const isScalar = /^\s*[+\-*/]\s*\d+$/.test(detalhesCompletos);
+    tipos.push(isScalar ? 'scalar' : 'expr');
     detalhesIteracoes.push(detalhesCompletos);
   }
   
   // Monta os detalhes totais
   let detalhesStr = `[${valoresLista.join(', ')}]`;
   if (tokens.length > 1) {
-    // Extrai o operador comum (o primeiro não espaço após a lista)
-    const primeiroDetalhe = detalhesIteracoes[0];
-    const matchOperador = primeiroDetalhe.match(/^\s*([+\-*/])/);
-    const operador = matchOperador ? matchOperador[1] : '';
+    const todosScalares = tipos.every(t => t === 'scalar');
+    const todosIguais = detalhesIteracoes.every(d => d === detalhesIteracoes[0]);
     
-    // Remove o operador de cada detalhe e cria os parênteses
-    const listaParenteses = detalhesIteracoes.map(d => {
-      const semOperador = d.replace(/^\s*[+\-*/]\s*/, '');
-      return `(${semOperador})`;
-    }).join(', ');
-    
-    detalhesStr += ` ${operador} [${listaParenteses}]`;
+    if (todosScalares && todosIguais) {
+      // Apenas um operador e número (ex: "+ 3")
+      detalhesStr += ` ${detalhesIteracoes[0]}`;
+    } else {
+      // Expressões com dados: mostrar cada uma entre parênteses
+      const listaParenteses = detalhesIteracoes.map(d => `(${d})`).join(', ');
+      // Extrair o operador comum (primeiro caractere não espaço)
+      const primeiro = detalhesIteracoes[0];
+      const operador = primeiro.match(/^\s*([+\-*/])/)?.[1] || '';
+      detalhesStr += ` ${operador} [${listaParenteses}]`;
+    }
   }
   
   resultadoDiv.innerHTML = `🎲 ${input}<br>Resultados: <b>${resultados.join(', ')}</b>`;
