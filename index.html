@@ -25,28 +25,13 @@ body.light{
 body.loading {
   opacity: 0;
 }
-/* Animação de rolagem - versão padrão */
 @keyframes roll{
  0%{transform:rotate(0) scale(1)}
- 30%{transform:rotate(15deg) scale(1.1)} /* reduzido de 25deg para 15deg */
- 60%{transform:rotate(-10deg) scale(1.1)} /* reduzido de -20deg para -10deg */
+ 30%{transform:rotate(25deg) scale(1.05)}
+ 60%{transform:rotate(-20deg) scale(1.05)}
  100%{transform:rotate(0) scale(1)}
 }
-.dado.rolando{animation:roll .3s ease-in-out} /* duração reduzida de .35s para .3s */
-
-/* Para mobile, animação ainda mais suave */
-@media (max-width:768px){
-  @keyframes roll-mobile{
-    0%{transform:rotate(0) scale(1)}
-    30%{transform:rotate(8deg) scale(1.05)}
-    60%{transform:rotate(-5deg) scale(1.05)}
-    100%{transform:rotate(0) scale(1)}
-  }
-  .dado.rolando{
-    animation: roll-mobile .25s ease-in-out !important;
-  }
-}
-
+.dado.rolando{animation:roll .35s ease-in-out}
 body{
  background:radial-gradient(circle at top,var(--bg1),var(--bg2));
  color:var(--text);
@@ -322,8 +307,28 @@ body.light .fade-5 { color: #eee; }
  .recursos{grid-template-columns:1fr; width:100%; gap:12px; margin-top:12px;}
  .nome-personagem, .toggle, .itens, .atributos-extras, .peso-container{width:100%; max-width:100%;}
  .panel{padding:15px; width:100%; box-sizing:border-box;}
- .controls button{padding:8px; font-size:14px; min-height:40px;}
+
+ /* Botões de controle mais largos */
+ .controls button {
+   flex: 1 1 30%;
+   margin-bottom: 6px;
+   padding: 12px 5px;
+   font-size: 16px;
+   min-height: 48px;
+ }
+
  .dado{font-size:48px; margin:5px 0;}
+ /* Animação suavizada no mobile */
+ .dado.rolando {
+   animation: roll-mobile .25s ease-in-out;
+ }
+ @keyframes roll-mobile {
+   0%{transform:rotate(0) scale(1)}
+   30%{transform:rotate(15deg) scale(1.02)}
+   60%{transform:rotate(-10deg) scale(1.02)}
+   100%{transform:rotate(0) scale(1)}
+ }
+
  .exposicao-input input{width:120px;}
  .section{margin-top:12px; padding-top:10px;}
  h2{font-size:1.3em; margin:5px 0; text-align:center;}
@@ -344,6 +349,29 @@ body.light .fade-5 { color: #eee; }
  .atributo-extra, .recurso-item, .peso-container{text-align:center;}
  .roll-details{font-size:13px; max-height:80px; overflow:hidden;}
  .resultado{min-height:65px;}
+
+ /* Centralizar a linha de adicionar atributo */
+ #listaAtributosPersonalizados + div {
+   flex-direction: column !important;
+   align-items: center;
+ }
+ #listaAtributosPersonalizados + div input,
+ #listaAtributosPersonalizados + div button {
+   width: 100% !important;
+   margin: 4px 0 !important;
+ }
+
+ /* Garantir centralização nas seções */
+ .panel .section {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+ }
+ .panel .section input,
+ .panel .section .controls {
+   width: 100%;
+   max-width: 400px;
+ }
 
  /* Melhorias para armas no mobile */
  .arma-detalhes {
@@ -392,36 +420,15 @@ body.light .fade-5 { color: #eee; }
    padding: 8px 5px;
    font-size: 14px;
  }
-
- /* ===== CENTRALIZAÇÃO EXTRA PARA TESTES NO MOBILE ===== */
- .panel .section {
-   display: flex;
-   flex-direction: column;
-   align-items: center;
- }
- .panel .section .dado {
-   margin: 10px auto;
- }
- .panel .section button {
-   max-width: 200px; /* limita largura do botão */
-   margin-left: auto;
-   margin-right: auto;
- }
- .panel .section .controls {
-   justify-content: center;
- }
- .panel .section input[type="text"],
- .panel .section input[type="number"] {
-   text-align: center;
- }
- .panel .section .resultado {
-   width: 100%;
-   text-align: center;
- }
 }
+
 @media(max-width:480px){
- .controls{flex-direction:row; gap:4px;}
- .controls button{flex:1 1 46%; margin-bottom:0; font-size:13px; padding:7px;}
+ .controls button {
+   flex: 1 1 45%; /* em telas muito pequenas, volta a ser 2 por linha */
+   padding: 10px 3px;
+   font-size: 14px;
+   min-height: 44px;
+ }
  .checkboxes-vida{gap:20px;}
  .panel{padding:12px;}
  .historico{font-size:12px;}
