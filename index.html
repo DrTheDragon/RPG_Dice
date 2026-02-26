@@ -740,6 +740,15 @@ body.light .fade-5 { color: #eee; }
 .B { color: #4fa3ff; }  /* Bom (azul) */
 .N { color: #9acd32; }  /* Normal (verde) */
 .F { color: #777; }     /* Falha (cinza escuro) */
+
+ @media (min-width: 769px) {
+  .controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+}
+ 
 </style>
 </head>
 <body class="loading">
