@@ -1228,43 +1228,44 @@ function rolarDadoPersonalizado() {
   const valoresLista = objLista.valores; // ex: [7, 14]
   
   const resultados = [];
-  const detalhesIteracoes = []; // armazenará os detalhes de cada iteração (sem o valor do #)
+  const detalhesIteracoes = [];
   
   for (let i = 0; i < valoresLista.length; i++) {
     const valorAtual = valoresLista[i];
-    // Substitui o token hash pelo valor atual na lista de tokens
     const tokensSubst = tokens.map(t => t === tokenHash ? valorAtual.toString() : t);
-    // Avalia a expressão com esses tokens (agora sem #)
     const rpnSubst = shuntingYard(tokensSubst);
     const resSubst = avaliarRPN(rpnSubst);
     
-    // Extrai o valor final
     let valorFinal;
     if (resSubst.tipo === 'escalar') {
       valorFinal = resSubst.valor;
     } else if (resSubst.tipo === 'dados') {
       valorFinal = resSubst.soma;
     } else {
-      valorFinal = resSubst.str; // fallback (lista)
+      valorFinal = resSubst.str;
     }
     resultados.push(valorFinal);
     
-    // Obtém os detalhes completos desta iteração (array)
-    let detalhesArray = resSubst.detalhes || [];
-    // Remove o valor do # do array (primeira ocorrência)
-    const valorStr = valorAtual.toString();
-    const indexToRemove = detalhesArray.indexOf(valorStr);
-    if (indexToRemove !== -1) {
-      detalhesArray.splice(indexToRemove, 1);
+    // Pega a string completa de detalhes desta iteração
+    let detalhesCompletos = '';
+    if (resSubst.detalhes) {
+      detalhesCompletos = resSubst.detalhes.join(' ');
+    } else {
+      detalhesCompletos = resSubst.str || '';
     }
-    // Junta os detalhes restantes
-    let detalhesSemValor = detalhesArray.join(' ');
-    detalhesIteracoes.push(detalhesSemValor);
+    
+    // Remove o valor do # da string de detalhes (a primeira ocorrência)
+    // Isso preserva o operador e o resto
+    const valorStr = valorAtual.toString();
+    // Substitui a primeira ocorrência do valor por uma string vazia, mas mantém o operador
+    // Ex: "7 + 2" -> " + 2"
+    detalhesCompletos = detalhesCompletos.replace(valorStr, '').trim();
+    detalhesIteracoes.push(detalhesCompletos);
   }
   
   // Monta os detalhes totais
   let detalhesStr = `[${valoresLista.join(', ')}]`;
-  if (tokens.length > 1) { // há outros tokens além do #
+  if (tokens.length > 1) {
     // Verifica se todos os detalhes das iterações são iguais
     const todosIguais = detalhesIteracoes.every(d => d === detalhesIteracoes[0]);
     if (todosIguais) {
@@ -1274,13 +1275,9 @@ function rolarDadoPersonalizado() {
     }
   }
   
-  // Exibe os resultados
   resultadoDiv.innerHTML = `🎲 ${input}<br>Resultados: <b>${resultados.join(', ')}</b>`;
-  
-  // Detalhes
   detalhesDiv.innerHTML = `<p><b>Detalhes:</b> ${detalhesStr}</p>`;
   
-  // Histórico
   const historicoStr = `${input} -> ${detalhesStr} = [${resultados.join(', ')}]`;
   historicoDados.unshift(`🎲 ${historicoStr}`);
   if (historicoDados.length > 6) historicoDados.pop();
@@ -1288,8 +1285,7 @@ function rolarDadoPersonalizado() {
   salvar();
   atualizarHistoricoDados();
   return;
-}
-    
+  }
     // Sem # → avaliação normal
     const rpn = shuntingYard(tokens);
     const resultado = avaliarRPN(rpn);
