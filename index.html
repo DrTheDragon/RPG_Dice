@@ -1144,31 +1144,42 @@ function rolarDadoPersonalizado() {
   try {
     input = input.replace(/\s+/g, '');
     const tokens = tokenizar(input);
+    
+    // Verifica quantos tokens contêm '#'
     const tokensComHash = tokens.filter(t => t.includes('#'));
     
+    // Mais de um # → erro
     if (tokensComHash.length > 1) {
-      resultadoDiv.innerHTML = 'Expressão inválida: use no máximo um #.';
+      resultadoDiv.innerHTML = '❌ Expressão inválida: use no máximo um #.';
       detalhesDiv.innerHTML = '';
       return;
     }
     
+    // Exatamente um # → processamento especial
     if (tokensComHash.length === 1) {
       const tokenHash = tokensComHash[0];
       const objLista = avaliarOperando(tokenHash);
-      if (objLista.tipo !== 'lista') throw new Error('Não é lista');
+      if (objLista.tipo !== 'lista') {
+        resultadoDiv.innerHTML = 'Erro: token # não gerou uma lista.';
+        return;
+      }
       const valoresLista = objLista.valores; // ex: [7, 14]
       
       const resultados = [];
-      const detalhesItens = []; // para armazenar a string de cada iteração
-      const valoresHash = []; // os valores do #
-      const stringsDados = []; // a string dos dados comuns de cada iteração
+      const detalhesIteracoes = []; // para exibição abaixo do resultado
+      const detalhesRestoLista = []; // para o histórico
       
-      for (let v of valoresLista) {
-        // Substitui o token hash pelo valor numérico
-        const tokensSubst = tokens.map(t => t === tokenHash ? v.toString() : t);
+      for (let i = 0; i < valoresLista.length; i++) {
+        const valorAtual = valoresLista[i];
+        
+        // Substitui o token hash pelo valor atual na lista de tokens
+        const tokensSubst = tokens.map(t => t === tokenHash ? valorAtual.toString() : t);
+        
+        // Avalia a expressão com esses tokens (agora sem #)
         const rpnSubst = shuntingYard(tokensSubst);
         const resSubst = avaliarRPN(rpnSubst);
         
+        // Extrai o valor final
         let valorFinal;
         if (resSubst.tipo === 'escalar') {
           valorFinal = resSubst.valor;
@@ -1177,42 +1188,36 @@ function rolarDadoPersonalizado() {
         } else {
           valorFinal = resSubst.str; // fallback (lista)
         }
-        
         resultados.push(valorFinal);
-        valoresHash.push(v);
         
-        // Extrai a parte dos dados comuns: tudo depois do primeiro token (que é v)
-        // Os detalhes de resSubst são um array de strings na ordem da expressão
-        // Ex: [v, "+", "5+17", "-", "3"] para v+2d30-1d4
-        // Queremos a string que representa os dados comuns, ou seja, a expressão sem o v
-        let dadosComunsStr = '';
-        if (resSubst.detalhes && resSubst.detalhes.length > 1) {
-          // Pula o primeiro (v) e junta o resto com espaços
-          dadosComunsStr = resSubst.detalhes.slice(1).join(' ');
+        // Extrai os detalhes da parte restante (a partir do índice 2, pois índice 0 é o valorAtual e índice 1 é o operador)
+        // Supondo que a expressão seja valorAtual + resto
+        let detalhesResto = '';
+        if (resSubst.detalhes && resSubst.detalhes.length > 2) {
+          // Junta todos os elementos a partir do índice 2 com espaço
+          detalhesResto = resSubst.detalhes.slice(2).join(' ');
         } else {
-          dadosComunsStr = resSubst.str || '';
+          // Caso não haja resto (improvável)
+          detalhesResto = '';
         }
-        stringsDados.push(dadosComunsStr);
         
-        // Detalhe da iteração: v + (dadosComuns) = valorFinal
-        detalhesItens.push(`${v} + (${dadosComunsStr}) = ${valorFinal}`);
+        // Se houver operadores, eles já estão incluídos na string (ex: "5+11 + 3")
+        detalhesIteracoes.push(`${valorAtual} + (${detalhesResto}) = ${valorFinal}`);
+        detalhesRestoLista.push(`(${detalhesResto})`);
       }
       
-      // Exibe resultados
+      // Exibe os resultados
       resultadoDiv.innerHTML = `🎲 ${input}<br>Resultados: <b>${resultados.join(', ')}</b>`;
       
-      // Detalhes: lista de iterações
+      // Detalhes das iterações
       let detalhesHtml = '<p><b>Detalhes:</b><br>';
-      detalhesItens.forEach(d => detalhesHtml += d + '<br>');
+      detalhesIteracoes.forEach(d => detalhesHtml += d + '<br>');
       detalhesHtml += '</p>';
       detalhesDiv.innerHTML = detalhesHtml;
       
-      // Histórico: formato [v1, v2] + [(dados1), (dados2)] = [r1, r2]
-      const hashStr = `[${valoresHash.join(', ')}]`;
-      const dadosStr = `[(${stringsDados.join('), (')})]`;
-      const resStr = `[${resultados.join(', ')}]`;
-      const historicoEntry = `${input} → ${hashStr} + ${dadosStr} = ${resStr}`;
-      historicoDados.unshift(`🎲 ${historicoEntry}`);
+      // Histórico no formato: [valores_d20] + [(detalhes_resto1), (detalhes_resto2)] = [resultados]
+      const historicoStr = `${input} → [${valoresLista.join(', ')}] + [${detalhesRestoLista.join(', ')}] = [${resultados.join(', ')}]`;
+      historicoDados.unshift(`🎲 ${historicoStr}`);
       if (historicoDados.length > 6) historicoDados.pop();
       
       salvar();
@@ -1220,10 +1225,11 @@ function rolarDadoPersonalizado() {
       return;
     }
     
-    // Sem # (código original)
+    // Sem # → avaliação normal (já existente)
     const rpn = shuntingYard(tokens);
     const resultado = avaliarRPN(rpn);
     
+    // Exibição normal
     if (resultado.tipo === 'lista') {
       resultadoDiv.innerHTML = `🎲 ${input}<br>Resultados: <b>${resultado.valores.join(', ')}</b>`;
     } else {
@@ -1231,6 +1237,7 @@ function rolarDadoPersonalizado() {
       resultadoDiv.innerHTML = `🎲 ${input}<br>Total: <b>${valor}</b>`;
     }
 
+    // Detalhes (formato original)
     let detalhesHtml = '<p><b>Detalhes:</b> ';
     if (resultado.detalhes) {
       if (resultado.tipo === 'lista') {
@@ -1253,6 +1260,7 @@ function rolarDadoPersonalizado() {
     detalhesHtml += '</p>';
     detalhesDiv.innerHTML = detalhesHtml;
 
+    // Histórico
     let historicoStr = `${input} → `;
     if (resultado.detalhes) {
       if (resultado.tipo === 'lista') {
@@ -1283,6 +1291,7 @@ function rolarDadoPersonalizado() {
     console.error(e);
   }
 }
+ 
 // ==================== FUNÇÃO PARA EXTRAIR PESO DOS ITENS COM SUPORTE A EXPRESSÕES E SUBSTITUIÇÃO ====================
 function extrairPesoDosItens() {
   if (processandoItens) return; // evita loop
