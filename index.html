@@ -344,8 +344,19 @@ body.light .fade-5 { color: #eee; }
  .recursos, .atributos-extras, .peso-container{margin-top:12px;}
  .checkboxes-vida{justify-content:center; gap:25px; margin:10px 0;}
  .checkbox-vida{width:28px; height:28px;}
- .checkboxes-status{margin-top:10px;}
- .checkbox-status{margin:5px 0; font-size:14px;}
+ /* Ajuste no checkbox-status para centralizar no mobile */
+.checkbox-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 100%; /* Garante que ocupe toda a largura */
+}
+.checkbox-status label {
+  text-align: center;
+  flex: 1; /* Permite que o texto ocupe o espaço disponível */
+}
+ 
  .atributo-extra, .recurso-item, .peso-container{text-align:center;}
  .roll-details{font-size:13px; max-height:80px; overflow:hidden;}
  .resultado{min-height:65px;}
