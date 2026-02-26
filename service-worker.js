@@ -1,49 +1,42 @@
-const CACHE_NAME = 'doto-rpg-cache-v1';
+const CACHE_NAME = 'noir-rpg-cache-v2';
 const urlsToCache = [
-  './', // Isso cacheia o index.html automaticamente
-  './index.html', // redundante, mas seguro
-  './favicon.svg',
-  './icon-192.png',
-  './icon-512.png'
+  '/',
+  '/index.html',
+  // Adicione outros assets se necessário (CSS, JS, imagens)
 ];
 
-// Instala o service worker e faz o cache dos recursos
 self.addEventListener('install', event => {
+  self.skipWaiting(); // Força a ativação imediata do novo service worker
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Cache aberto');
-        return cache.addAll(urlsToCache);
-      })
+      .then(cache => cache.addAll(urlsToCache))
   );
 });
 
-// Intercepta requisições e serve do cache se disponível
 self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Se encontrou no cache, retorna
-        if (response) {
-          return response;
-        }
-        // Caso contrário, faz a requisição normal (online)
-        return fetch(event.request);
-      })
-  );
+  // Estratégia: network first para HTML, cache first para outros
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .catch(() => caches.match(event.request))
+    );
+  } else {
+    event.respondWith(
+      caches.match(event.request)
+        .then(response => response || fetch(event.request))
+    );
+  }
 });
 
-// Limpa caches antigos quando uma nova versão é ativada
 self.addEventListener('activate', event => {
-  const cacheWhitelist = [CACHE_NAME];
+  // Toma controle imediatamente
+  event.waitUntil(clients.claim());
+  // Limpa caches antigos
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            return caches.delete(cacheName);
-          }
-        })
+        cacheNames.filter(name => name !== CACHE_NAME)
+          .map(name => caches.delete(name))
       );
     })
   );
