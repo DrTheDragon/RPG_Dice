@@ -7,7 +7,6 @@ const urlsToCache = [
   './icon-512.png'
 ];
 
-
 // Instala o service worker e faz o cache dos recursos
 self.addEventListener('install', event => {
   event.waitUntil(
