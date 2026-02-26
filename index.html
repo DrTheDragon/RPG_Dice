@@ -1229,7 +1229,8 @@ function rolarDadoPersonalizado() {
   
   const resultados = [];
   const detalhesIteracoes = [];
-  const tipos = []; // 'scalar' ou 'expr'
+  const operadores = [];
+  const restos = [];
   
   for (let i = 0; i < valoresLista.length; i++) {
     const valorAtual = valoresLista[i];
@@ -1259,28 +1260,43 @@ function rolarDadoPersonalizado() {
     const valorStr = valorAtual.toString();
     detalhesCompletos = detalhesCompletos.replace(valorStr, '').trim();
     
-    // Verifica se o que sobrou é um escalar (operador + número)
-    const isScalar = /^\s*[+\-*/]\s*\d+$/.test(detalhesCompletos);
-    tipos.push(isScalar ? 'scalar' : 'expr');
-    detalhesIteracoes.push(detalhesCompletos);
+    // Extrai o operador (primeiro caractere) e o resto
+    const match = detalhesCompletos.match(/^\s*([+\-*/])\s*(.*)$/);
+    if (match) {
+      const operador = match[1];
+      const resto = match[2].trim();
+      operadores.push(operador);
+      restos.push(resto);
+    } else {
+      operadores.push('');
+      restos.push(detalhesCompletos);
+    }
   }
   
   // Monta os detalhes totais
   let detalhesStr = `[${valoresLista.join(', ')}]`;
   if (tokens.length > 1) {
-    const todosScalares = tipos.every(t => t === 'scalar');
-    const todosIguais = detalhesIteracoes.every(d => d === detalhesIteracoes[0]);
+    // Verifica se todos os operadores são iguais e se há operador
+    const primeiroOperador = operadores[0];
+    const todosMesmoOperador = operadores.every(op => op === primeiroOperador);
     
-    if (todosScalares && todosIguais) {
-      // Apenas um operador e número (ex: "+ 3")
-      detalhesStr += ` ${detalhesIteracoes[0]}`;
+    if (primeiroOperador && todosMesmoOperador) {
+      // Verifica se todos os restos são números puros (escalares)
+      const todosEscalares = restos.every(r => /^\d+$/.test(r));
+      const todosIguais = restos.every(r => r === restos[0]);
+      
+      if (todosEscalares && todosIguais) {
+        // Caso: + 3 (todos iguais e escalares)
+        detalhesStr += ` ${primeiroOperador} ${restos[0]}`;
+      } else {
+        // Caso: expressões com dados: mostrar lista de restos entre parênteses
+        const listaParenteses = restos.map(r => `(${r})`).join(', ');
+        detalhesStr += ` ${primeiroOperador} [${listaParenteses}]`;
+      }
     } else {
-      // Expressões com dados: mostrar cada uma entre parênteses
-      const listaParenteses = detalhesIteracoes.map(d => `(${d})`).join(', ');
-      // Extrair o operador comum (primeiro caractere não espaço)
-      const primeiro = detalhesIteracoes[0];
-      const operador = primeiro.match(/^\s*([+\-*/])/)?.[1] || '';
-      detalhesStr += ` ${operador} [${listaParenteses}]`;
+      // Operadores diferentes ou ausentes (não deve acontecer, mas fallback)
+      const listaParenteses = restos.map(r => `(${r})`).join(', ');
+      detalhesStr += ` [${listaParenteses}]`;
     }
   }
   
@@ -1295,6 +1311,7 @@ function rolarDadoPersonalizado() {
   atualizarHistoricoDados();
   return;
 }
+  
     // Sem # → avaliação normal
     const rpn = shuntingYard(tokens);
     const resultado = avaliarRPN(rpn);
