@@ -750,9 +750,10 @@ body.light .fade-5 { color: #eee; }
     <span class="modal-close" onclick="fecharGerenciadorFichas()">&times;</span>
     <h2>📂 Gerenciar Fichas</h2>
     <div style="margin-bottom: 15px;">
-      <button onclick="importarDados()" style="width: 100%; margin-bottom: 10px;">📥 Importar Ficha</button>
-      <button onclick="criarNovaFicha()" style="width: 100%;">➕ Nova Ficha</button>
-    </div>
+  <button onclick="criarPasta()" style="width: 100%; margin-bottom: 10px;">📁 Nova Pasta</button>
+  <button onclick="importarDados()" style="width: 100%; margin-bottom: 10px;">📥 Importar Ficha</button>
+  <button onclick="criarNovaFicha()" style="width: 100%;">➕ Nova Ficha</button>
+</div>
     <ul id="listaFichasModal"></ul>
   </div>
 </div>
@@ -2312,13 +2313,6 @@ function atualizarListaFichasModal() {
   const lista = document.getElementById('listaFichasModal');
   lista.innerHTML = '';
 
-  // Botão para criar nova pasta
-  const btnCriarPasta = document.createElement('button');
-  btnCriarPasta.textContent = '📁 Nova Pasta';
-  btnCriarPasta.style.marginBottom = '10px';
-  btnCriarPasta.onclick = criarPasta;
-  lista.appendChild(btnCriarPasta);
-
   // Função auxiliar para criar item de ficha (com botões organizados)
   function criarItemFicha(ficha, idx) {
     const li = document.createElement('li');
@@ -2364,8 +2358,8 @@ function atualizarListaFichasModal() {
 
     botoesLinha.appendChild(btnAbrir);
     botoesLinha.appendChild(btnExportar);
-    botoesLinha.appendChild(btnExcluir);
     botoesLinha.appendChild(btnMover);
+    botoesLinha.appendChild(btnExcluir);
 
     // Se a ficha já está em uma pasta, adicionar botão "Remover da pasta"
     if (ficha.folderId) {
@@ -2428,7 +2422,6 @@ function atualizarListaFichasModal() {
     header.style.alignItems = 'center';
     header.style.width = '100%';
     header.style.cursor = 'pointer';
-    header.ondblclick = (e) => { e.stopPropagation(); togglePasta(pasta.id); };
 
     // Nome com círculo de cor
     const nomeDiv = document.createElement('div');
