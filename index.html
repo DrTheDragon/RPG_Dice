@@ -2522,21 +2522,6 @@ botoesPasta.appendChild(btnExcluir);
 header.appendChild(botoesPasta);
 liPasta.appendChild(header);
 
-    // Se estiver em modo movimento, a pasta fica destacada e clicável
-    if (movingSheetIndex !== null) {
-      const btnMoverPara = document.createElement('button');
-      btnMoverPara.textContent = '📥 Mover para cá';
-      btnMoverPara.style.backgroundColor = '#4caf50';
-      btnMoverPara.onclick = (e) => {
-        e.stopPropagation();
-        sheets[movingSheetIndex].folderId = pasta.id;
-        movingSheetIndex = null;
-        salvarTodasFichas();
-        atualizarListaFichasModal();
-      };
-      botoesPasta.appendChild(btnMoverPara);
-    }
-
     header.appendChild(botoesPasta);
     liPasta.appendChild(header);
 
