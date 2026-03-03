@@ -649,6 +649,9 @@ body.light .fade-5 { color: #eee; }
   overflow-wrap: break-word;
 }
  /* Força quebra de linha em todos os elementos de texto que possam ser longos */
+/* Garantir que todo texto quebre em várias linhas */
+.atributo-item,
+.atributo-item span,
 .historico li,
 .roll-details,
 .resultado,
@@ -665,6 +668,14 @@ body.light .fade-5 { color: #eee; }
   word-break: break-word;
   overflow-wrap: break-word;
   white-space: normal;
+}
+
+/* Permitir que os itens flexíveis encolham corretamente */
+.atributo-item {
+  min-width: 0;
+}
+.atributo-item span {
+  min-width: 0;
 }
 </style>
 </head>
