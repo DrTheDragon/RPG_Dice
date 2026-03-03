@@ -717,21 +717,22 @@ body.light .fade-5 { color: #eee; }
 .peso-item p {
   text-align: center;
 }
-
- /* Estilos para pastas no modal */
-.modal-content li[data-pasta-id] {
-  margin-bottom: 10px;
-  padding: 10px;
+/* Ajustes para o modal de fichas */
+.modal-content li {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
 }
-.modal-content li[data-pasta-id] ul {
-  list-style: none;
-  padding-left: 20px;
-  margin-top: 5px;
+.modal-content li > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  justify-content: center;
 }
-.modal-content li[data-pasta-id] ul li {
-  margin: 5px 0;
+.modal-content button {
+  flex: 0 1 auto;
+  min-width: 70px;
 }
- 
 </style>
 </head>
 <body class="loading">
@@ -1063,8 +1064,9 @@ let vida = 0, san = 0, descanso = 0, poder = 0, peso = 0, defesa = 0, exposicao 
 let deslocamentoBase = 0; // armazena o valor original do deslocamento (sem penalidade)
 
 // ===== VARIÁVEIS PARA MÚLTIPLAS FICHAS =====
-let sheets = [];  
- let folders = [];          // array de pastas: { id, nome, cor, aberta }// array de objetos de ficha
+let sheets = [];  // array de objetos de ficha
+ let folders = [];          // array de pastas: { id, nome, cor, aberta }
+ let movingSheetIndex = null; // índice da ficha sendo movida
 let currentSheetIndex = 0; // índice da ficha atual
 
 // Tema global (não salvo por ficha)
@@ -2286,12 +2288,11 @@ function carregarTodasFichas() {
     sheets.push(criarFichaPadrao());
     currentSheetIndex = 0;
   }
-  // Garantir que fichas antigas tenham folderId
   sheets.forEach(s => { if (s.folderId === undefined) s.folderId = null; });
   carregarFicha(currentSheetIndex);
   document.body.classList.remove('loading');
 }
-
+ 
 function salvar() {
   atualizarFichaAtualNoArray();
   salvarTodasFichas();
@@ -2318,30 +2319,185 @@ function atualizarListaFichasModal() {
   btnCriarPasta.onclick = criarPasta;
   lista.appendChild(btnCriarPasta);
 
+  // Função auxiliar para criar item de ficha (com botões organizados)
+  function criarItemFicha(ficha, idx) {
+    const li = document.createElement('li');
+    li.style.flexDirection = 'column';
+    li.style.alignItems = 'stretch';
+    li.style.gap = '5px';
+
+    const nomeLinha = document.createElement('div');
+    nomeLinha.style.display = 'flex';
+    nomeLinha.style.justifyContent = 'space-between';
+    nomeLinha.style.alignItems = 'center';
+    nomeLinha.innerHTML = `<span><b>${ficha.nomePersonagem || `Ficha ${idx+1}`}</b> ${idx === currentSheetIndex ? '(atual)' : ''}</span>`;
+
+    const botoesLinha = document.createElement('div');
+    botoesLinha.style.display = 'flex';
+    botoesLinha.style.gap = '5px';
+    botoesLinha.style.flexWrap = 'wrap';
+    botoesLinha.style.justifyContent = 'center';
+
+    // Botão Abrir
+    const btnAbrir = document.createElement('button');
+    btnAbrir.textContent = '📂 Abrir';
+    btnAbrir.onclick = () => switchParaFicha(idx);
+
+    // Botão Exportar
+    const btnExportar = document.createElement('button');
+    btnExportar.textContent = '📤 Exportar';
+    btnExportar.onclick = () => exportarFichaEspecifica(idx);
+
+    // Botão Excluir
+    const btnExcluir = document.createElement('button');
+    btnExcluir.textContent = '🗑️ Excluir';
+    btnExcluir.style.color = '#ff4c4c';
+    btnExcluir.onclick = () => excluirFicha(idx);
+
+    // Botão Mover (só aparece se não estiver no modo mover)
+    const btnMover = document.createElement('button');
+    btnMover.textContent = '📎 Mover';
+    btnMover.onclick = (e) => {
+      e.stopPropagation();
+      iniciarMovimentoFicha(idx);
+    };
+
+    botoesLinha.appendChild(btnAbrir);
+    botoesLinha.appendChild(btnExportar);
+    botoesLinha.appendChild(btnExcluir);
+    botoesLinha.appendChild(btnMover);
+
+    // Se a ficha já está em uma pasta, adicionar botão "Remover da pasta"
+    if (ficha.folderId) {
+      const btnRemover = document.createElement('button');
+      btnRemover.textContent = '🚫 Remover da pasta';
+      btnRemover.onclick = (e) => {
+        e.stopPropagation();
+        sheets[idx].folderId = null;
+        salvarTodasFichas();
+        atualizarListaFichasModal();
+      };
+      botoesLinha.appendChild(btnRemover);
+    }
+
+    li.appendChild(nomeLinha);
+    li.appendChild(botoesLinha);
+    return li;
+  }
+
+  // Se estiver em modo de movimento, mostrar mensagem e botão cancelar
+  if (movingSheetIndex !== null) {
+    const msgDiv = document.createElement('div');
+    msgDiv.style.backgroundColor = '#444';
+    msgDiv.style.padding = '10px';
+    msgDiv.style.marginBottom = '10px';
+    msgDiv.style.borderRadius = '5px';
+    msgDiv.innerHTML = `
+      <p>Movendo ficha: <b>${sheets[movingSheetIndex].nomePersonagem || 'Sem nome'}</b></p>
+      <button onclick="cancelarMovimento()">Cancelar</button>
+    `;
+    lista.appendChild(msgDiv);
+  }
+
   // Mostrar pastas e fichas soltas
   const foldersOrdenadas = [...folders].sort((a,b) => a.nome.localeCompare(b.nome));
   const sheetsSemPasta = sheets.filter(s => !s.folderId);
   const sheetsComPasta = sheets.filter(s => s.folderId);
 
-  // Função auxiliar para criar item de ficha
-  function criarItemFicha(ficha, idx) {
-    const li = document.createElement('li');
-    const nome = ficha.nomePersonagem || `Ficha ${idx+1}`;
-    li.innerHTML = `
-      <span><b>${nome}</b> ${idx === currentSheetIndex ? '(atual)' : ''}</span>
-      <div>
-        <button onclick="switchParaFicha(${idx})">📂 Abrir</button>
-        <button onclick="exportarFichaEspecifica(${idx})">📤 Exportar</button>
-        <button onclick="excluirFicha(${idx})" style="color:#ff4c4c;">🗑️</button>
-        <select onchange="moverFichaParaPasta(${idx}, this.value)">
-          <option value="">Mover para...</option>
-          ${folders.map(f => `<option value="${f.id}">${f.nome}</option>`).join('')}
-        </select>
-      </div>
-    `;
-    return li;
-  }
+  // Fichas sem pasta
+  sheetsSemPasta.forEach((ficha) => {
+    const idxReal = sheets.indexOf(ficha);
+    lista.appendChild(criarItemFicha(ficha, idxReal));
+  });
 
+  // Pastas
+  foldersOrdenadas.forEach(pasta => {
+    const liPasta = document.createElement('li');
+    liPasta.style.flexDirection = 'column';
+    liPasta.style.alignItems = 'stretch';
+    liPasta.style.backgroundColor = 'var(--bg1)';
+    liPasta.style.border = '1px solid var(--border)';
+    liPasta.style.marginBottom = '10px';
+    liPasta.style.padding = '10px';
+    liPasta.setAttribute('data-pasta-id', pasta.id);
+
+    // Cabeçalho da pasta
+    const header = document.createElement('div');
+    header.style.display = 'flex';
+    header.style.justifyContent = 'space-between';
+    header.style.alignItems = 'center';
+    header.style.width = '100%';
+    header.style.cursor = 'pointer';
+    header.ondblclick = (e) => { e.stopPropagation(); togglePasta(pasta.id); };
+
+    // Nome com círculo de cor
+    const nomeDiv = document.createElement('div');
+    nomeDiv.style.display = 'flex';
+    nomeDiv.style.alignItems = 'center';
+    nomeDiv.style.gap = '8px';
+    nomeDiv.innerHTML = `
+      <span style="display:inline-block; width:16px; height:16px; border-radius:50%; background-color:${pasta.cor || '#888'};"></span>
+      <span style="font-weight:bold;">${pasta.aberta ? '📂' : '📁'} ${pasta.nome}</span>
+    `;
+    header.appendChild(nomeDiv);
+
+    // Botões da pasta
+    const botoesPasta = document.createElement('div');
+    botoesPasta.style.display = 'flex';
+    botoesPasta.style.gap = '5px';
+    botoesPasta.innerHTML = `
+      <button onclick="editarPasta('${pasta.id}')">✏️</button>
+      <button onclick="excluirPasta('${pasta.id}')" style="color:#ff4c4c;">🗑️</button>
+      <button onclick="exportarTodasFichasDaPasta('${pasta.id}')">📤 Tudo</button>
+    `;
+
+    // Se estiver em modo movimento, a pasta fica destacada e clicável
+    if (movingSheetIndex !== null) {
+      const btnMoverPara = document.createElement('button');
+      btnMoverPara.textContent = '📥 Mover para cá';
+      btnMoverPara.style.backgroundColor = '#4caf50';
+      btnMoverPara.onclick = (e) => {
+        e.stopPropagation();
+        sheets[movingSheetIndex].folderId = pasta.id;
+        movingSheetIndex = null;
+        salvarTodasFichas();
+        atualizarListaFichasModal();
+      };
+      botoesPasta.appendChild(btnMoverPara);
+    }
+
+    header.appendChild(botoesPasta);
+    liPasta.appendChild(header);
+
+    // Conteúdo da pasta (se aberta)
+    if (pasta.aberta) {
+      const subLista = document.createElement('ul');
+      subLista.style.paddingLeft = '20px';
+      subLista.style.marginTop = '10px';
+      subLista.style.listStyle = 'none';
+      const fichasDaPasta = sheetsComPasta.filter(s => s.folderId === pasta.id);
+      fichasDaPasta.forEach(ficha => {
+        const idxReal = sheets.indexOf(ficha);
+        const subLi = criarItemFicha(ficha, idxReal);
+        subLista.appendChild(subLi);
+      });
+      liPasta.appendChild(subLista);
+    }
+
+    lista.appendChild(liPasta);
+  });
+}
+
+ function iniciarMovimentoFicha(sheetIndex) {
+  movingSheetIndex = sheetIndex;
+  atualizarListaFichasModal();
+}
+
+function cancelarMovimento() {
+  movingSheetIndex = null;
+  atualizarListaFichasModal();
+}
+ 
   // Mostrar fichas sem pasta primeiro
   sheetsSemPasta.forEach((ficha, idx) => {
     const idxReal = sheets.indexOf(ficha);
