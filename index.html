@@ -594,7 +594,7 @@ body.light .fade-5 { color: #eee; }
 <div class="toggle">
 <button onclick="toggleTema()">🌗 Alternar Tema</button>
 <button onclick="abrirGerenciadorFichas()">📂 Gerenciar Fichas</button>
-<input type="file" id="fileInput" class="file-input" accept=".bin,.json,.txt" onchange="processarArquivo(this.files)">
+<input type="file" id="fileInput" class="file-input" accept=".bin" onchange="processarArquivo(this.files)">
 </div>
 
 <!-- MODAL DE GERENCIAMENTO DE FICHAS -->
@@ -2213,7 +2213,7 @@ async function exportarFichaEspecifica(idx) {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    alert(`Ficha de ${nome} exportada com criptografia!`);
+    alert(`Ficha de ${nome} exportada com sucesso!`);
   } catch (error) {
     alert('Erro ao criptografar a ficha.');
     console.error(error);
