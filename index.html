@@ -2429,13 +2429,14 @@ function atualizarListaFichasModal() {
   // Pastas
   foldersOrdenadas.forEach(pasta => {
     const liPasta = document.createElement('li');
-    liPasta.style.flexDirection = 'column';
-    liPasta.style.alignItems = 'stretch';
-    liPasta.style.backgroundColor = 'var(--bg1)';
-    liPasta.style.border = '1px solid var(--border)';
-    liPasta.style.marginBottom = '10px';
-    liPasta.style.padding = '10px';
-    liPasta.setAttribute('data-pasta-id', pasta.id);
+liPasta.style.flexDirection = 'column';
+liPasta.style.alignItems = 'stretch';
+liPasta.style.backgroundColor = 'var(--bg1)';
+liPasta.style.border = '1px solid var(--border)';
+liPasta.style.padding = '8px';        // mesmo padding das fichas
+liPasta.style.gap = '5px';            // mesmo gap das fichas
+liPasta.style.margin = '5px 0';       // mesma margem vertical das fichas
+liPasta.setAttribute('data-pasta-id', pasta.id);
 
     // Cabeçalho da pasta
     // Cabeçalho da pasta
