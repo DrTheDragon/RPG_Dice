@@ -928,6 +928,14 @@ body.light .fade-5 { color: #eee; }
   <textarea id="anotacoes" placeholder="Suas anotações gerais..."></textarea>
 </div>
 
+ <!-- MODAL DE RESULTADO DO TESTE -->
+<div id="modalResultado" class="modal-resultado" onclick="fecharModalResultado()">
+  <div class="modal-content">
+    <div id="resultadoModalConteudo"></div>
+    <div class="close-hint">Clique em qualquer lugar para fechar</div>
+  </div>
+</div>
+ 
 </div> <!-- fecha wrapper -->
 
 <script>
@@ -1076,7 +1084,10 @@ function testeAtributo(nome, valorAtributo) {
   let t,c; const r = tabela[att];
   if(d===1) { if(d>=r.N) { t="NORMAL"; c="N"; } else { t="FALHA CRÍTICA"; c="F"; } }
   else { if(r.E && d>=r.E) { t="EXTREMO"; c="E"; } else if(r.B && d>=r.B) { t="BOM"; c="B"; } else if(d>=r.N) { t="NORMAL"; c="N"; } else { t="FALHA"; c="F"; } }
-  document.getElementById('resAtributo').innerHTML = `🎲 ${d}<br>📊 ${nome}: ${att}<br><span class="${c}"><b>${t}</b></span>`;
+  
+  // Mostra modal em vez de preencher o div resultado
+  mostrarResultadoAtributo(d, nome, att, c, t);
+  
   historico.unshift(`🎲 ${d} | ${nome}: ${att} → ${t}`);
   if(historico.length>6) historico.pop();
   salvar(); atualizarHistorico();
@@ -2578,6 +2589,24 @@ window.addEventListener('load', function() {
   carregarTodasFichas();
 });
 
+
+ // Função para mostrar o modal com o resultado
+function mostrarResultadoAtributo(dado, nome, valor, tipo, texto) {
+  const modal = document.getElementById('modalResultado');
+  const conteudo = document.getElementById('resultadoModalConteudo');
+  conteudo.innerHTML = `
+    <h3>🎲 Resultado</h3>
+    <div style="font-size:2rem; margin:10px 0;">${dado}</div>
+    <div>${nome}: ${valor}</div>
+    <div class="resultado-texto"><span class="${tipo}">${texto}</span></div>
+  `;
+  modal.style.display = 'flex';
+}
+
+// Fecha o modal de resultado
+function fecharModalResultado() {
+  document.getElementById('modalResultado').style.display = 'none';
+}
 </script>
 </body>
 </html>
