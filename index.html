@@ -717,6 +717,20 @@ body.light .fade-5 { color: #eee; }
 .peso-item p {
   text-align: center;
 }
+
+ /* Estilos para pastas no modal */
+.modal-content li[data-pasta-id] {
+  margin-bottom: 10px;
+  padding: 10px;
+}
+.modal-content li[data-pasta-id] ul {
+  list-style: none;
+  padding-left: 20px;
+  margin-top: 5px;
+}
+.modal-content li[data-pasta-id] ul li {
+  margin: 5px 0;
+}
  
 </style>
 </head>
@@ -2115,27 +2129,6 @@ function atualizarHistoricoArmas() {
 }
 
 // ==================== FUNÇÕES PARA MÚLTIPLAS FICHAS ====================
-function salvarTodasFichas() {
-  localStorage.setItem('noir_rpg_theme', document.body.className);
-  localStorage.setItem('noir_rpg_sheets', JSON.stringify({ sheets, current: currentSheetIndex }));
-}
-
-function carregarTodasFichas() {
-  const temaSalvo = localStorage.getItem('noir_rpg_theme');
-  if (temaSalvo) {
-    document.body.className = temaSalvo;
-  }
-  const data = JSON.parse(localStorage.getItem('noir_rpg_sheets') || '{"sheets":[],"current":0}');
-  sheets = data.sheets;
-  currentSheetIndex = data.current;
-  if (sheets.length === 0) {
-    sheets.push(criarFichaPadrao());
-    currentSheetIndex = 0;
-  }
-  carregarFicha(currentSheetIndex);
-  document.body.classList.remove('loading');
-}
-
 function criarFichaPadrao() {
   return {
     folderId: null,        // ID da pasta a que pertence (null = fora de pasta)
@@ -2153,6 +2146,58 @@ function criarFichaPadrao() {
     atributosPersonalizados:[],
     armas:[]
   };
+}
+
+ function atualizarFichaAtualNoArray() {
+  if (sheets.length === 0) {
+    sheets.push(criarFichaPadrao());
+    currentSheetIndex = 0;
+  }
+  const ficha = sheets[currentSheetIndex];
+  ficha.vida = vida;
+  ficha.san = san;
+  ficha.descanso = descanso;
+  ficha.poder = poder;
+  ficha.defesa = defesa;
+  ficha.exposicao = exposicao;
+  ficha.deslocamentoBase = deslocamentoBase;
+  ficha.vidaMax = document.getElementById('vidaMax').value;
+  ficha.sanMax = document.getElementById('sanMax').value;
+  ficha.poderMax = document.getElementById('poderMax').value;
+  ficha.pesoMax = document.getElementById('pesoMax').value;
+  ficha.dinheiro = document.getElementById('dinheiro').value;
+  ficha.traumasPerm = document.getElementById('traumasPerm').value;
+  ficha.traumasTemp = document.getElementById('traumasTemp').value;
+  ficha.pessoasImportantes = document.getElementById('pessoasImportantes').value;
+  ficha.talentos = document.getElementById('talentos').value;
+  ficha.itens = document.getElementById('itens').value;
+  ficha.rituais = document.getElementById('rituais').value;
+  ficha.anotacoes = document.getElementById('anotacoes').value;
+  ficha.historico = historico;
+  ficha.historicoSan = historicoSan;
+  ficha.historicoDados = historicoDados;
+  ficha.historicoArmas = historicoArmas;
+  ficha.nomePersonagem = document.getElementById('nomePersonagem').value;
+  ficha.apelido = document.getElementById('apelidoPersonagem').value;
+  ficha.idade = document.getElementById('idadePersonagem').value;
+  ficha.emprego = document.getElementById('empregoPersonagem').value;
+  ficha.cidadeNatal = document.getElementById('cidadeNatal').value;
+  ficha.cidadeResidente = document.getElementById('cidadeResidente').value;
+  ficha.tamanho = document.getElementById('tamanho').value;
+  ficha.aparencia = document.getElementById('aparencia').value;
+  ficha.deslocamento = document.getElementById('deslocamento').value;
+  ficha.caracteristicas = document.getElementById('caracteristicasPersonagem').value;
+  ficha.personalidade = document.getElementById('personalidadePersonagem').value;
+  ficha.historia = document.getElementById('historiaPersonagem').value;
+  const img = document.getElementById('fotoPlaceholder').querySelector('img');
+  ficha.imagem = img ? img.src : null;
+  ficha.checkVida1 = document.getElementById('checkVida1').checked;
+  ficha.checkVida2 = document.getElementById('checkVida2').checked;
+  ficha.checkVida3 = document.getElementById('checkVida3').checked;
+  ficha.checkFerido = document.getElementById('checkFerido').checked;
+  ficha.checkCaido = document.getElementById('checkCaido').checked;
+  ficha.atributosPersonalizados = atributosPersonalizados;
+  ficha.armas = armas;
 }
 
 function carregarFicha(index) {
