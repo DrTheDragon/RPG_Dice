@@ -353,6 +353,18 @@ body.light .fade-5 { color: #eee; }
  margin-bottom:20px;
  text-align:center;
 }
+ .modal-content li[data-pasta-id] {
+  margin-bottom: 10px;
+  padding: 10px;
+}
+.modal-content li[data-pasta-id] ul {
+  list-style: none;
+  padding-left: 20px;
+  margin-top: 5px;
+}
+.modal-content li[data-pasta-id] ul li {
+  margin: 5px 0;
+}
 .atributo-item {
  display:flex;
  align-items:center;
@@ -1049,7 +1061,8 @@ let vida = 0, san = 0, descanso = 0, poder = 0, peso = 0, defesa = 0, exposicao 
 let deslocamentoBase = 0; // armazena o valor original do deslocamento (sem penalidade)
 
 // ===== VARIÁVEIS PARA MÚLTIPLAS FICHAS =====
-let sheets = [];           // array de objetos de ficha
+let sheets = [];  
+ let folders = [];          // array de pastas: { id, nome, cor, aberta }// array de objetos de ficha
 let currentSheetIndex = 0; // índice da ficha atual
 
 // Tema global (não salvo por ficha)
@@ -2137,6 +2150,7 @@ function carregarTodasFichas() {
 
 function criarFichaPadrao() {
   return {
+    folderId: null,        // ID da pasta a que pertence (null = fora de pasta)
     vida:0, san:0, descanso:0, poder:0, peso:0, defesa:0, exposicao:0,
     deslocamentoBase:0,
     vidaMax:0, sanMax:0, poderMax:0, pesoMax:0,
@@ -2217,57 +2231,36 @@ function carregarFicha(index) {
   atualizarHistoricoArmas();
 }
 
-function salvar() {
+ function salvarTodasFichas() {
+  localStorage.setItem('noir_rpg_theme', document.body.className);
+  localStorage.setItem('noir_rpg_sheets', JSON.stringify({ 
+    sheets, 
+    folders, 
+    current: currentSheetIndex 
+  }));
+}
+
+function carregarTodasFichas() {
+  const temaSalvo = localStorage.getItem('noir_rpg_theme');
+  if (temaSalvo) {
+    document.body.className = temaSalvo;
+  }
+  const data = JSON.parse(localStorage.getItem('noir_rpg_sheets') || '{"sheets":[],"folders":[],"current":0}');
+  sheets = data.sheets || [];
+  folders = data.folders || [];
+  currentSheetIndex = data.current || 0;
   if (sheets.length === 0) {
     sheets.push(criarFichaPadrao());
     currentSheetIndex = 0;
   }
-  const ficha = sheets[currentSheetIndex];
-  ficha.vida = vida;
-  ficha.san = san;
-  ficha.descanso = descanso;
-  ficha.poder = poder;
-  ficha.defesa = defesa;
-  ficha.exposicao = exposicao;
-  ficha.deslocamentoBase = deslocamentoBase;
-  ficha.vidaMax = document.getElementById('vidaMax').value;
-  ficha.sanMax = document.getElementById('sanMax').value;
-  ficha.poderMax = document.getElementById('poderMax').value;
-  ficha.pesoMax = document.getElementById('pesoMax').value;
-  ficha.dinheiro = document.getElementById('dinheiro').value;
-  ficha.traumasPerm = document.getElementById('traumasPerm').value;
-  ficha.traumasTemp = document.getElementById('traumasTemp').value;
-  ficha.pessoasImportantes = document.getElementById('pessoasImportantes').value;
-  ficha.talentos = document.getElementById('talentos').value;
-  ficha.itens = document.getElementById('itens').value;
-  ficha.rituais = document.getElementById('rituais').value;
-  ficha.anotacoes = document.getElementById('anotacoes').value;
-  ficha.historico = historico;
-  ficha.historicoSan = historicoSan;
-  ficha.historicoDados = historicoDados;
-  ficha.historicoArmas = historicoArmas;
-  ficha.nomePersonagem = document.getElementById('nomePersonagem').value;
-  ficha.apelido = document.getElementById('apelidoPersonagem').value;
-  ficha.idade = document.getElementById('idadePersonagem').value;
-  ficha.emprego = document.getElementById('empregoPersonagem').value;
-  ficha.cidadeNatal = document.getElementById('cidadeNatal').value;
-  ficha.cidadeResidente = document.getElementById('cidadeResidente').value;
-  ficha.tamanho = document.getElementById('tamanho').value;
-  ficha.aparencia = document.getElementById('aparencia').value;
-  ficha.deslocamento = document.getElementById('deslocamento').value;
-  ficha.caracteristicas = document.getElementById('caracteristicasPersonagem').value;
-  ficha.personalidade = document.getElementById('personalidadePersonagem').value;
-  ficha.historia = document.getElementById('historiaPersonagem').value;
-  const img = document.getElementById('fotoPlaceholder').querySelector('img');
-  ficha.imagem = img ? img.src : null;
-  ficha.checkVida1 = document.getElementById('checkVida1').checked;
-  ficha.checkVida2 = document.getElementById('checkVida2').checked;
-  ficha.checkVida3 = document.getElementById('checkVida3').checked;
-  ficha.checkFerido = document.getElementById('checkFerido').checked;
-  ficha.checkCaido = document.getElementById('checkCaido').checked;
-  ficha.atributosPersonalizados = atributosPersonalizados;
-  ficha.armas = armas;
+  // Garantir que fichas antigas tenham folderId
+  sheets.forEach(s => { if (s.folderId === undefined) s.folderId = null; });
+  carregarFicha(currentSheetIndex);
+  document.body.classList.remove('loading');
+}
 
+function salvar() {
+  atualizarFichaAtualNoArray();
   salvarTodasFichas();
 }
 
@@ -2284,7 +2277,21 @@ function fecharGerenciadorFichas() {
 function atualizarListaFichasModal() {
   const lista = document.getElementById('listaFichasModal');
   lista.innerHTML = '';
-  sheets.forEach((ficha, idx) => {
+
+  // Botão para criar nova pasta
+  const btnCriarPasta = document.createElement('button');
+  btnCriarPasta.textContent = '📁 Nova Pasta';
+  btnCriarPasta.style.marginBottom = '10px';
+  btnCriarPasta.onclick = criarPasta;
+  lista.appendChild(btnCriarPasta);
+
+  // Mostrar pastas e fichas soltas
+  const foldersOrdenadas = [...folders].sort((a,b) => a.nome.localeCompare(b.nome));
+  const sheetsSemPasta = sheets.filter(s => !s.folderId);
+  const sheetsComPasta = sheets.filter(s => s.folderId);
+
+  // Função auxiliar para criar item de ficha
+  function criarItemFicha(ficha, idx) {
     const li = document.createElement('li');
     const nome = ficha.nomePersonagem || `Ficha ${idx+1}`;
     li.innerHTML = `
@@ -2293,12 +2300,63 @@ function atualizarListaFichasModal() {
         <button onclick="switchParaFicha(${idx})">📂 Abrir</button>
         <button onclick="exportarFichaEspecifica(${idx})">📤 Exportar</button>
         <button onclick="excluirFicha(${idx})" style="color:#ff4c4c;">🗑️</button>
+        <select onchange="moverFichaParaPasta(${idx}, this.value)">
+          <option value="">Mover para...</option>
+          ${folders.map(f => `<option value="${f.id}">${f.nome}</option>`).join('')}
+        </select>
       </div>
     `;
-    lista.appendChild(li);
+    return li;
+  }
+
+  // Mostrar fichas sem pasta primeiro
+  sheetsSemPasta.forEach((ficha, idx) => {
+    const idxReal = sheets.indexOf(ficha);
+    lista.appendChild(criarItemFicha(ficha, idxReal));
+  });
+
+  // Mostrar pastas com suas fichas
+  foldersOrdenadas.forEach(pasta => {
+    const liPasta = document.createElement('li');
+    liPasta.style.flexDirection = 'column';
+    liPasta.style.alignItems = 'stretch';
+    liPasta.style.backgroundColor = pasta.cor || 'var(--bg1)';
+    liPasta.style.border = '2px solid ' + (pasta.cor || 'var(--border)');
+    liPasta.setAttribute('data-pasta-id', pasta.id);
+    liPasta.ondblclick = (e) => { e.stopPropagation(); togglePasta(pasta.id); };
+
+    const header = document.createElement('div');
+    header.style.display = 'flex';
+    header.style.justifyContent = 'space-between';
+    header.style.alignItems = 'center';
+    header.style.width = '100%';
+    header.innerHTML = `
+      <span style="font-weight:bold; cursor:pointer;">${pasta.aberta ? '📂' : '📁'} ${pasta.nome}</span>
+      <div>
+        <button onclick="editarPasta('${pasta.id}')">✏️</button>
+        <button onclick="excluirPasta('${pasta.id}')" style="color:#ff4c4c;">🗑️</button>
+        <button onclick="exportarTodasFichasDaPasta('${pasta.id}')">📤 Tudo</button>
+      </div>
+    `;
+    liPasta.appendChild(header);
+
+    if (pasta.aberta) {
+      const subLista = document.createElement('ul');
+      subLista.style.paddingLeft = '20px';
+      subLista.style.marginTop = '5px';
+      const fichasDaPasta = sheetsComPasta.filter(s => s.folderId === pasta.id);
+      fichasDaPasta.forEach(ficha => {
+        const idxReal = sheets.indexOf(ficha);
+        const subLi = criarItemFicha(ficha, idxReal);
+        subLista.appendChild(subLi);
+      });
+      liPasta.appendChild(subLista);
+    }
+
+    lista.appendChild(liPasta);
   });
 }
-
+ 
 async function exportarFichaEspecifica(idx) {
   const ficha = sheets[idx];
   if (!ficha) return;
@@ -2415,6 +2473,76 @@ function criarNovaFicha() {
   if (document.getElementById('modalFichas').style.display === 'flex') {
     atualizarListaFichasModal();
   }
+}
+
+ // Cria uma nova pasta
+function criarPasta() {
+  const nome = prompt('Nome da nova pasta:');
+  if (!nome) return;
+  const cor = prompt('Cor da pasta (código CSS, ex: #ff0000 ou "red"):', '#444');
+  const novaPasta = {
+    id: 'pasta_' + Date.now() + '_' + Math.random(),
+    nome: nome,
+    cor: cor || '#444',
+    aberta: false   // começa fechada
+  };
+  folders.push(novaPasta);
+  salvarTodasFichas();
+  atualizarListaFichasModal();
+}
+
+// Edita uma pasta
+function editarPasta(pastaId) {
+  const pasta = folders.find(f => f.id === pastaId);
+  if (!pasta) return;
+  const novoNome = prompt('Novo nome da pasta:', pasta.nome);
+  if (novoNome === null) return;
+  pasta.nome = novoNome;
+  const novaCor = prompt('Nova cor (código CSS):', pasta.cor);
+  if (novaCor !== null) pasta.cor = novaCor;
+  salvarTodasFichas();
+  atualizarListaFichasModal();
+}
+
+// Exclui uma pasta (as fichas voltam a ficar sem pasta)
+function excluirPasta(pastaId) {
+  if (!confirm('Excluir esta pasta? As fichas dentro dela serão movidas para fora.')) return;
+  sheets.forEach(s => { if (s.folderId === pastaId) s.folderId = null; });
+  folders = folders.filter(f => f.id !== pastaId);
+  salvarTodasFichas();
+  atualizarListaFichasModal();
+}
+
+// Abre/fecha uma pasta (double‑click)
+function togglePasta(pastaId) {
+  const pasta = folders.find(f => f.id === pastaId);
+  if (pasta) {
+    pasta.aberta = !pasta.aberta;
+    salvarTodasFichas();
+    atualizarListaFichasModal();
+  }
+}
+
+// Move uma ficha para uma pasta (ou nenhuma)
+function moverFichaParaPasta(sheetIndex, pastaId) {
+  if (sheetIndex < 0 || sheetIndex >= sheets.length) return;
+  sheets[sheetIndex].folderId = pastaId || null;
+  salvarTodasFichas();
+  atualizarListaFichasModal();
+}
+// Exporta todas as fichas de uma pasta como arquivos individuais (ou um único arquivo?)
+// Vamos exportar cada ficha individualmente, mas pode ser adaptado.
+function exportarTodasFichasDaPasta(pastaId) {
+  const fichas = sheets.filter(s => s.folderId === pastaId);
+  if (fichas.length === 0) {
+    alert('Nenhuma ficha nesta pasta.');
+    return;
+  }
+  // Exporta cada ficha chamando a função existente
+  fichas.forEach(ficha => {
+    const idx = sheets.indexOf(ficha);
+    exportarFichaEspecifica(idx);
+  });
 }
 
 // ==================== FUNÇÃO PARA REMOVER FOTO ====================
