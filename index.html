@@ -2360,9 +2360,9 @@ function atualizarListaFichasModal() {
     btnAbrir.textContent = '📂 Abrir';
     btnAbrir.onclick = () => switchParaFicha(idx);
 
-    // Botão 
-    const btn = document.createElement('button');
-    btn.textContent = '📤 Exportar';
+    // Botão Exportar
+    const btnExportar = document.createElement('button');
+    btnExportar.textContent = '📤 Exportar';
     btnExportar.onclick = () => exportarFichaEspecifica(idx);
 
     // Botão Excluir
