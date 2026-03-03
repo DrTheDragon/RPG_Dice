@@ -648,6 +648,24 @@ body.light .fade-5 { color: #eee; }
   word-break: break-word;
   overflow-wrap: break-word;
 }
+ /* Força quebra de linha em todos os elementos de texto que possam ser longos */
+.historico li,
+.roll-details,
+.resultado,
+.arma-resultado,
+.detalhes,
+.historico,
+.modal-content p,
+.modal-content div,
+#resAtributo,
+#resSan,
+#resDadoPersonalizado,
+#resArma,
+#resultadoModalConteudo {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
 </style>
 </head>
 <body class="loading">
