@@ -2438,38 +2438,36 @@ liPasta.style.gap = '5px';            // mesmo gap das fichas
 liPasta.style.margin = '5px 0';       // mesma margem vertical das fichas
 liPasta.setAttribute('data-pasta-id', pasta.id);
 
-    // Cabeçalho da pasta
-    // Cabeçalho da pasta
-   const header = document.createElement('div');
-   header.style.display = 'flex';
-   header.style.flexWrap = 'wrap';          // permite que os botões desçam se necessário
-   header.style.gap = '5px';
-   header.style.justifyContent = 'space-between';
-   header.style.alignItems = 'center';
-   header.style.width = '100%';
-   header.style.cursor = 'pointer';
+   // Cabeçalho da pasta (mesmo estilo da linha de nome das fichas)
+const header = document.createElement('div');
+header.style.display = 'flex';
+header.style.justifyContent = 'space-between';
+header.style.alignItems = 'center';
+header.style.width = '100%';
+header.style.cursor = 'pointer';
 
-    // Nome com círculo de cor
-    const nomeDiv = document.createElement('div');
+// Nome com círculo de cor (igual ao estilo do nome da ficha)
+const nomeDiv = document.createElement('div');
 nomeDiv.style.display = 'flex';
 nomeDiv.style.alignItems = 'center';
 nomeDiv.style.gap = '8px';
-nomeDiv.style.flex = '1 1 auto';          // permite expandir/encolher
-nomeDiv.style.minWidth = '150px';          // tamanho mínimo antes de quebrar
-nomeDiv.style.wordBreak = 'break-word';    // quebra palavras longas
+nomeDiv.style.flex = '1 1 auto';
+nomeDiv.style.minWidth = '150px';
+nomeDiv.style.wordBreak = 'break-word';
 nomeDiv.innerHTML = `
   <span style="display:inline-block; width:16px; height:16px; border-radius:50%; background-color:${pasta.cor || '#888'};"></span>
   <span style="font-weight:bold;">${pasta.aberta ? '📂' : '📁'} ${pasta.nome}</span>
 `;
-    header.appendChild(nomeDiv);
+header.appendChild(nomeDiv);
 
-    // Botões da pasta
+// Botões da pasta (exatamente com o mesmo estilo dos botões das fichas)
 const botoesPasta = document.createElement('div');
 botoesPasta.style.display = 'flex';
 botoesPasta.style.gap = '5px';
 botoesPasta.style.flexWrap = 'wrap';
+botoesPasta.style.justifyContent = 'center';
 
-// Botão para abrir/fechar pasta
+// Botão abrir/fechar (ícone)
 const btnTogglePasta = document.createElement('button');
 btnTogglePasta.textContent = pasta.aberta ? '📂' : '📁';
 btnTogglePasta.onclick = (e) => {
@@ -2487,7 +2485,7 @@ btnEditar.onclick = (e) => {
 };
 botoesPasta.appendChild(btnEditar);
 
-// Se estiver em modo movimento, adicionar botão "Mover para cá"
+// Se em modo movimento, botão "Mover para cá"
 if (movingSheetIndex !== null) {
   const btnMoverPara = document.createElement('button');
   btnMoverPara.textContent = '📥 Mover para cá';
@@ -2502,7 +2500,7 @@ if (movingSheetIndex !== null) {
   botoesPasta.appendChild(btnMoverPara);
 }
 
-// Botão exportar tudo (agora antes do excluir)
+// Botão exportar tudo
 const btnExportarTudo = document.createElement('button');
 btnExportarTudo.textContent = '📤 Tudo';
 btnExportarTudo.onclick = (e) => {
@@ -2511,7 +2509,7 @@ btnExportarTudo.onclick = (e) => {
 };
 botoesPasta.appendChild(btnExportarTudo);
 
-// Botão excluir (por último)
+// Botão excluir (sempre no final)
 const btnExcluir = document.createElement('button');
 btnExcluir.textContent = '🗑️';
 btnExcluir.style.color = '#ff4c4c';
@@ -2520,6 +2518,9 @@ btnExcluir.onclick = (e) => {
   excluirPasta(pasta.id);
 };
 botoesPasta.appendChild(btnExcluir);
+
+header.appendChild(botoesPasta);
+liPasta.appendChild(header);
 
     // Se estiver em modo movimento, a pasta fica destacada e clicável
     if (movingSheetIndex !== null) {
