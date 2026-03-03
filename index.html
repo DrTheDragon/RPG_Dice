@@ -1084,10 +1084,13 @@ function testeAtributo(nome, valorAtributo) {
   let t,c; const r = tabela[att];
   if(d===1) { if(d>=r.N) { t="NORMAL"; c="N"; } else { t="FALHA CRÍTICA"; c="F"; } }
   else { if(r.E && d>=r.E) { t="EXTREMO"; c="E"; } else if(r.B && d>=r.B) { t="BOM"; c="B"; } else if(d>=r.N) { t="NORMAL"; c="N"; } else { t="FALHA"; c="F"; } }
-  
-  // Mostra modal em vez de preencher o div resultado
+
+  // Mantém o resultado no local original
+  document.getElementById('resAtributo').innerHTML = `🎲 ${d}<br>📊 ${nome}: ${att}<br><span class="${c}"><b>${t}</b></span>`;
+
+  // Mostra o modal central com o mesmo resultado
   mostrarResultadoAtributo(d, nome, att, c, t);
-  
+
   historico.unshift(`🎲 ${d} | ${nome}: ${att} → ${t}`);
   if(historico.length>6) historico.pop();
   salvar(); atualizarHistorico();
