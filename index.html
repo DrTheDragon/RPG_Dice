@@ -918,6 +918,59 @@ let temaAtual = document.body.className;
 // Flag para evitar loop na atualização dos itens
 let processandoItens = false;
 
+ // ==================== CRIPTOGRAFIA (AES-GCM) ====================
+const ENCRYPTION_PASSWORD = 'TH3D0CT0RPG'; // Mude para uma frase forte
+
+async function getKey() {
+  const encoder = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(ENCRYPTION_PASSWORD),
+    { name: 'PBKDF2' },
+    false,
+    ['deriveKey']
+  );
+  return crypto.subtle.deriveKey(
+    {
+      name: 'PBKDF2',
+      salt: encoder.encode('salt-constante'),
+      iterations: 100000,
+      hash: 'SHA-256'
+    },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+async function encryptData(plainText) {
+  const key = await getKey();
+  const encoder = new TextEncoder();
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const encrypted = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    encoder.encode(plainText)
+  );
+  const result = new Uint8Array(iv.length + encrypted.byteLength);
+  result.set(iv, 0);
+  result.set(new Uint8Array(encrypted), iv.length);
+  return result;
+}
+
+async function decryptData(encryptedData) {
+  const key = await getKey();
+  const iv = encryptedData.slice(0, 12);
+  const data = encryptedData.slice(12);
+  const decrypted = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    data
+  );
+  return new TextDecoder().decode(decrypted);
+}
+
 const tabela = {
   1:{N:20,B:null,E:null},2:{N:19,B:20,E:null},3:{N:18,B:20,E:null},
   4:{N:17,B:19,E:null},5:{N:16,B:19,E:20},6:{N:15,B:18,E:20},
@@ -2084,7 +2137,7 @@ function atualizarListaFichasModal() {
   });
 }
 
-function exportarFichaEspecifica(idx) {
+async function exportarFichaEspecifica(idx) {
   const ficha = sheets[idx];
   if (!ficha) return;
 
@@ -2149,16 +2202,22 @@ function exportarFichaEspecifica(idx) {
   };
 
   const jsonString = JSON.stringify(dadosParaExportar, null, 2);
-  const blob = new Blob([jsonString], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `ficha_rpg_${nome.replace(/\s+/g,'_')}_${data}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  alert(`Ficha de ${nome} exportada como JSON!`);
+  try {
+    const encryptedData = await encryptData(jsonString);
+    const blob = new Blob([encryptedData], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ficha_rpg_${nome.replace(/\s+/g,'_')}_${data}.bin`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    alert(`Ficha de ${nome} exportada com criptografia!`);
+  } catch (error) {
+    alert('Erro ao criptografar a ficha.');
+    console.error(error);
+  }
 }
 
 function switchParaFicha(idx) {
@@ -2208,15 +2267,19 @@ function removerFoto() {
 // ==================== EXPORTAÇÃO/IMPORTAÇÃO JSON ====================
 function importarDados() { document.getElementById('fileInput').click(); }
 function processarArquivo(files) {
-  if(files.length===0) return;
+  if (files.length === 0) return;
   const file = files[0];
-  // Limpa o input para permitir nova seleção do mesmo arquivo
   document.getElementById('fileInput').value = '';
+
   const reader = new FileReader();
-  reader.onload = function(e) {
+  reader.onload = async function(e) {
     try {
-      const dados = JSON.parse(e.target.result);
+      const encryptedData = new Uint8Array(e.target.result);
+      const jsonString = await decryptData(encryptedData);
+      const dados = JSON.parse(jsonString);
+
       const novaFicha = criarFichaPadrao();
+      // --- preenchimento da ficha (igual ao original) ---
       if (dados.meta && dados.meta.nomePersonagem) novaFicha.nomePersonagem = dados.meta.nomePersonagem;
       if (dados.status) {
         novaFicha.vida = dados.status.vida.atual || 0;
@@ -2281,14 +2344,15 @@ function processarArquivo(files) {
       } else {
         abrirGerenciadorFichas();
       }
-    } catch(error) {
-      alert('Erro ao ler o arquivo. Formato inválido.');
+    } catch (error) {
+      alert('Erro ao ler o arquivo. Formato inválido ou senha incorreta.');
+      console.error(error);
     }
   };
   reader.onerror = () => {
     alert('Erro ao ler arquivo.');
   };
-  reader.readAsText(file);
+  reader.readAsArrayBuffer(file);
 }
 
 // ==================== UTILITÁRIOS ====================
