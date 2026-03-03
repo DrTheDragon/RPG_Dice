@@ -594,7 +594,7 @@ body.light .fade-5 { color: #eee; }
 <div class="toggle">
 <button onclick="toggleTema()">🌗 Alternar Tema</button>
 <button onclick="abrirGerenciadorFichas()">📂 Gerenciar Fichas</button>
-<input type="file" id="fileInput" class="file-input" accept=".json,.txt" onchange="processarArquivo(this.files)">
+<input type="file" id="fileInput" class="file-input" accept=".bin,.json,.txt" onchange="processarArquivo(this.files)">
 </div>
 
 <!-- MODAL DE GERENCIAMENTO DE FICHAS -->
@@ -2273,86 +2273,95 @@ function processarArquivo(files) {
 
   const reader = new FileReader();
   reader.onload = async function(e) {
+    let dados;
+    // Tenta descriptografar (arquivo .bin)
     try {
       const encryptedData = new Uint8Array(e.target.result);
       const jsonString = await decryptData(encryptedData);
-      const dados = JSON.parse(jsonString);
-
-      const novaFicha = criarFichaPadrao();
-      // --- preenchimento da ficha (igual ao original) ---
-      if (dados.meta && dados.meta.nomePersonagem) novaFicha.nomePersonagem = dados.meta.nomePersonagem;
-      if (dados.status) {
-        novaFicha.vida = dados.status.vida.atual || 0;
-        novaFicha.vidaMax = dados.status.vida.max || 0;
-        novaFicha.san = dados.status.sanidade.atual || 0;
-        novaFicha.sanMax = dados.status.sanidade.max || 0;
-        novaFicha.descanso = dados.status.descanso || 0;
-        novaFicha.poder = dados.status.poder.atual || 0;
-        novaFicha.poderMax = dados.status.poder.max || 0;
-        novaFicha.pesoMax = dados.status.peso.max || 0;
-        novaFicha.defesa = dados.status.defesa || 0;
-        novaFicha.exposicao = dados.status.exposicaoParanormal || 0;
-      }
-      if (dados.estado) {
-        novaFicha.checkFerido = dados.estado.gravementeFerido || false;
-        novaFicha.checkCaido = dados.estado.caido || false;
-        if (dados.estado.marcadoresVida) {
-          novaFicha.checkVida1 = dados.estado.marcadoresVida.marcador1 || false;
-          novaFicha.checkVida2 = dados.estado.marcadoresVida.marcador2 || false;
-          novaFicha.checkVida3 = dados.estado.marcadoresVida.marcador3 || false;
-        }
-      }
-      if (dados.recursos) {
-        novaFicha.dinheiro = dados.recursos.dinheiro || "";
-        novaFicha.traumasPerm = dados.recursos.traumasPerm || "";
-        novaFicha.traumasTemp = dados.recursos.traumasTemp || "";
-        novaFicha.pessoasImportantes = dados.recursos.pessoasImportantes || "";
-        novaFicha.talentos = dados.recursos.talentos || "";
-        novaFicha.itens = dados.recursos.itens || "";
-        novaFicha.rituais = dados.recursos.rituais || "";
-        novaFicha.anotacoes = dados.recursos.anotacoes || "";
-      }
-      if (dados.armas) novaFicha.armas = dados.armas;
-      if (dados.fichaPersonagem) {
-        novaFicha.apelido = dados.fichaPersonagem.apelido || "";
-        novaFicha.idade = dados.fichaPersonagem.idade || "";
-        novaFicha.emprego = dados.fichaPersonagem.emprego || "";
-        novaFicha.cidadeNatal = dados.fichaPersonagem.cidadeNatal || "";
-        novaFicha.cidadeResidente = dados.fichaPersonagem.cidadeResidente || "";
-        novaFicha.tamanho = dados.fichaPersonagem.tamanho || "";
-        novaFicha.aparencia = dados.fichaPersonagem.aparencia || "";
-        novaFicha.deslocamento = dados.fichaPersonagem.deslocamento || "";
-        novaFicha.deslocamentoBase = dados.fichaPersonagem.deslocamentoBase || parseFloat(dados.fichaPersonagem.deslocamento) || 0;
-        novaFicha.caracteristicas = dados.fichaPersonagem.caracteristicas || "";
-        novaFicha.personalidade = dados.fichaPersonagem.personalidade || "";
-        novaFicha.historia = dados.fichaPersonagem.historia || "";
-        novaFicha.imagem = dados.fichaPersonagem.imagem || null;
-      }
-      if (dados.atributosPersonalizados) novaFicha.atributosPersonalizados = dados.atributosPersonalizados;
-      if (dados.historicos) {
-        novaFicha.historico = dados.historicos.testesAtributo || [];
-        novaFicha.historicoSan = dados.historicos.testesSanidade || [];
-        novaFicha.historicoDados = dados.historicos.dadosPersonalizados || [];
-        novaFicha.historicoArmas = dados.historicos.danoArmas || [];
-      }
-
-      sheets.push(novaFicha);
-      salvarTodasFichas();
-      alert(`Ficha importada com sucesso!`);
-      if (document.getElementById('modalFichas').style.display === 'flex') {
-        atualizarListaFichasModal();
-      } else {
-        abrirGerenciadorFichas();
-      }
+      dados = JSON.parse(jsonString);
     } catch (error) {
-      alert('Erro ao ler o arquivo. Formato inválido ou senha incorreta.');
-      console.error(error);
+      // Se falhou, tenta ler como JSON puro (fichas antigas)
+      try {
+        const text = new TextDecoder().decode(e.target.result);
+        dados = JSON.parse(text);
+      } catch (jsonError) {
+        alert('Erro ao ler o arquivo. Formato inválido ou senha incorreta.');
+        console.error(error, jsonError);
+        return;
+      }
+    }
+
+    // --- A partir daqui, o preenchimento da ficha é idêntico ao original ---
+    const novaFicha = criarFichaPadrao();
+    if (dados.meta && dados.meta.nomePersonagem) novaFicha.nomePersonagem = dados.meta.nomePersonagem;
+    if (dados.status) {
+      novaFicha.vida = dados.status.vida.atual || 0;
+      novaFicha.vidaMax = dados.status.vida.max || 0;
+      novaFicha.san = dados.status.sanidade.atual || 0;
+      novaFicha.sanMax = dados.status.sanidade.max || 0;
+      novaFicha.descanso = dados.status.descanso || 0;
+      novaFicha.poder = dados.status.poder.atual || 0;
+      novaFicha.poderMax = dados.status.poder.max || 0;
+      novaFicha.pesoMax = dados.status.peso.max || 0;
+      novaFicha.defesa = dados.status.defesa || 0;
+      novaFicha.exposicao = dados.status.exposicaoParanormal || 0;
+    }
+    if (dados.estado) {
+      novaFicha.checkFerido = dados.estado.gravementeFerido || false;
+      novaFicha.checkCaido = dados.estado.caido || false;
+      if (dados.estado.marcadoresVida) {
+        novaFicha.checkVida1 = dados.estado.marcadoresVida.marcador1 || false;
+        novaFicha.checkVida2 = dados.estado.marcadoresVida.marcador2 || false;
+        novaFicha.checkVida3 = dados.estado.marcadoresVida.marcador3 || false;
+      }
+    }
+    if (dados.recursos) {
+      novaFicha.dinheiro = dados.recursos.dinheiro || "";
+      novaFicha.traumasPerm = dados.recursos.traumasPerm || "";
+      novaFicha.traumasTemp = dados.recursos.traumasTemp || "";
+      novaFicha.pessoasImportantes = dados.recursos.pessoasImportantes || "";
+      novaFicha.talentos = dados.recursos.talentos || "";
+      novaFicha.itens = dados.recursos.itens || "";
+      novaFicha.rituais = dados.recursos.rituais || "";
+      novaFicha.anotacoes = dados.recursos.anotacoes || "";
+    }
+    if (dados.armas) novaFicha.armas = dados.armas;
+    if (dados.fichaPersonagem) {
+      novaFicha.apelido = dados.fichaPersonagem.apelido || "";
+      novaFicha.idade = dados.fichaPersonagem.idade || "";
+      novaFicha.emprego = dados.fichaPersonagem.emprego || "";
+      novaFicha.cidadeNatal = dados.fichaPersonagem.cidadeNatal || "";
+      novaFicha.cidadeResidente = dados.fichaPersonagem.cidadeResidente || "";
+      novaFicha.tamanho = dados.fichaPersonagem.tamanho || "";
+      novaFicha.aparencia = dados.fichaPersonagem.aparencia || "";
+      novaFicha.deslocamento = dados.fichaPersonagem.deslocamento || "";
+      novaFicha.deslocamentoBase = dados.fichaPersonagem.deslocamentoBase || parseFloat(dados.fichaPersonagem.deslocamento) || 0;
+      novaFicha.caracteristicas = dados.fichaPersonagem.caracteristicas || "";
+      novaFicha.personalidade = dados.fichaPersonagem.personalidade || "";
+      novaFicha.historia = dados.fichaPersonagem.historia || "";
+      novaFicha.imagem = dados.fichaPersonagem.imagem || null;
+    }
+    if (dados.atributosPersonalizados) novaFicha.atributosPersonalizados = dados.atributosPersonalizados;
+    if (dados.historicos) {
+      novaFicha.historico = dados.historicos.testesAtributo || [];
+      novaFicha.historicoSan = dados.historicos.testesSanidade || [];
+      novaFicha.historicoDados = dados.historicos.dadosPersonalizados || [];
+      novaFicha.historicoArmas = dados.historicos.danoArmas || [];
+    }
+
+    sheets.push(novaFicha);
+    salvarTodasFichas();
+    alert(`Ficha importada com sucesso!`);
+    if (document.getElementById('modalFichas').style.display === 'flex') {
+      atualizarListaFichasModal();
+    } else {
+      abrirGerenciadorFichas();
     }
   };
   reader.onerror = () => {
     alert('Erro ao ler arquivo.');
   };
-  reader.readAsArrayBuffer(file);
+  reader.readAsArrayBuffer(file); // Sempre lê como ArrayBuffer
 }
 
 // ==================== UTILITÁRIOS ====================
