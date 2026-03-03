@@ -695,25 +695,28 @@ body.light .fade-5 { color: #eee; }
   text-align: left;
 }
  /* Centralizar seção de peso e campo peso máximo */
+/* Garante que o container de peso mantenha o tamanho original */
 .peso-container {
-  width: 97.5%;
-  max-width: 1000px;
+  width: 820px;
+  max-width: 95%;
   margin-left: auto;
   margin-right: auto;
+  padding: 25px;
   box-sizing: border-box;
 }
 
+/* Campo de peso máximo: 97.5% de largura e centralizado */
 #pesoMax {
-  width: 100%;
-  max-width: 400px; /* opcional: limita largura do campo */
+  width: 97.5%;
   margin-left: auto;
   margin-right: auto;
   display: block;
   box-sizing: border-box;
 }
 
+/* Texto do peso atual centralizado (opcional, mas melhora a aparência) */
 .peso-item p {
-  text-align: center; /* centraliza o texto "Atual: 0" */
+  text-align: center;
 }
  
 </style>
