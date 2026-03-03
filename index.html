@@ -73,7 +73,14 @@ button:active{transform:scale(.97)}
 .N{color:#9acd32}
 .F{color:#777}
 .historico{margin-top:15px;font-size:14px}
-.historico ul{list-style:none;padding:0;margin:0;height:180px;}
+.historico ul {
+  list-style:none;
+  padding:0;
+  margin:0;
+  height: auto;
+  max-height: none;
+  overflow: visible;
+}
 .historico li{padding:5px 6px;border-bottom:1px solid var(--border);line-height:1.3;min-height:28px;display:flex;align-items:center}
 .fade-0{color:var(--text)}
 .fade-1{color:var(--text)}
@@ -242,10 +249,11 @@ body.light .fade-5 { color: #eee; }
  .section{margin-top:12px; padding-top:10px;}
  h2{font-size:1.3em; margin:5px 0; text-align:center;}
  h3{font-size:1.1em; margin:8px 0; text-align:center;}
- .historico{margin-top:10px;}
-  .historico ul {
-    height: 200px; /* aumentado para mostrar mais itens */
-  }
+ .historico ul {
+  height: auto;
+  max-height: none;
+  overflow: visible;
+}
  .historico li{padding:4px 6px; font-size:13px; line-height:1.4; min-height:26px;}
  input, button, textarea{font-size:14px; padding:8px; margin-top:6px;}
  .resultado{min-height:70px; padding:8px 0; font-size:14px; text-align:center;}
@@ -314,10 +322,11 @@ body.light .fade-5 { color: #eee; }
  .controls button{flex:1 1 46%; margin-bottom:0; font-size:13px; padding:7px;}
  .checkboxes-vida{gap:20px;}
  .panel{padding:12px;}
- .historico{font-size:12px;}
-  .historico ul {
-    height: 190px; /* ajuste conforme necessário */
-  }
+ .historico ul {
+  height: auto;
+  max-height: none;
+  overflow: visible;
+}
  .dado{font-size:42px;}
  h2{font-size:1.2em;}
  h3{font-size:1em;}
