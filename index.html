@@ -2360,9 +2360,9 @@ function atualizarListaFichasModal() {
     btnAbrir.textContent = '📂 Abrir';
     btnAbrir.onclick = () => switchParaFicha(idx);
 
-    // Botão Exportar
-    const btnExportar = document.createElement('button');
-    btnExportar.textContent = '📤 Exportar';
+    // Botão 
+    const btn = document.createElement('button');
+    btn.textContent = '📤 Exportar';
     btnExportar.onclick = () => exportarFichaEspecifica(idx);
 
     // Botão Excluir
@@ -2658,6 +2658,10 @@ async function exportarFichaEspecifica(idx) {
 
   const zip = new JSZip();
 
+  // Adiciona metadados da pasta
+  const meta = { nome: pasta.nome, cor: pasta.cor };
+  zip.file('_pasta_meta.json', JSON.stringify(meta, null, 2));
+
   for (const ficha of fichas) {
     const nome = ficha.nomePersonagem || 'SemNome';
     const dadosParaExportar = gerarDadosFichaParaExportar(ficha);
@@ -2849,6 +2853,29 @@ function importarDados() { document.getElementById('fileInput').click(); }
   const contents = await zip.loadAsync(file);
   let count = 0;
 
+  // Tenta ler metadados da pasta
+  let pastaId = null;
+  const metaFile = contents.files['_pasta_meta.json'];
+  if (metaFile) {
+    try {
+      const metaJson = await metaFile.async('string');
+      const meta = JSON.parse(metaJson);
+      // Cria uma nova pasta com esses metadados
+      const novaPasta = {
+        id: 'pasta_' + Date.now() + '_' + Math.random(),
+        nome: meta.nome || 'Pasta Importada',
+        cor: meta.cor || '#888',
+        aberta: false
+      };
+      folders.push(novaPasta);
+      pastaId = novaPasta.id;
+      console.log('Pasta criada a partir do ZIP:', novaPasta);
+    } catch (e) {
+      console.warn('Erro ao ler metadados da pasta:', e);
+    }
+  }
+
+  // Processa os arquivos .bin
   for (const filename of Object.keys(contents.files)) {
     if (filename.endsWith('.bin')) {
       const binData = await contents.files[filename].async('uint8array');
@@ -2856,8 +2883,8 @@ function importarDados() { document.getElementById('fileInput').click(); }
         const jsonString = await decryptData(binData);
         const dados = JSON.parse(jsonString);
         const novaFicha = criarFichaPadrao();
-        
-        // --- Preenchimento da ficha (igual ao existente) ---
+
+        // Preenchimento da ficha (igual ao existente)
         if (dados.meta && dados.meta.nomePersonagem) novaFicha.nomePersonagem = dados.meta.nomePersonagem;
         if (dados.status) {
           novaFicha.vida = dados.status.vida.atual || 0;
@@ -2914,6 +2941,11 @@ function importarDados() { document.getElementById('fileInput').click(); }
           novaFicha.historicoArmas = dados.historicos.danoArmas || [];
         }
 
+        // Se temos uma pasta criada, atribui o folderId
+        if (pastaId) {
+          novaFicha.folderId = pastaId;
+        }
+
         sheets.push(novaFicha);
         count++;
       } catch (e) {
@@ -2923,13 +2955,19 @@ function importarDados() { document.getElementById('fileInput').click(); }
   }
 
   salvarTodasFichas();
-  alert(`${count} ficha(s) importada(s) do ZIP.`);
+  if (pastaId) {
+    alert(`Pasta "${folders.find(f => f.id === pastaId)?.nome}" recriada com ${count} ficha(s) importada(s) do ZIP.`);
+  } else {
+    alert(`${count} ficha(s) importada(s) do ZIP (sem pasta associada).`);
+  }
+
   if (document.getElementById('modalFichas').style.display === 'flex') {
     atualizarListaFichasModal();
   } else {
     abrirGerenciadorFichas();
   }
 }
+ 
 function processarArquivo(files) {
   if (files.length === 0) return;
   const file = files[0];
