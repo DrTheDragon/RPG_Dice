@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
  <!-- Cropper.js CSS -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
 <meta charset="UTF-8">
@@ -763,7 +764,7 @@ body.light .fade-5 { color: #eee; }
 <div class="toggle">
 <button onclick="toggleTema()">🌗 Alternar Tema</button>
 <button onclick="abrirGerenciadorFichas()">📂 Gerenciar Fichas</button>
-<input type="file" id="fileInput" class="file-input" accept=".bin" onchange="processarArquivo(this.files)">
+<input type="file" id="fileInput" class="file-input" accept=".bin, .zip" onchange="processarArquivo(this.files)">
 </div>
 
 <!-- MODAL DE GERENCIAMENTO DE FICHAS -->
@@ -2460,16 +2461,16 @@ nomeDiv.innerHTML = `
 `;
 header.appendChild(nomeDiv);
 
-// Botões da pasta (exatamente com o mesmo estilo dos botões das fichas)
+// Botões da pasta (com texto)
 const botoesPasta = document.createElement('div');
 botoesPasta.style.display = 'flex';
 botoesPasta.style.gap = '5px';
 botoesPasta.style.flexWrap = 'wrap';
 botoesPasta.style.justifyContent = 'center';
 
-// Botão abrir/fechar (ícone)
+// Botão abrir/fechar pasta
 const btnTogglePasta = document.createElement('button');
-btnTogglePasta.textContent = pasta.aberta ? '📂' : '📁';
+btnTogglePasta.textContent = pasta.aberta ? '📂 Fechar Pasta' : '📁 Abrir Pasta';
 btnTogglePasta.onclick = (e) => {
   e.stopPropagation();
   togglePasta(pasta.id);
@@ -2478,7 +2479,7 @@ botoesPasta.appendChild(btnTogglePasta);
 
 // Botão editar
 const btnEditar = document.createElement('button');
-btnEditar.textContent = '✏️';
+btnEditar.textContent = '✏️ Editar Pasta';
 btnEditar.onclick = (e) => {
   e.stopPropagation();
   editarPasta(pasta.id);
@@ -2500,18 +2501,18 @@ if (movingSheetIndex !== null) {
   botoesPasta.appendChild(btnMoverPara);
 }
 
-// Botão exportar tudo
+// Botão exportar pasta como ZIP
 const btnExportarTudo = document.createElement('button');
-btnExportarTudo.textContent = '📤 Tudo';
+btnExportarTudo.textContent = '📦 Exportar Pasta (ZIP)';
 btnExportarTudo.onclick = (e) => {
   e.stopPropagation();
-  exportarTodasFichasDaPasta(pasta.id);
+  exportarPastaComoZip(pasta.id);
 };
 botoesPasta.appendChild(btnExportarTudo);
 
-// Botão excluir (sempre no final)
+// Botão excluir
 const btnExcluir = document.createElement('button');
-btnExcluir.textContent = '🗑️';
+btnExcluir.textContent = '🗑️ Apagar Pasta';
 btnExcluir.style.color = '#ff4c4c';
 btnExcluir.onclick = (e) => {
   e.stopPropagation();
@@ -2521,9 +2522,6 @@ botoesPasta.appendChild(btnExcluir);
 
 header.appendChild(botoesPasta);
 liPasta.appendChild(header);
-
-    header.appendChild(botoesPasta);
-    liPasta.appendChild(header);
 
     // Conteúdo da pasta (se aberta)
     if (pasta.aberta) {
@@ -2553,16 +2551,13 @@ function cancelarMovimento() {
   movingSheetIndex = null;
   atualizarListaFichasModal();
 }
- 
-async function exportarFichaEspecifica(idx) {
-  const ficha = sheets[idx];
-  if (!ficha) return;
 
-  const nome = ficha.nomePersonagem || `Ficha ${idx+1}`;
+ function gerarDadosFichaParaExportar(ficha) {
+  const nome = ficha.nomePersonagem || 'SemNome';
   const data = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
   const hora = new Date().toLocaleTimeString('pt-BR');
 
-  const dadosParaExportar = {
+  return {
     meta: { sistema:"Teste RPG", versao:"1.0", dataExportacao:new Date().toISOString(), dataLegivel:`${data} ${hora}`, nomePersonagem:nome },
     status: {
       vida:{ atual:ficha.vida || 0, max:ficha.vidaMax || 0 },
@@ -2617,6 +2612,15 @@ async function exportarFichaEspecifica(idx) {
       danoArmas: ficha.historicoArmas || []
     }
   };
+}
+ 
+async function exportarFichaEspecifica(idx) {
+  const ficha = sheets[idx];
+  if (!ficha) return;
+
+  const nome = ficha.nomePersonagem || `Ficha ${idx+1}`;
+  const data = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+  const dadosParaExportar = gerarDadosFichaParaExportar(ficha);
 
   const jsonString = JSON.stringify(dadosParaExportar, null, 2);
   try {
@@ -2635,6 +2639,43 @@ async function exportarFichaEspecifica(idx) {
     alert('Erro ao criptografar a ficha.');
     console.error(error);
   }
+}
+
+ async function exportarPastaComoZip(pastaId) {
+  const pasta = folders.find(f => f.id === pastaId);
+  if (!pasta) return;
+
+  const fichas = sheets.filter(s => s.folderId === pastaId);
+  if (fichas.length === 0) {
+    alert('Nenhuma ficha nesta pasta.');
+    return;
+  }
+
+  if (typeof JSZip === 'undefined') {
+    alert('Biblioteca JSZip não carregada.');
+    return;
+  }
+
+  const zip = new JSZip();
+
+  for (const ficha of fichas) {
+    const nome = ficha.nomePersonagem || 'SemNome';
+    const dadosParaExportar = gerarDadosFichaParaExportar(ficha);
+    const jsonString = JSON.stringify(dadosParaExportar, null, 2);
+    const encryptedData = await encryptData(jsonString);
+    zip.file(`${nome.replace(/[^a-z0-9]/gi, '_')}.bin`, encryptedData);
+  }
+
+  const content = await zip.generateAsync({ type: 'blob' });
+  const url = URL.createObjectURL(content);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${pasta.nome.replace(/[^a-z0-9]/gi, '_')}.zip`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  alert(`Pasta "${pasta.nome}" exportada como ZIP com ${fichas.length} fichas.`);
 }
 
 function switchParaFicha(idx) {
@@ -2812,11 +2853,106 @@ function removerFoto() {
 
 // ==================== EXPORTAÇÃO/IMPORTAÇÃO JSON ====================
 function importarDados() { document.getElementById('fileInput').click(); }
+ async function importarZip(file) {
+  if (typeof JSZip === 'undefined') {
+    alert('Biblioteca JSZip não carregada.');
+    return;
+  }
+
+  const zip = new JSZip();
+  const contents = await zip.loadAsync(file);
+  let count = 0;
+
+  for (const filename of Object.keys(contents.files)) {
+    if (filename.endsWith('.bin')) {
+      const binData = await contents.files[filename].async('uint8array');
+      try {
+        const jsonString = await decryptData(binData);
+        const dados = JSON.parse(jsonString);
+        const novaFicha = criarFichaPadrao();
+        
+        // --- Preenchimento da ficha (igual ao existente) ---
+        if (dados.meta && dados.meta.nomePersonagem) novaFicha.nomePersonagem = dados.meta.nomePersonagem;
+        if (dados.status) {
+          novaFicha.vida = dados.status.vida.atual || 0;
+          novaFicha.vidaMax = dados.status.vida.max || 0;
+          novaFicha.san = dados.status.sanidade.atual || 0;
+          novaFicha.sanMax = dados.status.sanidade.max || 0;
+          novaFicha.descanso = dados.status.descanso || 0;
+          novaFicha.poder = dados.status.poder.atual || 0;
+          novaFicha.poderMax = dados.status.poder.max || 0;
+          novaFicha.pesoMax = dados.status.peso.max || 0;
+          novaFicha.defesa = dados.status.defesa || 0;
+          novaFicha.exposicao = dados.status.exposicaoParanormal || 0;
+        }
+        if (dados.estado) {
+          novaFicha.checkFerido = dados.estado.gravementeFerido || false;
+          novaFicha.checkCaido = dados.estado.caido || false;
+          if (dados.estado.marcadoresVida) {
+            novaFicha.checkVida1 = dados.estado.marcadoresVida.marcador1 || false;
+            novaFicha.checkVida2 = dados.estado.marcadoresVida.marcador2 || false;
+            novaFicha.checkVida3 = dados.estado.marcadoresVida.marcador3 || false;
+          }
+        }
+        if (dados.recursos) {
+          novaFicha.dinheiro = dados.recursos.dinheiro || "";
+          novaFicha.traumasPerm = dados.recursos.traumasPerm || "";
+          novaFicha.traumasTemp = dados.recursos.traumasTemp || "";
+          novaFicha.pessoasImportantes = dados.recursos.pessoasImportantes || "";
+          novaFicha.talentos = dados.recursos.talentos || "";
+          novaFicha.itens = dados.recursos.itens || "";
+          novaFicha.rituais = dados.recursos.rituais || "";
+          novaFicha.anotacoes = dados.recursos.anotacoes || "";
+        }
+        if (dados.armas) novaFicha.armas = dados.armas;
+        if (dados.fichaPersonagem) {
+          novaFicha.apelido = dados.fichaPersonagem.apelido || "";
+          novaFicha.idade = dados.fichaPersonagem.idade || "";
+          novaFicha.emprego = dados.fichaPersonagem.emprego || "";
+          novaFicha.cidadeNatal = dados.fichaPersonagem.cidadeNatal || "";
+          novaFicha.cidadeResidente = dados.fichaPersonagem.cidadeResidente || "";
+          novaFicha.tamanho = dados.fichaPersonagem.tamanho || "";
+          novaFicha.aparencia = dados.fichaPersonagem.aparencia || "";
+          novaFicha.deslocamento = dados.fichaPersonagem.deslocamento || "";
+          novaFicha.deslocamentoBase = dados.fichaPersonagem.deslocamentoBase || parseFloat(dados.fichaPersonagem.deslocamento) || 0;
+          novaFicha.caracteristicas = dados.fichaPersonagem.caracteristicas || "";
+          novaFicha.personalidade = dados.fichaPersonagem.personalidade || "";
+          novaFicha.historia = dados.fichaPersonagem.historia || "";
+          novaFicha.imagem = dados.fichaPersonagem.imagem || null;
+        }
+        if (dados.atributosPersonalizados) novaFicha.atributosPersonalizados = dados.atributosPersonalizados;
+        if (dados.historicos) {
+          novaFicha.historico = dados.historicos.testesAtributo || [];
+          novaFicha.historicoSan = dados.historicos.testesSanidade || [];
+          novaFicha.historicoDados = dados.historicos.dadosPersonalizados || [];
+          novaFicha.historicoArmas = dados.historicos.danoArmas || [];
+        }
+
+        sheets.push(novaFicha);
+        count++;
+      } catch (e) {
+        console.warn(`Erro ao importar ${filename}:`, e);
+      }
+    }
+  }
+
+  salvarTodasFichas();
+  alert(`${count} ficha(s) importada(s) do ZIP.`);
+  if (document.getElementById('modalFichas').style.display === 'flex') {
+    atualizarListaFichasModal();
+  } else {
+    abrirGerenciadorFichas();
+  }
+}
 function processarArquivo(files) {
   if (files.length === 0) return;
   const file = files[0];
   document.getElementById('fileInput').value = '';
 
+  if (file.name.endsWith('.zip')) {
+    importarZip(file);
+    return;
+  }
   const reader = new FileReader();
   reader.onload = async function(e) {
     let dados;
