@@ -2498,54 +2498,6 @@ function cancelarMovimento() {
   atualizarListaFichasModal();
 }
  
-  // Mostrar fichas sem pasta primeiro
-  sheetsSemPasta.forEach((ficha, idx) => {
-    const idxReal = sheets.indexOf(ficha);
-    lista.appendChild(criarItemFicha(ficha, idxReal));
-  });
-
-  // Mostrar pastas com suas fichas
-  foldersOrdenadas.forEach(pasta => {
-    const liPasta = document.createElement('li');
-    liPasta.style.flexDirection = 'column';
-    liPasta.style.alignItems = 'stretch';
-    liPasta.style.backgroundColor = pasta.cor || 'var(--bg1)';
-    liPasta.style.border = '2px solid ' + (pasta.cor || 'var(--border)');
-    liPasta.setAttribute('data-pasta-id', pasta.id);
-    liPasta.ondblclick = (e) => { e.stopPropagation(); togglePasta(pasta.id); };
-
-    const header = document.createElement('div');
-    header.style.display = 'flex';
-    header.style.justifyContent = 'space-between';
-    header.style.alignItems = 'center';
-    header.style.width = '100%';
-    header.innerHTML = `
-      <span style="font-weight:bold; cursor:pointer;">${pasta.aberta ? '📂' : '📁'} ${pasta.nome}</span>
-      <div>
-        <button onclick="editarPasta('${pasta.id}')">✏️</button>
-        <button onclick="excluirPasta('${pasta.id}')" style="color:#ff4c4c;">🗑️</button>
-        <button onclick="exportarTodasFichasDaPasta('${pasta.id}')">📤 Tudo</button>
-      </div>
-    `;
-    liPasta.appendChild(header);
-
-    if (pasta.aberta) {
-      const subLista = document.createElement('ul');
-      subLista.style.paddingLeft = '20px';
-      subLista.style.marginTop = '5px';
-      const fichasDaPasta = sheetsComPasta.filter(s => s.folderId === pasta.id);
-      fichasDaPasta.forEach(ficha => {
-        const idxReal = sheets.indexOf(ficha);
-        const subLi = criarItemFicha(ficha, idxReal);
-        subLista.appendChild(subLi);
-      });
-      liPasta.appendChild(subLista);
-    }
-
-    lista.appendChild(liPasta);
-  });
-}
- 
 async function exportarFichaEspecifica(idx) {
   const ficha = sheets[idx];
   if (!ficha) return;
