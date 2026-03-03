@@ -2827,20 +2827,6 @@ function moverFichaParaPasta(sheetIndex, pastaId) {
   salvarTodasFichas();
   atualizarListaFichasModal();
 }
-// Exporta todas as fichas de uma pasta como arquivos individuais (ou um único arquivo?)
-// Vamos exportar cada ficha individualmente, mas pode ser adaptado.
-function exportarTodasFichasDaPasta(pastaId) {
-  const fichas = sheets.filter(s => s.folderId === pastaId);
-  if (fichas.length === 0) {
-    alert('Nenhuma ficha nesta pasta.');
-    return;
-  }
-  // Exporta cada ficha chamando a função existente
-  fichas.forEach(ficha => {
-    const idx = sheets.indexOf(ficha);
-    exportarFichaEspecifica(idx);
-  });
-}
 
 // ==================== FUNÇÃO PARA REMOVER FOTO ====================
 function removerFoto() {
