@@ -1901,9 +1901,9 @@ function rolarDanoArma(index) {
   const formula = arma.danoFormula;
   
   try {
-    // Reutiliza o mesmo parser, mas precisamos de uma versão que retorne detalhes
     const resultado = avaliarFormulaDanoDetalhado(formula);
     
+    // Exibe no local original
     let html = `<b>${arma.nome}</b> — Dano: ${formula}<br>`;
     html += `Resultado: <b>${resultado.total}</b>`;
     if (resultado.detalhes) {
@@ -1911,7 +1911,10 @@ function rolarDanoArma(index) {
     }
     resultadoDiv.innerHTML = html;
 
-    // Histórico com passo a passo
+    // Mostra o modal central com o mesmo resultado
+    mostrarResultadoArma(arma.nome, formula, resultado.total, resultado.detalhes);
+
+    // Histórico
     let historicoEntry = `🔫 ${arma.nome}: ${formula} → `;
     if (resultado.detalhes) {
       historicoEntry += resultado.detalhes + ' = ';
@@ -1933,6 +1936,19 @@ function rolarDanoArma(index) {
   } catch (e) {
     resultadoDiv.innerHTML = `Erro na fórmula: ${formula}`;
   }
+}
+
+// Nova função para exibir resultado da arma no modal central
+function mostrarResultadoArma(nome, formula, total, detalhes) {
+  const modal = document.getElementById('modalResultado');
+  const conteudo = document.getElementById('resultadoModalConteudo');
+  conteudo.innerHTML = `
+    <h3>🔫 ${nome}</h3>
+    <div style="font-size:1rem; margin:5px 0;">${formula}</div>
+    <div style="font-size:2rem; margin:10px 0;">${total}</div>
+    <div class="resultado-texto">${detalhes || ''}</div>
+  `;
+  modal.style.display = 'flex';
 }
 
 function avaliarFormulaDanoDetalhado(formula) {
