@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+ <!-- Cropper.js CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
 <meta charset="UTF-8">
 <!-- Meta tags anti-cache -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -2460,14 +2462,14 @@ function toggleTema() {
 // ==================== EVENTOS ====================
 document.getElementById('fotoInput').addEventListener('change', function(e) {
   const file = e.target.files[0];
-  if(file) {
-    const reader = new FileReader();
-    reader.onload = function(event) {
-      document.getElementById('fotoPlaceholder').innerHTML = `<img src="${event.target.result}" style="width:100%; height:100%; object-fit:cover;">`;
-      salvar();
-    };
-    reader.readAsDataURL(file);
-  }
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(event) {
+    // Abre o modal e configura a imagem para recorte
+    abrirModalRecorte(event.target.result);
+  };
+  reader.readAsDataURL(file);
 });
 
 ['vidaMax','sanMax','poderMax','defesa','exposicaoInput',
@@ -2610,6 +2612,82 @@ function mostrarResultadoAtributo(dado, nome, valor, tipo, texto) {
 function fecharModalResultado() {
   document.getElementById('modalResultado').style.display = 'none';
 }
+ let cropper; // variável global para a instância do cropper
+
+function abrirModalRecorte(dataUrl) {
+  const modal = document.getElementById('modalRecorte');
+  const img = document.getElementById('imagemParaRecortar');
+  img.src = dataUrl;
+
+  // Se já existir um cropper, destrua-o
+  if (cropper) cropper.destroy();
+
+  // Inicializa o cropper após a imagem carregar
+  img.onload = function() {
+    cropper = new Cropper(img, {
+      aspectRatio: 1, // 1:1 (quadrado) – você pode alterar
+      viewMode: 1,
+      autoCropArea: 0.8,
+      movable: true,
+      zoomable: true,
+      rotatable: true,
+      scalable: true
+    });
+  };
+
+  modal.style.display = 'flex';
+}
+
+function aplicarRecorte() {
+  if (!cropper) return;
+
+  // Obtém o canvas com a imagem recortada (qualidade 0.9, tipo PNG)
+  const canvas = cropper.getCroppedCanvas({
+    width: 300,        // tamanho final desejado (ajuste conforme necessário)
+    height: 300,
+    imageSmoothingQuality: 'high'
+  });
+
+  // Converte o canvas para dataURL e aplica no placeholder
+  const dataUrl = canvas.toDataURL('image/png');
+  document.getElementById('fotoPlaceholder').innerHTML = `<img src="${dataUrl}" style="width:100%; height:100%; object-fit:cover;">`;
+
+  // Fecha o modal
+  fecharModalRecorte();
+
+  // Salva a ficha (a imagem já foi atualizada)
+  salvar();
+}
+
+function fecharModalRecorte() {
+  const modal = document.getElementById('modalRecorte');
+  modal.style.display = 'none';
+  if (cropper) {
+    cropper.destroy();
+    cropper = null;
+  }
+  // Limpa o input file para permitir nova seleção do mesmo arquivo
+  document.getElementById('fotoInput').value = '';
+}
 </script>
+
+ <!-- Modal para recorte de imagem -->
+<div id="modalRecorte" class="modal" onclick="if(event.target === this) fecharModalRecorte()">
+  <div class="modal-content" style="max-width: 600px;">
+    <span class="modal-close" onclick="fecharModalRecorte()">&times;</span>
+    <h2>✂️ Recortar Imagem</h2>
+    <div style="max-height: 400px; overflow: hidden;">
+      <img id="imagemParaRecortar" src="" style="max-width: 100%;">
+    </div>
+    <div style="display: flex; gap: 10px; margin-top: 15px; justify-content: center;">
+      <button onclick="aplicarRecorte()">✓ Aplicar</button>
+      <button onclick="fecharModalRecorte()">✗ Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cropper.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+ 
 </body>
 </html>
