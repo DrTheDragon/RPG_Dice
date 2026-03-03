@@ -2442,14 +2442,62 @@ function atualizarListaFichasModal() {
     header.appendChild(nomeDiv);
 
     // Botões da pasta
-    const botoesPasta = document.createElement('div');
-    botoesPasta.style.display = 'flex';
-    botoesPasta.style.gap = '5px';
-    botoesPasta.innerHTML = `
-      <button onclick="editarPasta('${pasta.id}')">✏️</button>
-      <button onclick="excluirPasta('${pasta.id}')" style="color:#ff4c4c;">🗑️</button>
-      <button onclick="exportarTodasFichasDaPasta('${pasta.id}')">📤 Tudo</button>
-    `;
+    // Botões da pasta
+const botoesPasta = document.createElement('div');
+botoesPasta.style.display = 'flex';
+botoesPasta.style.gap = '5px';
+
+// Botão para abrir/fechar pasta (agora antes do editar)
+const btnTogglePasta = document.createElement('button');
+btnTogglePasta.textContent = pasta.aberta ? '📂' : '📁';
+btnTogglePasta.onclick = (e) => {
+  e.stopPropagation();
+  togglePasta(pasta.id);
+};
+botoesPasta.appendChild(btnTogglePasta);
+
+// Botão editar
+const btnEditar = document.createElement('button');
+btnEditar.textContent = '✏️';
+btnEditar.onclick = (e) => {
+  e.stopPropagation();
+  editarPasta(pasta.id);
+};
+botoesPasta.appendChild(btnEditar);
+
+// Se estiver em modo movimento, adicionar botão "Mover para cá" antes do excluir
+if (movingSheetIndex !== null) {
+  const btnMoverPara = document.createElement('button');
+  btnMoverPara.textContent = '📥 Mover para cá';
+  btnMoverPara.style.backgroundColor = '#4caf50';
+  btnMoverPara.onclick = (e) => {
+    e.stopPropagation();
+    sheets[movingSheetIndex].folderId = pasta.id;
+    movingSheetIndex = null;
+    salvarTodasFichas();
+    atualizarListaFichasModal();
+  };
+  botoesPasta.appendChild(btnMoverPara);
+}
+
+// Botão excluir (agora depois do mover, se existir)
+const btnExcluir = document.createElement('button');
+btnExcluir.textContent = '🗑️';
+btnExcluir.style.color = '#ff4c4c';
+btnExcluir.onclick = (e) => {
+  e.stopPropagation();
+  excluirPasta(pasta.id);
+};
+botoesPasta.appendChild(btnExcluir);
+
+// Botão exportar tudo
+const btnExportarTudo = document.createElement('button');
+btnExportarTudo.textContent = '📤 Tudo';
+btnExportarTudo.onclick = (e) => {
+  e.stopPropagation();
+  exportarTodasFichasDaPasta(pasta.id);
+};
+botoesPasta.appendChild(btnExportarTudo);
 
     // Se estiver em modo movimento, a pasta fica destacada e clicável
     if (movingSheetIndex !== null) {
@@ -2615,17 +2663,75 @@ function criarNovaFicha() {
     atualizarListaFichasModal();
   }
 }
+ // Função auxiliar para selecionar cor com seletor visual
+function selecionarCor(corAtual = '#444') {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.height = '100%';
+    overlay.style.backgroundColor = 'rgba(0,0,0,0.5)';
+    overlay.style.display = 'flex';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.zIndex = '3000';
 
+    const caixa = document.createElement('div');
+    caixa.style.backgroundColor = 'var(--panel)';
+    caixa.style.padding = '20px';
+    caixa.style.borderRadius = '8px';
+    caixa.style.border = '2px solid var(--border)';
+    caixa.style.boxShadow = '0 0 20px black';
+    caixa.style.textAlign = 'center';
+
+    const titulo = document.createElement('h3');
+    titulo.textContent = 'Escolha uma cor';
+    titulo.style.marginTop = '0';
+    caixa.appendChild(titulo);
+
+    const colorInput = document.createElement('input');
+    colorInput.type = 'color';
+    colorInput.value = corAtual;
+    colorInput.style.width = '100px';
+    colorInput.style.height = '50px';
+    colorInput.style.margin = '10px';
+    caixa.appendChild(colorInput);
+
+    const btnOk = document.createElement('button');
+    btnOk.textContent = 'OK';
+    btnOk.style.margin = '5px';
+    btnOk.onclick = () => {
+      document.body.removeChild(overlay);
+      resolve(colorInput.value);
+    };
+
+    const btnCancelar = document.createElement('button');
+    btnCancelar.textContent = 'Cancelar';
+    btnCancelar.style.margin = '5px';
+    btnCancelar.onclick = () => {
+      document.body.removeChild(overlay);
+      resolve(null);
+    };
+
+    caixa.appendChild(btnOk);
+    caixa.appendChild(btnCancelar);
+    overlay.appendChild(caixa);
+    document.body.appendChild(overlay);
+  });
+}
  // Cria uma nova pasta
-function criarPasta() {
+async function criarPasta() {
   const nome = prompt('Nome da nova pasta:');
   if (!nome) return;
-  const cor = prompt('Cor da pasta (código CSS, ex: #ff0000 ou "red"):', '#444');
+  const cor = await selecionarCor('#444');
+  if (cor === null) return;
   const novaPasta = {
     id: 'pasta_' + Date.now() + '_' + Math.random(),
     nome: nome,
-    cor: cor || '#444',
-    aberta: false   // começa fechada
+    cor: cor,
+    aberta: false
   };
   folders.push(novaPasta);
   salvarTodasFichas();
@@ -2633,14 +2739,15 @@ function criarPasta() {
 }
 
 // Edita uma pasta
-function editarPasta(pastaId) {
+async function editarPasta(pastaId) {
   const pasta = folders.find(f => f.id === pastaId);
   if (!pasta) return;
   const novoNome = prompt('Novo nome da pasta:', pasta.nome);
   if (novoNome === null) return;
+  const novaCor = await selecionarCor(pasta.cor);
+  if (novaCor === null) return;
   pasta.nome = novoNome;
-  const novaCor = prompt('Nova cor (código CSS):', pasta.cor);
-  if (novaCor !== null) pasta.cor = novaCor;
+  pasta.cor = novaCor;
   salvarTodasFichas();
   atualizarListaFichasModal();
 }
