@@ -1695,7 +1695,7 @@ function alterar(t, v) {
   else if(t==="san") san = Math.max(0, Math.min(+document.getElementById('sanMax').value, san+v));
   else if(t==="descanso") {
     let novo = descanso + v;
-    if (novo > 12) novo = 12;
+    if (novo > 6) novo = 6;
     if (novo < -12) novo = -12;
     descanso = novo;
   }
